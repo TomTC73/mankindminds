@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Basic Frontend</title>
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    <script type="module" src="/src/main.js"></script>
+  </head>
+  <body>
+    <main class="container">
+      <h1>Manual Review Submissions</h1>
+      <p class="subtitle">Upload text or image content for manual review via email. Video support coming soon.</p>
+
+      <form id="submission-form" class="submission-form">
+        <label for="type">Submission type</label>
+        <select id="type" name="type" required>
+          <option value="text">Text</option>
+          <option value="image">Image</option>
+        </select>
+
+        <div id="text-group">
+          <label for="text">Text content</label>
+          <textarea id="text" name="text" rows="5" placeholder="Write content to review..."></textarea>
+        </div>
+
+        <div id="image-group" class="hidden">
+          <label for="image">Image file</label>
+          <input id="image" name="image" type="file" accept="image/*" />
+        </div>
+
+        <div class="g-recaptcha" data-sitekey="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"></div>
+
+        <button type="submit">Submit for review</button>
+      </form>
+
+      <p id="status" class="status">Ready</p>
+    </main>
+  </body>
+</html>
