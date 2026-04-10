@@ -3,38 +3,76 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Basic Frontend</title>
+    <title>Mankind Minds</title>
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&family=Indie+Flower&display=swap" rel="stylesheet">
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
     <script type="module" src="/src/main.js"></script>
   </head>
   <body>
-    <main class="container">
-      <h1>Manual Review Submissions</h1>
-      <p class="subtitle">Upload text or image content for manual review via email. Video support coming soon.</p>
+    <div class="page-wrapper">
+      <header class="header">
+        <div class="header-decoration">
+          <svg class="sketch-line" viewBox="0 0 200 20" preserveAspectRatio="none">
+            <path d="M 0 10 Q 50 5, 100 10 T 200 10" stroke="currentColor" fill="none" stroke-width="1.5"/>
+          </svg>
+        </div>
+        <h1 class="title">Mankind Minds</h1>
+        <p class="tagline">Share your voice with the world</p>
+        <div class="header-decoration">
+          <svg class="sketch-line" viewBox="0 0 200 20" preserveAspectRatio="none">
+            <path d="M 0 10 Q 50 5, 100 10 T 200 10" stroke="currentColor" fill="none" stroke-width="1.5"/>
+          </svg>
+        </div>
+      </header>
 
-      <form id="submission-form" class="submission-form">
-        <label for="type">Submission type</label>
-        <select id="type" name="type" required>
-          <option value="text">Text</option>
-          <option value="image">Image</option>
-        </select>
-
-        <div id="text-group">
-          <label for="text">Text content</label>
-          <textarea id="text" name="text" rows="5" placeholder="Write content to review..."></textarea>
+      <main class="container">
+        <div class="intro-box">
+          <p>We're listening. Send us your thoughts, your art, your vision.</p>
+          <p>Share text or images — we'll review everything personally.</p>
         </div>
 
-        <div id="image-group" class="hidden">
-          <label for="image">Image file</label>
-          <input id="image" name="image" type="file" accept="image/*" />
+        <form id="submission-form" class="submission-form">
+          <div class="form-group">
+            <label for="type" class="form-label">What are you sending?</label>
+            <div class="select-wrapper">
+              <select id="type" name="type" required>
+                <option value="text">✎ A thought (text)</option>
+                <option value="image">◻ An image</option>
+              </select>
+            </div>
+          </div>
+
+          <div id="text-group" class="form-group">
+            <label for="text" class="form-label">Your words</label>
+            <textarea id="text" name="text" rows="6" placeholder="Write what's on your mind..."></textarea>
+          </div>
+
+          <div id="image-group" class="form-group hidden">
+            <label for="image" class="form-label">Upload your image</label>
+            <div class="file-input-wrapper">
+              <input id="image" name="image" type="file" accept="image/*" />
+              <span class="file-label">Choose file</span>
+            </div>
+          </div>
+
+          <div class="captcha-wrapper">
+            <div class="g-recaptcha" data-sitekey="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"></div>
+          </div>
+
+          <button type="submit" class="submit-btn">Send it</button>
+        </form>
+
+        <p id="status" class="status-message">Ready to listen</p>
+      </main>
+
+      <footer class="footer">
+        <div class="footer-decoration">
+          <svg class="sketch-line" viewBox="0 0 200 20" preserveAspectRatio="none">
+            <path d="M 0 10 Q 50 5, 100 10 T 200 10" stroke="currentColor" fill="none" stroke-width="1.5"/>
+          </svg>
         </div>
-
-        <div class="g-recaptcha" data-sitekey="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"></div>
-
-        <button type="submit">Submit for review</button>
-      </form>
-
-      <p id="status" class="status">Ready</p>
-    </main>
+        <p>© 2026 Mankind Minds</p>
+      </footer>
+    </div>
   </body>
 </html>
