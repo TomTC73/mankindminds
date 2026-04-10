@@ -17,7 +17,12 @@
           </svg>
         </div>
         <h1 class="title">Mankind Minds</h1>
-        <p class="tagline">Share your voice with the world</p>
+        <p class="tagline">Human creativity. Verified real.</p>
+        <nav class="nav">
+          <button class="nav-btn active" data-page="home">Home</button>
+          <button class="nav-btn" data-page="submit">Submit Work</button>
+          <button class="nav-btn" data-page="gallery">Accepted Art</button>
+        </nav>
         <div class="header-decoration">
           <svg class="sketch-line" viewBox="0 0 200 20" preserveAspectRatio="none">
             <path d="M 0 10 Q 50 5, 100 10 T 200 10" stroke="currentColor" fill="none" stroke-width="1.5"/>
@@ -26,43 +31,89 @@
       </header>
 
       <main class="container">
-        <div class="intro-box">
-          <p>We're listening. Send us your thoughts, your art, your vision.</p>
-          <p>Share text or images — we'll review everything personally.</p>
+        <!-- HOME PAGE -->
+        <div id="page-home" class="page active">
+          <div class="hero-box">
+            <h2>Welcome to Mankind Minds</h2>
+            <p>We celebrate human-made creativity. Every submission is personally reviewed to ensure it's genuine, original work.</p>
+            <p>Artists whose work is verified receive a <strong>digital certificate</strong> recognizing their talent.</p>
+          </div>
+
+          <div class="info-grid">
+            <div class="info-card">
+              <div class="card-icon">✎</div>
+              <h3>Text or Art</h3>
+              <p>Share your thoughts or visual creations. We accept both.</p>
+            </div>
+            <div class="info-card">
+              <div class="card-icon">👁</div>
+              <h3>Hand-Reviewed</h3>
+              <p>Every submission is checked by real people to ensure authenticity.</p>
+            </div>
+            <div class="info-card">
+              <div class="card-icon">🎖</div>
+              <h3>Verified Badge</h3>
+              <p>Approved artists get a certificate proving their work is human-made.</p>
+            </div>
+          </div>
+
+          <div class="cta-box">
+            <p>Ready to share your work?</p>
+            <button class="nav-btn cta-button" data-page="submit">Submit Now</button>
+          </div>
         </div>
 
-        <form id="submission-form" class="submission-form">
-          <div class="form-group">
-            <label for="type" class="form-label">What are you sending?</label>
-            <div class="select-wrapper">
-              <select id="type" name="type" required>
-                <option value="text">✎ A thought (text)</option>
-                <option value="image">◻ An image</option>
-              </select>
+        <!-- SUBMIT PAGE -->
+        <div id="page-submit" class="page">
+          <h2>Share Your Work</h2>
+          <p class="page-subtitle">Send us your text or images. We verify and certify human-made work.</p>
+
+          <form id="submission-form" class="submission-form">
+            <div class="form-group">
+              <label for="type" class="form-label">What are you sending?</label>
+              <div class="select-wrapper">
+                <select id="type" name="type" required>
+                  <option value="text">✎ A thought or writing</option>
+                  <option value="image">◻ An artwork or image</option>
+                </select>
+              </div>
+            </div>
+
+            <div id="text-group" class="form-group">
+              <label for="text" class="form-label">Your words</label>
+              <textarea id="text" name="text" rows="6" placeholder="Share your thoughts, poetry, or writing..."></textarea>
+            </div>
+
+            <div id="image-group" class="form-group hidden">
+              <label for="image" class="form-label">Upload your artwork</label>
+              <div class="file-input-wrapper">
+                <input id="image" name="image" type="file" accept="image/*" />
+                <span class="file-label">Choose file</span>
+              </div>
+            </div>
+
+            <div class="captcha-wrapper">
+              <div class="g-recaptcha" data-sitekey="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"></div>
+            </div>
+
+            <button type="submit" class="submit-btn">Send for Review</button>
+          </form>
+
+          <p id="status" class="status-message"></p>
+        </div>
+
+        <!-- GALLERY PAGE -->
+        <div id="page-gallery" class="page">
+          <h2>Verified Artists</h2>
+          <p class="page-subtitle">Work that passed our authenticity check. 100% human-made.</p>
+
+          <div class="gallery-container">
+            <div class="gallery-item">
+              <div class="gallery-placeholder">Coming soon...</div>
+              <p class="gallery-caption">First verified submissions will appear here</p>
             </div>
           </div>
-
-          <div id="text-group" class="form-group">
-            <label for="text" class="form-label">Your words</label>
-            <textarea id="text" name="text" rows="6" placeholder="Write what's on your mind..."></textarea>
-          </div>
-
-          <div id="image-group" class="form-group hidden">
-            <label for="image" class="form-label">Upload your image</label>
-            <div class="file-input-wrapper">
-              <input id="image" name="image" type="file" accept="image/*" />
-              <span class="file-label">Choose file</span>
-            </div>
-          </div>
-
-          <div class="captcha-wrapper">
-            <div class="g-recaptcha" data-sitekey="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"></div>
-          </div>
-
-          <button type="submit" class="submit-btn">Send it</button>
-        </form>
-
-        <p id="status" class="status-message">Ready to listen</p>
+        </div>
       </main>
 
       <footer class="footer">
@@ -71,7 +122,7 @@
             <path d="M 0 10 Q 50 5, 100 10 T 200 10" stroke="currentColor" fill="none" stroke-width="1.5"/>
           </svg>
         </div>
-        <p>© 2026 Mankind Minds</p>
+        <p>© 2026 Mankind Minds — Celebrating human creativity</p>
       </footer>
     </div>
   </body>

@@ -2,6 +2,30 @@ import './style.css';
 
 const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 
+// PAGE NAVIGATION
+const navBtns = document.querySelectorAll('.nav-btn');
+const pages = document.querySelectorAll('.page');
+
+navBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    const pageName = btn.dataset.page;
+    
+    // Update active button
+    navBtns.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    
+    // Show page
+    pages.forEach(p => p.classList.remove('active'));
+    document.getElementById(`page-${pageName}`).classList.add('active');
+    
+    // Reset form when navigating to submit page
+    if (pageName === 'submit') {
+      resetForm();
+    }
+  });
+});
+
+// FORM SUBMISSION
 const formEl = document.getElementById('submission-form');
 const typeEl = document.getElementById('type');
 const textGroupEl = document.getElementById('text-group');
@@ -19,6 +43,13 @@ function toggleFields() {
 
   textEl.required = isText;
   imageEl.required = !isText;
+}
+
+function resetForm() {
+  formEl.reset();
+  toggleFields();
+  statusEl.textContent = '';
+  window.grecaptcha?.reset?.();
 }
 
 async function submitForm(event) {
