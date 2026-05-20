@@ -1,0 +1,214 @@
+body {
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  background: white;
+  color: black;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px;
+  border-bottom: 1px solid black;
+}
+
+.logo {
+  font-size: 24px;
+  font-weight: 500;
+  margin: 0;
+}
+
+.nav a {
+  margin-left: 20px;
+  text-decoration: none;
+  color: black;
+}
+
+.nav a:hover {
+  text-decoration: underline;
+}
+
+.hero {
+  text-align: center;
+  padding: 100px 20px;
+}
+
+.hero-box {
+  border: 1px solid black;
+  padding: 40px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.hero h2 {
+  font-size: 36px;
+  font-weight: 300;
+}
+
+.hero p {
+  margin: 20px 0;
+  font-size: 18px;
+}
+
+.button {
+  border: 1px solid black;
+  padding: 12px 24px;
+  background: transparent;
+  cursor: pointer;
+  color: black;
+}
+
+.button:hover {
+  background: black;
+  color: white;
+}
+
+.section {
+  padding: 80px 20px;
+  border-top: 1px solid black;
+}
+
+.section h3 {
+  text-align: center;
+  font-size: 28px;
+  margin-bottom: 40px;
+}
+
+.certificate {
+  text-align: center;
+  border: 1px solid black;
+  padding: 40px;
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.certificate-preview {
+  border: 1px dashed black;
+  padding: 40px;
+  margin-top: 20px;
+}
+
+.footer {
+  border-top: 1px solid black;
+  padding: 20px;
+  text-align: center;
+  font-size: 14px;
+}
+
+/* Verified creators page */
+
+.creator-tabs {
+  max-width: 900px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.creator-tab {
+  border: 1px solid black;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.creator-avatar {
+  width: 60px;
+  height: 60px;
+  border: 1px solid black;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.creator-info {
+  flex: 1;
+}
+
+.creator-info h4 {
+  font-size: 22px;
+  margin: 0 0 6px;
+  font-weight: 400;
+}
+
+.creator-category {
+  font-size: 15px;
+  margin: 0 0 8px;
+}
+
+.creator-info p {
+  margin-top: 0;
+}
+
+.verified-badge {
+  display: inline-block;
+  border: 1px solid black;
+  padding: 6px 12px;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.creator-button {
+  white-space: nowrap;
+}
+
+@media (max-width: 700px) {
+  .header {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .nav a {
+    margin: 0 10px;
+  }
+
+  .hero {
+    padding: 70px 20px;
+  }
+
+  .hero h2 {
+    font-size: 30px;
+  }
+
+  .creator-tab {
+    flex-direction: column;
+    text-align: center;
+    align-items: center;
+  }
+
+  .creator-info {
+    flex: unset;
+  }
+
+  .creator-avatar {
+  width: 60px;
+  height: 60px;
+  border: 1px solid black;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: 500;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.creator-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+}
