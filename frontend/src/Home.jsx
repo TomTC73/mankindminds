@@ -1,47 +1,106 @@
-import React from "react";
 import "./Home.css";
+import { Link } from "react-router-dom";
 
-export default function Home() {
+function Home() {
   return (
     <div>
       <header className="header">
-        <div className="logo">Mankind Minds</div>
+        <h1 className="logo">Creator Certify</h1>
+
         <nav className="nav">
-          <a href="#">About</a>
-          <a href="#">Submit</a>
-          <a href="#">Certificates</a>
+          <a href="#about">About</a>
+          <a href="#process">Process</a>
+          <Link to="/certificates">Certificates</Link>
+          <a href="#contact">Contact</a>
         </nav>
       </header>
 
       <section className="hero">
         <div className="hero-box">
-          <h2>Prove Your Work is Human</h2>
+          <h2>Creator Certification Made Simple</h2>
+
           <p>
-            Submit your creative work. Our system analyzes it, and real people
-            verify it. Earn a certificate that proves your work is authentically
-            human-made.
+            Verify creators, showcase trusted certificates, and give brands,
+            followers, and collaborators confidence in who they are working with.
           </p>
-          <button className="button">Submit Your Work</button>
+
+          <Link to="/certificates">
+            <button className="button">View Certificates</button>
+          </Link>
+
+          <a href="#about">
+            <button className="button secondary-button">Learn More</button>
+          </a>
         </div>
       </section>
 
-      <section className="section">
-        <h3>How It Works</h3>
+      <section className="section" id="about">
+        <h3>About Creator Certify</h3>
+
+        <p className="section-intro">
+          A simple verification platform designed to help creators present their
+          credibility clearly, professionally, and confidently.
+        </p>
+
         <div className="grid">
           <div className="card">
-            <h4>1. Submit</h4>
-            <p>Upload your text, image, or video for analysis.</p>
-          </div>
-
-          <div className="card">
-            <h4>2. Scan</h4>
-            <p>Our AI evaluates patterns and originality signals.</p>
-          </div>
-
-          <div className="card">
-            <h4>3. Verify</h4>
+            <span>01</span>
+            <h4>Trusted Verification</h4>
             <p>
-              Human reviewers confirm authenticity and issue certification.
+              We help creators prove their identity, credibility, and
+              authenticity through a clean verification process.
+            </p>
+          </div>
+
+          <div className="card">
+            <span>02</span>
+            <h4>Shareable Certificates</h4>
+            <p>
+              Each verified creator receives a simple certificate that can be
+              shared with brands, followers, and collaborators.
+            </p>
+          </div>
+
+          <div className="card">
+            <span>03</span>
+            <h4>Built for Creators</h4>
+            <p>
+              Our platform is made for creators who want to build trust and
+              present themselves more professionally online.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section className="section" id="process">
+        <h3>How It Works</h3>
+
+        <p className="section-intro">
+          Creator certification should be clear, simple, and easy to understand.
+        </p>
+
+        <div className="grid steps">
+          <div className="card step">
+            <h4>Submit Details</h4>
+            <p>
+              Creators provide the information needed to confirm their identity
+              and online presence.
+            </p>
+          </div>
+
+          <div className="card step">
+            <h4>Get Verified</h4>
+            <p>
+              The creator profile is reviewed to confirm authenticity and
+              credibility.
+            </p>
+          </div>
+
+          <div className="card step">
+            <h4>Receive Certificate</h4>
+            <p>
+              Verified creators receive a certificate they can display and share
+              anywhere online.
             </p>
           </div>
         </div>
@@ -49,21 +108,48 @@ export default function Home() {
 
       <section className="section">
         <div className="certificate">
-          <h3>A New Standard of Trust</h3>
+          <h3>Certificate Preview</h3>
+
           <p>
-            Like a Fairtrade label for creativity, Mankind Minds certification
-            shows your work was made by a real human mind.
+            A clean, professional certificate that communicates trust at a
+            glance.
           </p>
 
           <div className="certificate-preview">
-            <p>[ Certificate Preview ]</p>
+            <h4>Certificate of Verification</h4>
+
+            <p>This certifies that</p>
+
+            <p className="certificate-name">Creator Name</p>
+
+            <p>
+              has been verified by Creator Certify for authenticity,
+              credibility, and creator status.
+            </p>
+
+            <p className="certificate-meta">Certificate ID: CC-2026-001</p>
           </div>
         </div>
       </section>
 
-      <footer className="footer">
-        <p>© {new Date().getFullYear()} Mankind Minds</p>
+      <section className="cta">
+        <h3>Start Building Trust</h3>
+
+        <p>
+          Explore verified creators and see how certification can strengthen a
+          creator’s professional presence.
+        </p>
+
+        <Link to="/certificates">
+          <button className="button">Browse Certificates</button>
+        </Link>
+      </section>
+
+      <footer className="footer" id="contact">
+        <p>© 2026 Creator Certify. All rights reserved.</p>
       </footer>
     </div>
   );
 }
+
+export default Home;
