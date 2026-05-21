@@ -5,7 +5,7 @@ function Home() {
   return (
     <div>
       <header className="header">
-        <h1 className="logo">Creator Certify</h1>
+        <h1 className="logo">Mankind Minds</h1>
 
         <nav className="nav">
           <a href="#about">About</a>
@@ -35,7 +35,7 @@ function Home() {
       </section>
 
       <section className="section" id="about">
-        <h3>About Creator Certify</h3>
+        <h3>About Mankind Minds</h3>
 
         <p className="section-intro">
           A simple verification platform designed to help creators present their
@@ -123,11 +123,11 @@ function Home() {
             <p className="certificate-name">Creator Name</p>
 
             <p>
-              has been verified by Creator Certify for authenticity,
+              has been verified by Mankind Minds for authenticity,
               credibility, and creator status.
             </p>
 
-            <p className="certificate-meta">Certificate ID: CC-2026-001</p>
+            <p className="certificate-meta">Certificate ID: MM-2026-001</p>
           </div>
         </div>
       </section>
@@ -146,7 +146,7 @@ function Home() {
       </section>
 
       <footer className="footer" id="contact">
-        <p>© 2026 Creator Certify. All rights reserved.</p>
+        <p>© 2026 Mankind Minds. All rights reserved.</p>
       </footer>
     </div>
   );

@@ -1,5 +1,6 @@
 import "./index.css";
 import { Link } from "react-router-dom";
+import samuelGreenImg from "./assets/samuel-green.jpg";
 
 function VerifiedCreators() {
   const creators = [
@@ -8,50 +9,14 @@ function VerifiedCreators() {
       category: "Illustrator",
       description:
         "sharing creativity & inspiration! A UK based illustrator, with a range of products.",
-      imageUrl:
-        "https://scontent-man2-1.cdninstagram.com/v/t51.2885-19/501385646_18052020740461268_2359320855962906776_n.jpg?stp=dst-jpg_s150x150_tt6&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLmRqYW5nby4xMDgwLmMyIn0&_nc_ht=scontent-man2-1.cdninstagram.com&_nc_cat=108&_nc_oc=Q6cZ2gHnG9CDw42hQnQundY7HTjJUdzMhE8zIRgPlHtsTBsIba4jR9Ql4NlvhlTyfSshe-M&_nc_ohc=PwQDi_b04IcQ7kNvwG6CEqk&_nc_gid=u9u9oBLXtkU1lOVZlkCNEA&edm=AP4sbd4BAAAA&ccb=7-5&oh=00_Af5snuSd1qO1XpLu0PJLQPfu80CzKe5lfT_ySJFWRPGpAA&oe=6A13D5AD&_nc_sid=7a9f4b",
-    },
-    {
-      name: "Leo Martinez",
-      category: "Fitness Coach",
-      description:
-        "Shares simple workout routines, nutrition tips, and beginner-friendly programs.",
-      imageUrl: "",
-    },
-    {
-      name: "Maya Chen",
-      category: "Digital Artist",
-      description:
-        "Creates modern illustrations, brand visuals, and creative tutorials.",
-      imageUrl: "",
-    },
-    {
-      name: "Noah Williams",
-      category: "Tech Reviewer",
-      description:
-        "Reviews everyday tech, productivity tools, and creator equipment.",
-      imageUrl: "",
-    },
-    {
-      name: "Sofia Patel",
-      category: "Travel Creator",
-      description:
-        "Documents city guides, hidden gems, and practical travel advice.",
-      imageUrl: "",
-    },
-    {
-      name: "Ethan Brooks",
-      category: "Music Producer",
-      description:
-        "Produces original tracks, shares sound design tips, and creator resources.",
-      imageUrl: "",
+      imageUrl: samuelGreenImg,
     },
   ];
 
   return (
     <div>
       <header className="header">
-        <h1 className="logo">Creator Certify</h1>
+        <h1 className="logo">Mankind Minds</h1>
 
         <nav className="nav">
           <Link to="/">Home</Link>
@@ -119,7 +84,7 @@ function VerifiedCreators() {
       </section>
 
       <footer className="footer">
-        <p>© 2026 Creator Certify. All rights reserved.</p>
+        <p>© 2026 Mankind Minds. All rights reserved.</p>
       </footer>
     </div>
   );
