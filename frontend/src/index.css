@@ -130,6 +130,14 @@ a {
   font-size: 24px;
   font-weight: 500;
   flex-shrink: 0;
+  overflow: hidden;
+}
+
+.creator-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .creator-info {
@@ -190,25 +198,4 @@ a {
   .creator-info {
     flex: unset;
   }
-
-  .creator-avatar {
-  width: 60px;
-  height: 60px;
-  border: 1px solid black;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 24px;
-  font-weight: 500;
-  flex-shrink: 0;
-  overflow: hidden;
-}
-
-.creator-avatar-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
 }

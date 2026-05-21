@@ -2,8 +2,16 @@
 .DS_Store
 
 # Frontend
-frontend/node_modules
-frontend/dist
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# Environment files
+.env
+.env.local
+frontend/.env
+frontend/.env.local
+backend/.env
 
 # Backend
-backend/target
+backend/target/
