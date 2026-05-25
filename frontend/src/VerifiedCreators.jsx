@@ -1,6 +1,7 @@
 import "./index.css";
 import { Link } from "react-router-dom";
 import samuelGreenImg from "./assets/samuel-green.jpg";
+import OliverValentineImg from "./assets/oliver-valentine.jpg";
 
 function VerifiedCreators() {
   const creators = [
@@ -11,6 +12,14 @@ function VerifiedCreators() {
         "sharing creativity & inspiration! A UK based illustrator, with a range of products.",
       imageUrl: samuelGreenImg,
       profileUrl: "/creators/samuel-green",
+    },
+    {
+      name: "Oliver Valentine",
+      category: "Musician",
+      description:
+        "Musician and songwriter in OhValentine, creating noughties-inspired indie rock and performing around Brighton.",
+      imageUrl: OliverValentineImg,
+      profileUrl: "/creators/oliver-valentine",
     },
   ];
 
@@ -54,7 +63,10 @@ function VerifiedCreators() {
                     className="creator-avatar-img"
                   />
                 ) : (
-                  creator.name.charAt(0)
+                  creator.name
+                    .split(" ")
+                    .map((word) => word.charAt(0))
+                    .join("")
                 )}
               </div>
 
