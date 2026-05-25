@@ -18,7 +18,7 @@ function OliverValentineProfile() {
     },
     {
       name: "SoundCloud",
-      url: "https://on.soundcloud.com/sVzwt9sJ2BUzh6Xau2",
+      url: "https://soundcloud.com/oh-valentine-65974085",
     },
     {
       name: "Email",
