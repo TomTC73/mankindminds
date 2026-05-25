@@ -33,7 +33,6 @@ function SamuelGreenProfile() {
 
         <nav className="nav">
           <Link to="/">Home</Link>
-          <Link to="/verified-creators">Creators</Link>
           <a href="#socials">Socials</a>
         </nav>
       </header>

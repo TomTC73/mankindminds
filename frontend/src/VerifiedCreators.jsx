@@ -22,7 +22,7 @@ function VerifiedCreators() {
         <nav className="nav">
           <Link to="/">Home</Link>
           <a href="#creators">Creators</a>
-          <a href="#apply">Apply</a>
+          <Link to="/apply">Apply</Link>
         </nav>
       </header>
 
@@ -34,9 +34,9 @@ function VerifiedCreators() {
             our certification process.
           </p>
 
-          <a href="#apply">
+          <Link to="/apply">
             <button className="button">Become Verified</button>
-          </a>
+          </Link>
         </div>
       </section>
 
@@ -82,7 +82,9 @@ function VerifiedCreators() {
             profile has been reviewed and approved.
           </p>
 
-          <button className="button">Apply Now</button>
+          <Link to="/apply">
+            <button className="button">Apply Now</button>
+          </Link>
         </div>
       </section>
 
