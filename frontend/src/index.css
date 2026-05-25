@@ -171,36 +171,6 @@ a {
   white-space: nowrap;
 }
 
-@media (max-width: 700px) {
-  .header {
-    flex-direction: column;
-    gap: 16px;
-  }
-
-  .nav a {
-    margin: 0 10px;
-  }
-
-  .hero {
-    padding: 70px 20px;
-  }
-
-  .hero h2 {
-    font-size: 30px;
-  }
-
-  .creator-tab {
-    flex-direction: column;
-    text-align: center;
-    align-items: center;
-  }
-
-  .creator-info {
-    flex: unset;
-  }
-}
-
-
 /* Samuel Green profile page */
 
 .profile-hero-box {
@@ -252,7 +222,72 @@ a {
   color: white;
 }
 
+/* Creator application form */
+
+.application-form {
+  border: 1px solid black;
+  padding: 40px;
+  max-width: 700px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.application-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 15px;
+}
+
+.application-form input,
+.application-form textarea {
+  border: 1px solid black;
+  padding: 12px;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 15px;
+  background: white;
+  color: black;
+}
+
+.application-form textarea {
+  resize: vertical;
+}
+
+.form-note {
+  font-size: 14px;
+  margin: 0;
+}
+
 @media (max-width: 700px) {
+  .header {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .nav a {
+    margin: 0 10px;
+  }
+
+  .hero {
+    padding: 70px 20px;
+  }
+
+  .hero h2 {
+    font-size: 30px;
+  }
+
+  .creator-tab {
+    flex-direction: column;
+    text-align: center;
+    align-items: center;
+  }
+
+  .creator-info {
+    flex: unset;
+  }
+
   .profile-hero-box {
     text-align: center;
   }
