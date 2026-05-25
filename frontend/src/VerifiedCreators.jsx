@@ -10,6 +10,7 @@ function VerifiedCreators() {
       description:
         "sharing creativity & inspiration! A UK based illustrator, with a range of products.",
       imageUrl: samuelGreenImg,
+      profileUrl: "/creators/samuel-green",
     },
   ];
 
@@ -65,7 +66,9 @@ function VerifiedCreators() {
 
               <span className="verified-badge">Verified</span>
 
-              <button className="button creator-button">View Profile</button>
+              <Link to={creator.profileUrl}>
+                <button className="button creator-button">View Profile</button>
+              </Link>
             </div>
           ))}
         </div>
