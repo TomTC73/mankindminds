@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Home from "./Home";
 import VerifiedCreators from "./VerifiedCreators";
 import SamuelGreenProfile from "./SamuelGreenProfile";
+import OliverValentineProfile from "./OliverValentineProfile";
 import CreatorApplication from "./CreatorApplication";
 
 function App() {
@@ -11,6 +12,10 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/certificates" element={<VerifiedCreators />} />
         <Route path="/creators/samuel-green" element={<SamuelGreenProfile />} />
+        <Route
+          path="/creators/oliver-valentine"
+          element={<OliverValentineProfile />}
+        />
         <Route path="/apply" element={<CreatorApplication />} />
       </Routes>
     </BrowserRouter>
