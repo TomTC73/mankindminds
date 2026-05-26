@@ -39,7 +39,7 @@ function VerifiedCreators() {
         <div className="hero-box">
           <h2>View Our Verified Creators</h2>
           <p>
-            Explore trusted creators who have been reviewed and verified through
+            Explore trusted creators who have been reviewed and verified as AI-Free through
             our certification process.
           </p>
 

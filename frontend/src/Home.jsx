@@ -39,7 +39,7 @@ function Home() {
 
         <p className="section-intro">
           A simple verification platform designed to help creators present their
-          credibility clearly, professionally, and confidently.
+          AI-Free status clearly, professionally, and confidently.
         </p>
 
         <div className="grid">
@@ -91,15 +91,15 @@ function Home() {
           <div className="card step">
             <h4>Get Verified</h4>
             <p>
-              The creator profile is reviewed to confirm authenticity and
-              credibility.
+              Their profile is scanned against
+              our algorithms to confirm we have no reason to doubt the creator is AI-Free.
             </p>
           </div>
 
           <div className="card step">
             <h4>Receive Certificate</h4>
             <p>
-              Verified creators receive a certificate they can display and share
+              Verified creators receive certification they can display and share
               anywhere online.
             </p>
           </div>
