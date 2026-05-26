@@ -5,11 +5,11 @@
 
     <script>
       (function () {
-        var redirect = sessionStorage.redirect;
-        delete sessionStorage.redirect;
+        var redirectPath = sessionStorage.getItem("redirectPath");
 
-        if (redirect && redirect !== location.href) {
-          history.replaceState(null, null, redirect);
+        if (redirectPath) {
+          sessionStorage.removeItem("redirectPath");
+          window.history.replaceState(null, "", redirectPath);
         }
       })();
     </script>
