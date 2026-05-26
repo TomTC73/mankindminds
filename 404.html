@@ -5,7 +5,13 @@
     <title>Mankind Minds</title>
 
     <script>
-      sessionStorage.redirect = location.href;
+      var redirectPath =
+        window.location.pathname +
+        window.location.search +
+        window.location.hash;
+
+      sessionStorage.setItem("redirectPath", redirectPath);
+
       window.location.replace("/");
     </script>
   </head>
