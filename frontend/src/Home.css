@@ -9,8 +9,22 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 24px 40px;
+  padding: 12px 40px;
   border-bottom: 1px solid black;
+}
+
+/* Added container to layout image and text side-by-side */
+.logo-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Global sizing for your logo image */
+.logo-image {
+  width: 56px;          
+  height: 56px;         
+  object-fit: contain;  
 }
 
 .logo {

@@ -1,17 +1,11 @@
 import "./index.css";
 import { Link } from "react-router-dom";
+import Header from "./Header";
 
 function CreatorApplication() {
   return (
     <div>
-      <header className="header">
-        <h1 className="logo">Mankind Minds</h1>
-
-        <nav className="nav">
-          <Link to="/">Home</Link>
-          <Link to="/certificates">Creators</Link>
-        </nav>
-      </header>
+      <Header />
 
       <section className="section">
         <h3>Apply to Become Verified</h3>
