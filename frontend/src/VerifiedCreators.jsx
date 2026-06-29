@@ -1,5 +1,6 @@
 import "./index.css";
 import { Link } from "react-router-dom";
+import Header from "./Header";
 import samuelGreenImg from "./assets/samuel-green.jpg";
 import OliverValentineImg from "./assets/oliver-valentine.jpg";
 
@@ -25,15 +26,7 @@ function VerifiedCreators() {
 
   return (
     <div>
-      <header className="header">
-        <h1 className="logo">Mankind Minds</h1>
-
-        <nav className="nav">
-          <Link to="/">Home</Link>
-          <a href="#creators">Creators</a>
-          <Link to="/apply">Apply</Link>
-        </nav>
-      </header>
+      <Header />
 
       <section className="hero">
         <div className="hero-box">
@@ -44,7 +37,7 @@ function VerifiedCreators() {
           </p>
 
           <Link to="/apply">
-            <button className="button">Become Verified</button>
+            <button className="button">Apply now</button>
           </Link>
         </div>
       </section>

@@ -1,5 +1,5 @@
 import "./index.css";
-import { Link } from "react-router-dom";
+import Header from "./Header";
 import oliverValentineImg from "./assets/oliver-valentine.jpg";
 
 function OliverValentineProfile() {
@@ -28,15 +28,7 @@ function OliverValentineProfile() {
 
   return (
     <div>
-      <header className="header">
-        <h1 className="logo">Mankind Minds</h1>
-
-        <nav className="nav">
-          <Link to="/">Home</Link>
-          <Link to="/certificates">Creators</Link>
-          <a href="#socials">Socials</a>
-        </nav>
-      </header>
+      <Header />
 
       <section className="hero">
         <div className="hero-box profile-hero-box">
