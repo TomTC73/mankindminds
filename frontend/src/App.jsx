@@ -5,6 +5,7 @@ import Process from "./Process";
 import VerifiedCreators from "./VerifiedCreators";
 import SamuelGreenProfile from "./SamuelGreenProfile";
 import OliverValentineProfile from "./OliverValentineProfile";
+import JosephMelodyProfile from "./JosephMelodyProfile";
 import CreatorApplication from "./CreatorApplication";
 
 function App() {
@@ -19,6 +20,10 @@ function App() {
         <Route
           path="/creators/oliver-valentine"
           element={<OliverValentineProfile />}
+        />
+        <Route
+          path="/creators/joseph-melody"
+          element={<JosephMelodyProfile />}
         />
         <Route path="/apply" element={<CreatorApplication />} />
       </Routes>
