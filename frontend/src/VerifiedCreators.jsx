@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import Header from "./Header";
 import samuelGreenImg from "./assets/samuel-green.jpg";
 import OliverValentineImg from "./assets/oliver-valentine.jpg";
+import JosephMelodyImg from "./assets/joseph-melody.jpg";
 
 function VerifiedCreators() {
   const creators = [
@@ -21,6 +22,14 @@ function VerifiedCreators() {
         "Musician and songwriter in OhValentine, creating noughties-inspired indie rock and performing around Brighton.",
       imageUrl: OliverValentineImg,
       profileUrl: "/creators/oliver-valentine",
+    },
+    {
+      name: "Joseph Melody",
+      category: "Photographer",
+      description:
+        "Sample creator page ready for replacement. Add Joseph’s real bio, work, and verification details here.",
+      imageUrl: JosephMelodyImg,
+      profileUrl: "/creators/joseph-melody",
     },
   ];
 
