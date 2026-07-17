@@ -6,20 +6,12 @@ import JosephMelodyImg from "./assets/joseph-melody.jpg";
 function JosephMelodyProfile() {
   const socialLinks = [
     {
-      name: "Website",
-      url: "https://example.com/joseph-melody",
-    },
-    {
       name: "Instagram",
-      url: "https://instagram.com/josephmelody",
-    },
-    {
-      name: "TikTok",
-      url: "https://www.tiktok.com/@josephmelody",
+      url: "https://instagram.com/joesjpgs",
     },
     {
       name: "Email",
-      url: "mailto:joseph@melodyexample.com",
+      url: "mailto:josephmelody2804@gmail.com",
     },
   ];
 
@@ -44,21 +36,16 @@ function JosephMelodyProfile() {
           </div>
 
           <p>
-            Joseph Melody is a verified creator with a sample profile page ready
-            for content replacement. Replace this text with real details about
-            Joseph’s creative work, background, and verification story.
+            Joseph Melody is a verified photographer whose submitted creative portfolio has been reviewed by Mankind Minds and confirmed as AI-free.
           </p>
 
           <div className="ai-free-card">
             <h3>AI-Free Verification</h3>
             <p>
-              This section is a placeholder for the verification summary. Add
-              Joseph’s own verification details here, including submission
-              materials, creative process, and why his work qualifies as
-              AI-free.
+              Joseph’s submitted body of work was reviewed as part of the Mankind Minds verification process. His creative practice shows a human-led photographic process, including raw image capture, camera operations (both digital and film), and digital post-processing.
             </p>
 
-            <strong>Verification Status: Sample AI-Free Profile</strong>
+            <strong>Verification Status: Proven AI-Free Creator</strong>
           </div>
         </div>
       </section>
@@ -68,9 +55,10 @@ function JosephMelodyProfile() {
 
         <div className="certificate">
           <p>
-            Use this area to describe the creator’s work, creative focus, and
-            examples of what they make. Replace this sample text with Joseph’s
-            actual projects and creative strengths.
+            Joseph Melody is a photographer who creates images for a wide range of purposes, from capturing the essence of unique cultures through street photography to providing portfolio assets for student films.
+          </p>
+          <p>
+            His submitted materials reflect a self-directed, intentional photographic process, utilizing physical cameras and traditional editing workflows to capture and share human-led visual stories. He is deeply passionate about the effort that goes into his photography and stands firmly against AI-generated imagery.
           </p>
         </div>
       </section>
@@ -80,10 +68,15 @@ function JosephMelodyProfile() {
 
         <div className="certificate">
           <p>
-            Add the review details here once the creator’s work has been
-            assessed. This is the place to explain how the submitted materials
-            were checked and what evidence supports the AI-free claim.
-          </p>
+           Mankind Minds reviews the materials submitted by each creator to assess whether their creative output is human-made and free from AI generation. For photographers, this can include raw images, metadata, camera specifications, editing workflows, portfolio links, and wider creative evidence.
+         </p>
+
+
+         <p>
+           Joseph has declared that his submitted creative work was made
+           entirely without the use of AI. Based on the reviewed materials, his
+           creator profile has been approved as AI-free.
+         </p>
         </div>
       </section>
 
