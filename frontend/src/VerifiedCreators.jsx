@@ -27,7 +27,7 @@ function VerifiedCreators() {
       name: "Joseph Melody",
       category: "Photographer",
       description:
-        "Sample creator page ready for replacement. Add Joseph’s real bio, work, and verification details here.",
+        "Photographer capturing visual stories, captured mainly through the lense of street photography, with a strict commitment to AI-free, authentic imagery.",
       imageUrl: JosephMelodyImg,
       profileUrl: "/creators/joseph-melody",
     },

@@ -55,7 +55,7 @@ function JosephMelodyProfile() {
 
         <div className="certificate">
           <p>
-            Joseph Melody is a photographer who creates images for a wide range of purposes, from capturing the essence of unique cultures through street photography to providing portfolio assets for student films.
+            Joseph Melody is a photographer who creates images for a wide range of purposes, capturing the essence of unique cultures through street photography.
           </p>
           <p>
             His submitted materials reflect a self-directed, intentional photographic process, utilizing physical cameras and traditional editing workflows to capture and share human-led visual stories. He is deeply passionate about the effort that goes into his photography and stands firmly against AI-generated imagery.
