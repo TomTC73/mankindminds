@@ -1,6 +1,7 @@
 import "./index.css";
 import Header from "./Header";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 
 function CreatorApplication() {
   const [socials, setSocials] = useState({
@@ -186,6 +187,25 @@ function CreatorApplication() {
             ></textarea>
           </label>
 
+
+          <label className="checkbox-label">
+            <input
+              type="checkbox"
+              name="terms_agreement"
+              value="Agreed"
+              required
+            />
+
+            <span>
+              I agree to the{" "}
+              <a href="/terms" target="_blank">
+                Terms & Conditions
+              </a>
+              . <span className="required">*</span>
+            </span>
+          </label>
+
+
           <label className="checkbox-label">
             <input
               type="checkbox"
@@ -195,8 +215,7 @@ function CreatorApplication() {
             />
 
             <span>
-              I confirm that the submitted work is my own and was not generated
-              using AI. <span className="required">*</span>
+              I confirm that the submitted work represents my own creative work and that the information provided in this application is accurate. <span className="required">*</span>
             </span>
           </label>
 
@@ -213,7 +232,21 @@ function CreatorApplication() {
       </section>
 
       <footer className="footer">
-        <p>© 2026 Mankind Minds. All rights reserved.</p>
+        <p>
+          © 2026 Mankind Minds. All rights reserved.
+        </p>
+
+        <p>
+          Verification provided by Mankind Minds represents an assessment based on
+          submitted information and available evidence at the time of review. It does
+          not guarantee that a creator has never used AI tools.
+        </p>
+
+        <p>
+          <Link to="/privacy-policy">Privacy Policy</Link>
+          {" | "}
+          <Link to="/terms">Terms & Conditions</Link>
+        </p>
       </footer>
     </div>
   );
