@@ -1,5 +1,6 @@
 import "./Home.css";
 import Header from "./Header";
+import { Link } from "react-router-dom";
 
 function Process() {
   return (
@@ -84,8 +85,22 @@ function Process() {
       </section>
 
       <footer className="footer">
-        <p>© 2026 Mankind Minds. All rights reserved.</p>
-      </footer>
+      <p>
+        © 2026 Mankind Minds. All rights reserved.
+      </p>
+
+      <p>
+        Verification provided by Mankind Minds represents an assessment based on
+        submitted information and available evidence at the time of review. It does
+        not guarantee that a creator has never used AI tools.
+      </p>
+
+      <p>
+        <Link to="/privacy-policy">Privacy Policy</Link>
+        {" | "}
+        <Link to="/terms">Terms & Conditions</Link>
+      </p>
+    </footer>
     </div>
   );
 }
