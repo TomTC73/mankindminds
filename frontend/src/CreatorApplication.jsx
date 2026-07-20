@@ -115,11 +115,11 @@ function CreatorApplication() {
           </label>
 
           <label>
-            Instagram
+            Instagram username
             <input
-              type="url"
+              type="text"
               name="instagram"
-              placeholder="https://instagram.com/yourusername"
+              placeholder="yourusername"
               onChange={(e) =>
                 setSocials({
                   ...socials,
@@ -130,11 +130,11 @@ function CreatorApplication() {
           </label>
 
           <label>
-            TikTok
+            TikTok username
             <input
-              type="url"
+              type="text"
               name="tiktok"
-              placeholder="https://tiktok.com/@yourusername"
+              placeholder="yourusername"
               onChange={(e) =>
                 setSocials({
                   ...socials,
