@@ -1,8 +1,27 @@
 import "./index.css";
-import { Link } from "react-router-dom";
 import Header from "./Header";
+import { useState } from "react";
 
 function CreatorApplication() {
+  const [socials, setSocials] = useState({
+    website: "",
+    instagram: "",
+    tiktok: "",
+    youtube: "",
+    other_social: "",
+  });
+
+  const handleSubmit = (e) => {
+    const hasSocial = Object.values(socials).some(
+      (social) => social.trim() !== ""
+    );
+
+    if (!hasSocial) {
+      e.preventDefault();
+      alert("Please provide at least one social media or portfolio link.");
+    }
+  };
+
   return (
     <div>
       <Header />
@@ -14,6 +33,7 @@ function CreatorApplication() {
           className="application-form"
           action="https://api.web3forms.com/submit"
           method="POST"
+          onSubmit={handleSubmit}
         >
           <input
             type="hidden"
@@ -34,7 +54,10 @@ function CreatorApplication() {
           />
 
           <label>
-            Creator Name
+            <span>
+              Creator Name <span className="required">*</span>
+            </span>
+
             <input
               type="text"
               name="creator_name"
@@ -44,7 +67,10 @@ function CreatorApplication() {
           </label>
 
           <label>
-            Email Address
+            <span>
+              Email Address <span className="required">*</span>
+            </span>
+
             <input
               type="email"
               name="email"
@@ -54,13 +80,22 @@ function CreatorApplication() {
           </label>
 
           <label>
-            Creator Category
+            <span>
+              Creator Category <span className="optional">(Optional)</span>
+            </span>
+
             <input
               type="text"
               name="category"
-              placeholder="Illustrator, musician, writer, filmmaker..."
-              required
+              placeholder="Photographer, artist, writer..."
             />
+          </label>
+
+          <label>
+            <span>
+              Social Media / Portfolio Links{" "}
+              <span className="required">*</span>
+            </span>
           </label>
 
           <label>
@@ -69,6 +104,12 @@ function CreatorApplication() {
               type="url"
               name="website"
               placeholder="https://yourwebsite.com"
+              onChange={(e) =>
+                setSocials({
+                  ...socials,
+                  website: e.target.value,
+                })
+              }
             />
           </label>
 
@@ -78,6 +119,12 @@ function CreatorApplication() {
               type="url"
               name="instagram"
               placeholder="https://instagram.com/yourusername"
+              onChange={(e) =>
+                setSocials({
+                  ...socials,
+                  instagram: e.target.value,
+                })
+              }
             />
           </label>
 
@@ -87,6 +134,12 @@ function CreatorApplication() {
               type="url"
               name="tiktok"
               placeholder="https://tiktok.com/@yourusername"
+              onChange={(e) =>
+                setSocials({
+                  ...socials,
+                  tiktok: e.target.value,
+                })
+              }
             />
           </label>
 
@@ -96,62 +149,61 @@ function CreatorApplication() {
               type="url"
               name="youtube"
               placeholder="https://youtube.com/@yourusername"
+              onChange={(e) =>
+                setSocials({
+                  ...socials,
+                  youtube: e.target.value,
+                })
+              }
             />
           </label>
 
           <label>
-            Other Social Media / Portfolio Links
-            <textarea
-              name="other_links"
-              placeholder="Add any extra social media, Linktree, Behance, shop links, portfolio links, etc."
-              rows="5"
-            ></textarea>
+            Other Portfolio Link
+            <input
+              type="url"
+              name="other_social"
+              placeholder="https://yourportfolio.com"
+              onChange={(e) =>
+                setSocials({
+                  ...socials,
+                  other_social: e.target.value,
+                })
+              }
+            />
           </label>
 
           <label>
-            Links to media you created
-            <textarea
-              name="media_links"
-              placeholder="Paste links to examples of your original work. You can use Google Drive, Dropbox, YouTube, Instagram, Behance, your website, Linktree, etc."
-              rows="6"
-              required
-            ></textarea>
-          </label>
+            <span>
+              Tell Us About Your Work{" "}
+              <span className="optional">(Optional)</span>
+            </span>
 
-          <label>
-            Tell us about your work
             <textarea
               name="about_work"
-              placeholder="Describe what you create, your process, and why you want to be verified."
+              placeholder="Tell us about what you create, your process, and the type of work you submit."
               rows="6"
-              required
             ></textarea>
           </label>
 
-          <label>
-            How was this work created?
-            <textarea
-              name="creation_process"
-              placeholder="Explain your creative process. For example: hand drawn, painted, photographed, filmed, edited, written, recorded, designed, etc."
-              rows="6"
+          <label className="checkbox-label">
+            <input
+              type="checkbox"
+              name="ai_free_confirmation"
+              value="Confirmed"
               required
-            ></textarea>
-          </label>
+            />
 
-          <label>
-            AI-Free Declaration
-            <textarea
-              name="ai_free_declaration"
-              placeholder="Please confirm whether the submitted work was created without AI generation, and explain anything important we should know."
-              rows="5"
-              required
-            ></textarea>
+            <span>
+              I confirm that the submitted work is my own and was not generated
+              using AI. <span className="required">*</span>
+            </span>
           </label>
 
           <p className="form-note">
-            Please make sure your media links are public or set to viewable by
-            anyone with the link. File uploads are not supported on this form
-            yet.
+            Please make sure your links are public or viewable by anyone with
+            the link. We use your submitted profiles and examples of work for
+            verification.
           </p>
 
           <button className="button" type="submit">

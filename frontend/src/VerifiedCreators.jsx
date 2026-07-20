@@ -36,7 +36,6 @@ function VerifiedCreators() {
   return (
     <div>
       <Header />
-
       <section className="hero">
         <div className="hero-box">
           <h2>View Our Verified Creators</h2>
@@ -45,9 +44,9 @@ function VerifiedCreators() {
             our certification process.
           </p>
 
-          <Link to="/apply">
+           {/*<Link to="/apply">
             <button className="button">Apply now</button>
-          </Link>
+          </Link>*/}
         </div>
       </section>
 
