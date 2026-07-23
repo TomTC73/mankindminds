@@ -91,18 +91,11 @@ function About() {
           </p>
 
           <div className="certificate-preview">
-            <h4>Certificate of Verification</h4>
-
-            <p>This certifies that</p>
-
-            <p className="certificate-name">Creator Name</p>
-
-            <p>
-              has been verified by Mankind Minds for authenticity,
-              credibility, and creator status.
-            </p>
-
-            <p className="certificate-meta">Certificate ID: MM-2026-001</p>
+            <img 
+              src="/certificate.png" 
+              alt="Certificate of Verification"
+              className="certificate-image"
+            />
           </div>
         </div>
       </section>
