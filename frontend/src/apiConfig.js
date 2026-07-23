@@ -1,8 +1,6 @@
-// Automatically uses localhost during local development ('npm run dev')
-// and switches to AWS Elastic Beanstalk when built for production on GitHub Pages
-export const API_BASE = import.meta.env.DEV
-  ? "http://localhost:8080"
-  : "http://Mankindminds-backend-env.eba-2egvmjdy.eu-north-1.elasticbeanstalk.com";
+// (removed Elastic Beanstalk / AWS reference)
+
+export const API_BASE = "https://mankind-minds-api-151580998157.europe-west2.run.app";
 
 export const API_URL = `${API_BASE}/api`;
 

@@ -40,4 +40,4 @@ Backend starts on `http://localhost:8080` and exposes:
    npm run dev
    ```
 
-Frontend starts on `http://localhost:5173` and fetches creator data from the backend API.
+Frontend starts on `http://localhost:5173` and fetches creator data from the backend API.\n## Production\n\nProduction API base: https://mankind-minds-api-151580998157.europe-west2.run.app\n
