@@ -61,12 +61,20 @@ body {
     align-items: center;
     justify-content: center;
     gap: 16px;
-    padding: 16px 20px;
+    padding: 16px 12px;
   }
 
   .nav {
     justify-content: center;
-    flex-wrap: wrap;
-    gap: 16px;
+    flex-wrap: nowrap; /* Keeps all items strictly on one row */
+    gap: 12px;         /* Tighter gap so elements don't overflow small screens */
+  }
+
+  .nav a {
+    font-size: 14px;
+  }
+
+  .nav a.contact-link {
+    padding: 8px 12px; /* Slimmer button padding for a tighter fit */
   }
 }
