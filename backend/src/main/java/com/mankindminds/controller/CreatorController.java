@@ -145,8 +145,24 @@ public class CreatorController {
                 new Creator.SocialLink("Instagram", "https://instagram.com/joesjpgs"),
                 new Creator.SocialLink("Email", "mailto:josephmelody2804@gmail.com")
             )
+
+
+
+
+
+
+
+
+
+
+
+
+
+            //CREATORS DO NOT GO PAST HERE
         );
 
+
+        // Add the creators to the in-memory database
         creatorDatabase.put(samuel.getSlug(), samuel);
         creatorDatabase.put(oliver.getSlug(), oliver);
         creatorDatabase.put(joseph.getSlug(), joseph);
