@@ -137,9 +137,7 @@ function PrivacyPolicy() {
         </div>
       </section>
 
-      <footer className="footer">
-        <p>© 2026 Mankind Minds. All rights reserved.</p>
-      </footer>
+      <Footer />
     </div>
   );
 }

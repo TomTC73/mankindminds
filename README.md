@@ -1,20 +1,19 @@
-# Basic Spring Boot + NPM Frontend Template
+# Mankind Minds
 
 ## Structure
 
 - `backend/` - Maven Spring Boot API
-- `frontend/` - NPM + Vite website
+- `frontend/` - React + Vite website
 
 ## What this app does
 
-- User chooses submission type: **text** or **image**
-- Frontend sends submission to backend
-- Backend forwards submission to your review email for manual approval
-- Video submission is not yet implemented
+- Frontend loads verified creator profiles from the backend API
+- Creator profile images are served as backend static assets
+- Creator pages are rendered dynamically from `/api/creators`
 
 ## Run backend
 
-1. Open terminal in `backend/`
+1. Open a terminal in `backend/`
 2. Run:
 
    ```bash
@@ -23,25 +22,13 @@
 
 Backend starts on `http://localhost:8080` and exposes:
 
-- `POST /api/submissions`
-
-Before running, update backend email settings in [backend/src/main/resources/application.properties](backend/src/main/resources/application.properties):
-
-- `review.email.to`
-- `spring.mail.username`
-- `spring.mail.password`
-- `captcha.secret-key`
-
-If you use Gmail, use an App Password (not your normal account password).
-
-Also update the reCAPTCHA site key in [frontend/index.html](frontend/index.html) by replacing `replace-with-your-recaptcha-site-key`.
-
-You can create both keys in Google reCAPTCHA admin and use the same domain you run locally (`localhost`).
+- `GET /api/creators`
+- `GET /api/creators/{slug}`
 
 ## Run frontend
 
-1. Open second terminal in `frontend/`
-2. Install deps:
+1. Open a separate terminal in `frontend/`
+2. Install dependencies:
 
    ```bash
    npm install
@@ -53,4 +40,4 @@ You can create both keys in Google reCAPTCHA admin and use the same domain you r
    npm run dev
    ```
 
-Frontend starts on `http://localhost:5173` and sends submissions to the backend endpoint.
+Frontend starts on `http://localhost:5173` and fetches creator data from the backend API.

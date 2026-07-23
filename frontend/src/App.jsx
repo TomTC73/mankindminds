@@ -9,9 +9,7 @@ import Home from "./Home";
 import About from "./About";
 import Process from "./Process";
 import VerifiedCreators from "./VerifiedCreators";
-import SamuelGreenProfile from "./SamuelGreenProfile";
-import OliverValentineProfile from "./OliverValentineProfile";
-import JosephMelodyProfile from "./JosephMelodyProfile";
+import CreatorProfile from "./CreatorProfile";
 import CreatorApplication from "./CreatorApplication";
 import PrivacyPolicy from "./PrivacyPolicy";
 import Terms from "./Terms";
@@ -36,32 +34,12 @@ function App() {
         <Route path="/process" element={<Process />} />
         <Route path="/certificates" element={<VerifiedCreators />} />
 
-        <Route
-          path="/creators/samuel-green"
-          element={<SamuelGreenProfile />}
-        />
-
-        <Route
-          path="/creators/oliver-valentine"
-          element={<OliverValentineProfile />}
-        />
-
-        <Route
-          path="/creators/joseph-melody"
-          element={<JosephMelodyProfile />}
-        />
+        {/* Dynamic Route to handle ALL creators */}
+        <Route path="/creators/:slug" element={<CreatorProfile />} />
 
         <Route path="/apply" element={<CreatorApplication />} />
-
-        <Route
-          path="/privacy-policy"
-          element={<PrivacyPolicy />}
-        />
-
-        <Route
-          path="/terms"
-          element={<Terms />}
-        />
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="/terms" element={<Terms />} />
       </Routes>
     </BrowserRouter>
   );

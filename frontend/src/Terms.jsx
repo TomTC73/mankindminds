@@ -1,5 +1,6 @@
 import "./Home.css";
 import Header from "./Header";
+import Footer from "./Footer";
 
 function Terms() {
   return (
@@ -115,9 +116,7 @@ function Terms() {
         </div>
       </section>
 
-      <footer className="footer">
-        <p>© 2026 Mankind Minds. All rights reserved.</p>
-      </footer>
+      <Footer />
     </div>
   );
 }
