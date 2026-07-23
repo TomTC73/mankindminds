@@ -1,5 +1,6 @@
 import "./Home.css";
 import Header from "./Header";
+import Footer from "./Footer";
 
 function PrivacyPolicy() {
   return (
