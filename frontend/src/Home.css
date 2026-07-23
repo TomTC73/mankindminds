@@ -5,6 +5,8 @@ body {
   color: black;
 }
 
+/* HEADER */
+
 .header {
   display: flex;
   justify-content: space-between;
@@ -13,18 +15,16 @@ body {
   border-bottom: 1px solid black;
 }
 
-/* Added container to layout image and text side-by-side */
 .logo-container {
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
-/* Global sizing for your logo image */
 .logo-image {
-  width: 56px;          
-  height: 56px;         
-  object-fit: contain;  
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
 }
 
 .logo {
@@ -49,6 +49,9 @@ body {
 .nav a:hover {
   text-decoration: underline;
 }
+
+
+/* HERO */
 
 .hero {
   text-align: center;
@@ -76,6 +79,9 @@ body {
   max-width: 620px;
 }
 
+
+/* BUTTONS */
+
 .button {
   border: 1px solid black;
   padding: 14px 28px;
@@ -94,6 +100,9 @@ body {
 .secondary-button {
   margin-left: 12px;
 }
+
+
+/* SECTIONS */
 
 .section {
   padding: 90px 20px;
@@ -114,6 +123,9 @@ body {
   font-size: 17px;
   line-height: 1.6;
 }
+
+
+/* GRID */
 
 .grid {
   display: grid;
@@ -147,6 +159,9 @@ body {
   font-size: 15px;
 }
 
+
+/* STEPS */
+
 .steps {
   counter-reset: step;
 }
@@ -163,12 +178,16 @@ body {
   font-size: 14px;
 }
 
+
+/* CERTIFICATE */
+
 .certificate {
   text-align: center;
   border: 1px solid black;
   padding: 48px 40px;
   max-width: 760px;
   margin: 0 auto;
+  overflow: hidden;
 }
 
 .certificate h3 {
@@ -179,27 +198,30 @@ body {
   line-height: 1.6;
 }
 
+
 .certificate-preview {
   border: 1px dashed black;
-  padding: 48px 32px;
+  padding: 32px;
   margin-top: 32px;
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
 }
 
-.certificate-preview h4 {
-  font-size: 26px;
-  font-weight: 300;
-  margin: 0 0 16px;
+
+.certificate-image {
+  width: 85%;
+  max-width: 550px;
+  height: auto;
+  display: block;
+  object-fit: contain;
 }
 
-.certificate-name {
-  font-size: 22px;
-  margin: 20px 0 8px;
-}
 
-.certificate-meta {
-  font-size: 14px;
-  margin-top: 28px;
-}
+/* CTA */
 
 .cta {
   text-align: center;
@@ -219,6 +241,9 @@ body {
   line-height: 1.6;
 }
 
+
+/* FOOTER */
+
 .footer {
   border-top: 1px solid black;
   padding: 24px 40px;
@@ -226,7 +251,11 @@ body {
   font-size: 14px;
 }
 
+
+/* MOBILE */
+
 @media (max-width: 700px) {
+
   .header {
     flex-direction: column;
     gap: 18px;
@@ -239,23 +268,41 @@ body {
     justify-content: center;
   }
 
+
   .hero {
     padding: 70px 20px;
   }
+
 
   .hero-box {
     padding: 40px 24px;
   }
 
+
   .hero h2 {
     font-size: 34px;
   }
+
 
   .secondary-button {
     margin-left: 0;
     margin-top: 12px;
   }
-  .two-column-grid {
-  max-width: 1px; /* adjust until the cards match the width above */
+
+
+  .certificate {
+    padding: 32px 20px;
   }
+
+
+  .certificate-preview {
+    padding: 20px;
+  }
+
+
+  .certificate-image {
+    width: 100%;
+    max-width: 100%;
+  }
+
 }
