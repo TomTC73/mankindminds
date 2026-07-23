@@ -54,3 +54,19 @@ body {
   background: #222;
   text-decoration: none; /* prevents underline on the button variant */
 }
+
+@media (max-width: 700px) {
+  .header {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 16px 20px;
+  }
+
+  .nav {
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+}

@@ -86,7 +86,7 @@ function About() {
           <h3>Certificate Preview</h3>
 
           <p>
-            A clean, professional certificate that communicates trust at a
+            A clean, professional choice of certificates that communicate trust at a
             glance.
           </p>
 
