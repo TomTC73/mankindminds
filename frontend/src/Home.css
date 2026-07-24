@@ -13,6 +13,7 @@ body {
   align-items: center;
   padding: 12px 40px;
   border-bottom: 1px solid black;
+  background: white;
 }
 
 .logo-container {
@@ -50,57 +51,110 @@ body {
   text-decoration: underline;
 }
 
+/* ===========================
+   HOME HERO
+=========================== */
 
-/* HERO */
+.home-hero {
+  position: relative;
 
-.hero {
-  text-align: center;
-  padding: 110px 20px;
+  height: calc(100vh - 81px);
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  padding: 0 20px;
+
+  background-size: cover;
+  background-position: right bottom;
+  background-repeat: no-repeat;
+
+  overflow: hidden;
 }
+
+/*
+.home-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,.25);
+}
+*/
 
 .hero-box {
-  border: 1px solid black;
-  padding: 56px 40px;
+  position: relative;
+  z-index: 1;
+
   max-width: 720px;
-  margin: 0 auto;
+  padding: 56px 40px;
+
+  text-align: center;
+
+  background: rgba(255,255,255,.82);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+
+  border: 1px solid rgba(255,255,255,.4);
+
+  box-shadow: 0 20px 60px rgba(0,0,0,.25);
 }
 
-.hero h2 {
+.hero-box h2 {
   font-size: 44px;
   font-weight: 300;
   margin: 0;
   line-height: 1.15;
 }
 
-.hero p {
+.hero-box p {
   margin: 24px auto 32px;
   font-size: 18px;
   line-height: 1.6;
   max-width: 620px;
 }
 
+/* ===========================
+   NORMAL HERO (Other pages)
+=========================== */
+
+.hero {
+  text-align: center;
+  padding: 110px 20px;
+}
+
+.hero .hero-box {
+  margin: 0 auto;
+}
 
 /* BUTTONS */
 
 .button {
-  border: 1px solid black;
+  border: none;
   padding: 14px 28px;
-  background: transparent;
-  color: black;
+  background: black;
+  color: white;
   cursor: pointer;
   font-size: 15px;
-  transition: background 0.2s ease, color 0.2s ease;
+  transition: all .25s ease;
 }
 
 .button:hover {
-  background: black;
-  color: white;
+  background: white;
+  color: black;
 }
 
 .secondary-button {
   margin-left: 12px;
+  background: transparent;
+  border: 1px solid black;
+  color: black;
 }
 
+.secondary-button:hover {
+  background: black;
+  color: white;
+}
 
 /* SECTIONS */
 
@@ -124,12 +178,11 @@ body {
   line-height: 1.6;
 }
 
-
 /* GRID */
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(240px,1fr));
   gap: 24px;
   max-width: 1000px;
   margin: 0 auto;
@@ -159,15 +212,10 @@ body {
   font-size: 15px;
 }
 
-
 /* STEPS */
 
 .steps {
   counter-reset: step;
-}
-
-.step {
-  position: relative;
 }
 
 .step::before {
@@ -177,7 +225,6 @@ body {
   margin-bottom: 28px;
   font-size: 14px;
 }
-
 
 /* CERTIFICATE */
 
@@ -198,7 +245,6 @@ body {
   line-height: 1.6;
 }
 
-
 .certificate-preview {
   border: 1px dashed black;
   padding: 32px;
@@ -208,18 +254,14 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  overflow: hidden;
 }
-
 
 .certificate-image {
   width: 85%;
   max-width: 550px;
   height: auto;
-  display: block;
   object-fit: contain;
 }
-
 
 /* CTA */
 
@@ -232,7 +274,6 @@ body {
 .cta h3 {
   font-size: 32px;
   font-weight: 300;
-  margin: 0 0 16px;
 }
 
 .cta p {
@@ -240,7 +281,6 @@ body {
   margin: 0 auto 28px;
   line-height: 1.6;
 }
-
 
 /* FOOTER */
 
@@ -251,58 +291,56 @@ body {
   font-size: 14px;
 }
 
-
 /* MOBILE */
 
-@media (max-width: 700px) {
+@media (max-width:700px){
 
-  .header {
-    flex-direction: column;
-    gap: 18px;
-    padding: 24px 20px;
-  }
+.header{
+flex-direction:column;
+gap:18px;
+padding:24px 20px;
+}
 
-  .nav {
-    gap: 16px;
-    flex-wrap: wrap;
-    justify-content: center;
-  }
+.nav{
+gap:16px;
+flex-wrap:wrap;
+justify-content:center;
+}
 
+.home-hero{
+height:calc(100vh - 140px);
+padding:0 20px;
+background-position:right bottom;
+}
 
-  .hero {
-    padding: 70px 20px;
-  }
+.hero{
+padding:70px 20px;
+}
 
+.hero-box{
+padding:40px 24px;
+}
 
-  .hero-box {
-    padding: 40px 24px;
-  }
+.hero-box h2{
+font-size:34px;
+}
 
+.secondary-button{
+margin-left:0;
+margin-top:12px;
+}
 
-  .hero h2 {
-    font-size: 34px;
-  }
+.certificate{
+padding:32px 20px;
+}
 
+.certificate-preview{
+padding:20px;
+}
 
-  .secondary-button {
-    margin-left: 0;
-    margin-top: 12px;
-  }
-
-
-  .certificate {
-    padding: 32px 20px;
-  }
-
-
-  .certificate-preview {
-    padding: 20px;
-  }
-
-
-  .certificate-image {
-    width: 100%;
-    max-width: 100%;
-  }
+.certificate-image{
+width:100%;
+max-width:100%;
+}
 
 }
