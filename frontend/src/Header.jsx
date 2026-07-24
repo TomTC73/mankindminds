@@ -14,7 +14,7 @@ function Header() {
         <Link to="/process">Process</Link>
         <Link to="/certificates">Certificates</Link>
         <Link to="/apply" className="contact-link">
-          Contact
+          Apply
         </Link>
       </nav>
     </header>
