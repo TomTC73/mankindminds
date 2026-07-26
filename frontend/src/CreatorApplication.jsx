@@ -110,16 +110,30 @@ function CreatorApplication() {
             />
           </label>
 
-          {/* Simplification: Dropdown + Handle/URL Input */}
+          {/* Mobile-friendly flexible layout container */}
           <label>
             <span>
               Primary Social Media / Portfolio <span className="required">*</span>
             </span>
-            <div style={{ display: "flex", gap: "10px", marginTop: "5px" }}>
+            <div
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: "10px",
+                marginTop: "5px",
+                width: "100%",
+                boxSizing: "border-box",
+              }}
+            >
               <select
                 value={selectedPlatform}
                 onChange={(e) => setSelectedPlatform(e.target.value)}
-                style={{ padding: "8px", borderRadius: "4px" }}
+                style={{
+                  padding: "8px",
+                  borderRadius: "4px",
+                  minWidth: "120px",
+                  boxSizing: "border-box",
+                }}
               >
                 <option value="Instagram">Instagram</option>
                 <option value="TikTok">TikTok</option>
@@ -134,23 +148,15 @@ function CreatorApplication() {
                 placeholder={getPlaceholder()}
                 onChange={(e) => setPlatformHandle(e.target.value)}
                 required
-                style={{ flex: 1 }}
+                style={{
+                  flex: "1 1 200px",
+                  minWidth: "0",
+                  maxWidth: "100%",
+                  boxSizing: "border-box",
+                }}
               />
             </div>
           </label>
-
-          {/* <label>
-            <span>
-              Tell Us About Your Work{" "}
-              <span className="optional">(Optional)</span>
-            </span>
-
-            <textarea
-              name="about_work"
-              placeholder="Tell us about what you create, your process, and the type of work you submit."
-              rows="6"
-            ></textarea>
-          </label> */}
 
           <label className="checkbox-label">
             <input
