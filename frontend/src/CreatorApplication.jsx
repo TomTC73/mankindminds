@@ -4,22 +4,28 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 
 function CreatorApplication() {
-  const [socials, setSocials] = useState({
-    website: "",
-    instagram: "",
-    tiktok: "",
-    youtube: "",
-    other_social: "",
-  });
+  const [selectedPlatform, setSelectedPlatform] = useState("Instagram");
+  const [platformHandle, setPlatformHandle] = useState("");
 
   const handleSubmit = (e) => {
-    const hasSocial = Object.values(socials).some(
-      (social) => social.trim() !== ""
-    );
-
-    if (!hasSocial) {
+    if (!platformHandle.trim()) {
       e.preventDefault();
-      alert("Please provide at least one social media or portfolio link.");
+      alert("Please provide a social media or portfolio link/username.");
+    }
+  };
+
+  // Helper function to return relevant placeholder text based on selected option
+  const getPlaceholder = () => {
+    switch (selectedPlatform) {
+      case "Instagram":
+      case "TikTok":
+        return "@yourusername";
+      case "YouTube":
+        return "https://youtube.com/@yourusername";
+      case "Website":
+        return "https://yourwebsite.com";
+      default:
+        return "https://yourportfolio.com";
     }
   };
 
@@ -52,6 +58,18 @@ function CreatorApplication() {
             type="hidden"
             name="from_name"
             value="Mankind Minds Website"
+          />
+
+          {/* Hidden inputs to pass selected platform & handle to Web3Forms */}
+          <input
+            type="hidden"
+            name="social_platform"
+            value={selectedPlatform}
+          />
+          <input
+            type="hidden"
+            name="social_handle"
+            value={platformHandle}
           />
 
           <label>
@@ -92,89 +110,36 @@ function CreatorApplication() {
             />
           </label>
 
+          {/* Simplification: Dropdown + Handle/URL Input */}
           <label>
             <span>
-              Social Media / Portfolio Links{" "}
-              <span className="required">*</span>
+              Primary Social Media / Portfolio <span className="required">*</span>
             </span>
+            <div style={{ display: "flex", gap: "10px", marginTop: "5px" }}>
+              <select
+                value={selectedPlatform}
+                onChange={(e) => setSelectedPlatform(e.target.value)}
+                style={{ padding: "8px", borderRadius: "4px" }}
+              >
+                <option value="Instagram">Instagram</option>
+                <option value="TikTok">TikTok</option>
+                <option value="YouTube">YouTube</option>
+                <option value="Website">Website</option>
+                <option value="Other">Other Portfolio</option>
+              </select>
+
+              <input
+                type="text"
+                value={platformHandle}
+                placeholder={getPlaceholder()}
+                onChange={(e) => setPlatformHandle(e.target.value)}
+                required
+                style={{ flex: 1 }}
+              />
+            </div>
           </label>
 
-          <label>
-            Website
-            <input
-              type="url"
-              name="website"
-              placeholder="https://yourwebsite.com"
-              onChange={(e) =>
-                setSocials({
-                  ...socials,
-                  website: e.target.value,
-                })
-              }
-            />
-          </label>
-
-          <label>
-            Instagram username
-            <input
-              type="text"
-              name="instagram"
-              placeholder="yourusername"
-              onChange={(e) =>
-                setSocials({
-                  ...socials,
-                  instagram: e.target.value,
-                })
-              }
-            />
-          </label>
-
-          <label>
-            TikTok username
-            <input
-              type="text"
-              name="tiktok"
-              placeholder="yourusername"
-              onChange={(e) =>
-                setSocials({
-                  ...socials,
-                  tiktok: e.target.value,
-                })
-              }
-            />
-          </label>
-
-          <label>
-            YouTube
-            <input
-              type="url"
-              name="youtube"
-              placeholder="https://youtube.com/@yourusername"
-              onChange={(e) =>
-                setSocials({
-                  ...socials,
-                  youtube: e.target.value,
-                })
-              }
-            />
-          </label>
-
-          <label>
-            Other Portfolio Link
-            <input
-              type="url"
-              name="other_social"
-              placeholder="https://yourportfolio.com"
-              onChange={(e) =>
-                setSocials({
-                  ...socials,
-                  other_social: e.target.value,
-                })
-              }
-            />
-          </label>
-
-          <label>
+          {/* <label>
             <span>
               Tell Us About Your Work{" "}
               <span className="optional">(Optional)</span>
@@ -185,8 +150,7 @@ function CreatorApplication() {
               placeholder="Tell us about what you create, your process, and the type of work you submit."
               rows="6"
             ></textarea>
-          </label>
-
+          </label> */}
 
           <label className="checkbox-label">
             <input
@@ -198,13 +162,12 @@ function CreatorApplication() {
 
             <span>
               I agree to the{" "}
-              <a href="/terms" target="_blank">
+              <a href="/terms" target="_blank" rel="noreferrer">
                 Terms & Conditions
               </a>
               . <span className="required">*</span>
             </span>
           </label>
-
 
           <label className="checkbox-label">
             <input
