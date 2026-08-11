@@ -363,3 +363,13 @@ a {
   border: none !important;
 }
 }
+
+.leaflet-container {
+  font-family: inherit;
+  z-index: 1;
+}
+
+.custom-leaflet-marker {
+  background: transparent !important;
+  border: none !important;
+}
