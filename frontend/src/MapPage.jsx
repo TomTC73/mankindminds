@@ -7,7 +7,6 @@ import Header from "./Header";
 
 const logoIcon = "/favicon.png";
 
-// Map center and bounds (London)
 const LONDON_CENTER = [51.5246, -0.0718];
 
 const LONDON_BOUNDS = [
@@ -271,7 +270,7 @@ function MapPage() {
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
             />
 
-            {/* Studio Markers */}
+            
             {CREATOR_LOCATIONS.map((loc) => (
               <Marker
                 key={loc.id}
