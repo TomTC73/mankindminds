@@ -6,6 +6,7 @@ import {
   useLocation,
 } from "react-router-dom";
 import Home from "./Home";
+import MapPage from "./MapPage";
 import About from "./About";
 import Process from "./Process";
 import VerifiedCreators from "./VerifiedCreators";
@@ -30,6 +31,7 @@ function App() {
       <ScrollToTop />
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/map" element={<MapPage />} />
         <Route path="/about" element={<About />} />
         <Route path="/process" element={<Process />} />
         <Route path="/certificates" element={<VerifiedCreators />} />
