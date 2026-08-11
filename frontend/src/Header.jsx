@@ -13,6 +13,7 @@ function Header() {
         <Link to="/about">About</Link>
         <Link to="/process">Process</Link>
         <Link to="/certificates">Certificates</Link>
+        <Link to="/map">Map</Link>
         <Link to="/apply" className="contact-link">
           Apply
         </Link>

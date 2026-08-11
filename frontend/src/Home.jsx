@@ -1,9 +1,34 @@
+// 1. ADDED THIS: Imported useEffect and useRef hooks from React
+import { useEffect, useRef } from "react";
 import "./Home.css";
 import { Link } from "react-router-dom";
 import Header from "./Header";
 import backgroundImage from "./assets/BackgroundHome.png";
 
 function Home() {
+  // 2. ADDED THIS: Created a ref to hold the map HTML element
+  const mapRef = useRef(null);
+
+  useEffect(() => {
+    // Set map center (e.g., London coordinates)
+    const location = { lat: 51.5074, lng: -0.1278 };
+
+    // Check if Google Maps script is available
+    if (window.google && mapRef.current) {
+      const map = new window.google.maps.Map(mapRef.current, {
+        center: location,
+        zoom: 12,
+      });
+
+      // Add a marker to the map
+      new window.google.maps.Marker({
+        position: location,
+        map: map,
+        title: "Verified Creator Hub",
+      });
+    }
+  }, []);
+
   return (
     <div>
       <Header />
@@ -32,6 +57,12 @@ function Home() {
             </button>
           </Link>
         </div>
+      </section>
+
+      {/* 3. ADDED THIS: The section containing your map div */}
+      <section className="map-section">
+        <h3>Find Certified Creators Near You</h3>
+        <div ref={mapRef} className="map-container"></div>
       </section>
     </div>
   );
