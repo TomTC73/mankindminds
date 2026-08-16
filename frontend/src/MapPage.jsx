@@ -558,7 +558,7 @@ function MapPage() {
                                 {artist}
                               </span>
                               <a
-                                href={`http://localhost:5173/apply?ref=${loc.refCode}`}
+                                href={`https://www.mankindminds.com/apply?ref=${loc.refCode}`}
                                 style={{
                                   fontSize: "12px",
                                   color: "#2563eb",
