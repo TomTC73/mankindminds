@@ -7,11 +7,19 @@ import Header from "./Header";
 
 const logoIcon = "/favicon.png";
 
+// Center Coordinates
 const LONDON_CENTER = [51.5246, -0.0718];
+const NORWICH_CENTER = [52.6309, 1.2974];
 
+// Map Bounds
 const LONDON_BOUNDS = [
   [51.25, -0.55], 
   [51.7, 0.3],    
+];
+
+const NORWICH_BOUNDS = [
+  [52.45, 1.05],
+  [52.80, 1.55],
 ];
 
 const generateRefCode = () => {
@@ -23,8 +31,8 @@ const generateRefCode = () => {
   return result;
 };
 
-const CREATOR_LOCATIONS = [
-  // --- Original Studios ---
+// --- LONDON LOCATIONS ---
+const LONDON_LOCATIONS = [
   {
     id: 1,
     name: "Cloak & Dagger Tattoo London",
@@ -165,8 +173,6 @@ const CREATOR_LOCATIONS = [
     lat: 51.5252,
     lng: -0.0847,
   },
-
-  // --- Newly Mapped Studios ---
   {
     id: 11,
     name: "Ink Me Tattoo Studio",
@@ -365,6 +371,80 @@ const CREATOR_LOCATIONS = [
   },
 ];
 
+// --- NORWICH LOCATIONS ---
+const NORWICH_LOCATIONS = [
+  {
+    id: 101,
+    name: "Norwich City Tattoo Studio",
+    hubTitle: "London Street Studio",
+    postcode: "NR2 1LD",
+    refCode: generateRefCode(),
+    image: "/Tatooshops/image.png",
+    description: "Premier custom tattooing studio located in historic central Norwich.",
+    starRating: 4.9,
+    aiPercentage: "Unverified",
+    artists: ["Artist 1", "Artist 2", "Artist 3", "Artist 4"],
+    lat: 52.6288,
+    lng: 1.2941,
+  },
+  {
+    id: 102,
+    name: "Elm Hill Ink Collective",
+    hubTitle: "Elm Hill Studio",
+    postcode: "NR3 1HG",
+    refCode: generateRefCode(),
+    image: "/Tatooshops/image copy.png",
+    description: "Bespoke fine line and traditional art in a historic cobblestone setting.",
+    starRating: 4.8,
+    aiPercentage: "Unverified",
+    artists: ["Artist 1", "Artist 2", "Artist 3", "Artist 4"],
+    lat: 52.6315,
+    lng: 1.2982,
+  },
+  {
+    id: 103,
+    name: "Lanes Tattoo Parlour",
+    hubTitle: "Norwich Lanes Studio",
+    postcode: "NR2 1AT",
+    refCode: generateRefCode(),
+    image: "/Tatooshops/image copy 2.png",
+    description: "Contemporary flash, illustrative art, and custom blackwork.",
+    starRating: 4.7,
+    aiPercentage: "Unverified",
+    artists: ["Artist 1", "Artist 2", "Artist 3", "Artist 4"],
+    lat: 52.6295,
+    lng: 1.2915,
+  },
+  {
+    id: 104,
+    name: "Castle Hill Tattoos",
+    hubTitle: "Castle Meadow Studio",
+    postcode: "NR1 3BY",
+    refCode: generateRefCode(),
+    image: "/Tatooshops/image copy 3.png",
+    description: "Bold traditional and realism tattooing next to historic Norwich Castle.",
+    starRating: 4.9,
+    aiPercentage: "Unverified",
+    artists: ["Artist 1", "Artist 2", "Artist 3", "Artist 4"],
+    lat: 52.6279,
+    lng: 1.2965,
+  },
+  {
+    id: 105,
+    name: "Riverside Ink Studio",
+    hubTitle: "Riverside Studio",
+    postcode: "NR1 1EE",
+    refCode: generateRefCode(),
+    image: "/Tatooshops/image copy 4.png",
+    description: "Modern boutique studio specializing in color, realism, and fine line work.",
+    starRating: 4.8,
+    aiPercentage: "Unverified",
+    artists: ["Artist 1", "Artist 2", "Artist 3", "Artist 4"],
+    lat: 52.6254,
+    lng: 1.3051,
+  },
+];
+
 const createCustomPinIcon = () => {
   const iconHtml = `
     <div style="
@@ -404,12 +484,17 @@ function MapPage() {
   const mapRef = useRef(null);
   const markerRefs = useRef({});
 
+  // Active City State
+  const [activeCity, setActiveCity] = useState("London");
+
   // Search State
   const [searchTerm, setSearchTerm] = useState("");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
-  // Filter ONLY by Studio Name and Ref Code
-  const filteredShops = CREATOR_LOCATIONS.filter((shop) => {
+  // Active Dataset
+  const activeLocations = activeCity === "London" ? LONDON_LOCATIONS : NORWICH_LOCATIONS;
+
+  const filteredShops = activeLocations.filter((shop) => {
     const query = searchTerm.toLowerCase().trim();
     if (!query) return false;
     return (
@@ -417,6 +502,17 @@ function MapPage() {
       shop.refCode.toLowerCase().includes(query)
     );
   });
+
+  const handleCityChange = (city) => {
+    setActiveCity(city);
+    setSearchTerm("");
+    setIsDropdownOpen(false);
+
+    if (mapRef.current) {
+      const targetCenter = city === "London" ? LONDON_CENTER : NORWICH_CENTER;
+      mapRef.current.flyTo(targetCenter, 13, { duration: 1.2 });
+    }
+  };
 
   const handleSelectShop = (shop) => {
     if (mapRef.current) {
@@ -453,7 +549,7 @@ function MapPage() {
           Find Certified Studios Near You
         </h2>
 
-        
+        {/* Map Box */}
         <div
           style={{
             position: "relative",
@@ -468,11 +564,60 @@ function MapPage() {
             marginBottom: "50px",
           }}
         >
-      
+          {/* Top-Left City Toggle Bar inside Map */}
+          <div
+            style={{
+              position: "absolute",
+              top: "14px",
+              left: "14px",
+              zIndex: 1000,
+              display: "inline-flex",
+              backgroundColor: "#ffffff",
+              padding: "4px",
+              borderRadius: "8px",
+              boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+              border: "1px solid #cbd5e1",
+            }}
+          >
+            <button
+              onClick={() => handleCityChange("London")}
+              style={{
+                padding: "8px 16px",
+                fontSize: "13px",
+                fontWeight: "600",
+                borderRadius: "6px",
+                border: "none",
+                cursor: "pointer",
+                backgroundColor: activeCity === "London" ? "#0f172a" : "transparent",
+                color: activeCity === "London" ? "#ffffff" : "#475569",
+                transition: "all 0.2s ease",
+              }}
+            >
+              London
+            </button>
+            <button
+              onClick={() => handleCityChange("Norwich")}
+              style={{
+                padding: "8px 16px",
+                fontSize: "13px",
+                fontWeight: "600",
+                borderRadius: "6px",
+                border: "none",
+                cursor: "pointer",
+                backgroundColor: activeCity === "Norwich" ? "#0f172a" : "transparent",
+                color: activeCity === "Norwich" ? "#ffffff" : "#475569",
+                transition: "all 0.2s ease",
+              }}
+            >
+              Norwich
+            </button>
+          </div>
+
+          {/* Top-Right Search Bar inside Map */}
           <div style={{ position: "absolute", top: "14px", right: "14px", zIndex: 1000, width: "280px" }}>
             <input
               type="text"
-              placeholder="Search studio or ref code..."
+              placeholder={`Search ${activeCity} studio or ref...`}
               value={searchTerm}
               onChange={(e) => {
                 setSearchTerm(e.target.value);
@@ -492,7 +637,6 @@ function MapPage() {
               }}
             />
 
-           
             {isDropdownOpen && searchTerm.trim().length > 0 && (
               <div
                 style={{
@@ -520,7 +664,7 @@ function MapPage() {
                         borderBottom: "1px solid #f1f5f9",
                         transition: "background-color 0.15s ease",
                         display: "flex",
-                        justify: "space-between",
+                        justifyContent: "space-between",
                         alignItems: "center",
                       }}
                       onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#f8fafc")}
@@ -548,7 +692,7 @@ function MapPage() {
             center={LONDON_CENTER}
             zoom={13}
             minZoom={10}
-            maxBounds={LONDON_BOUNDS}
+            maxBounds={activeCity === "London" ? LONDON_BOUNDS : NORWICH_BOUNDS}
             maxBoundsViscosity={1.0}
             style={{ width: "100%", height: "100%" }}
             zoomControl={true}
@@ -558,7 +702,8 @@ function MapPage() {
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
             />
 
-            {CREATOR_LOCATIONS.map((loc) => (
+            {/* Markers always render regardless of zoom level */}
+            {activeLocations.map((loc) => (
               <Marker
                 key={loc.id}
                 position={[loc.lat, loc.lng]}
@@ -594,7 +739,7 @@ function MapPage() {
                       <div
                         style={{
                           display: "flex",
-                          justify: "space-between",
+                          justifyContent: "space-between",
                           alignItems: "center",
                           borderTop: "1px solid #e2e8f0",
                           paddingTop: "8px",
@@ -611,7 +756,6 @@ function MapPage() {
                         </span>
                       </div>
 
-                   
                       <div style={{ borderTop: "1px solid #e2e8f0", paddingTop: "8px" }}>
                         <p style={{ margin: "0 0 8px 0", fontSize: "11px", fontWeight: "700", color: "#64748b", letterSpacing: "0.5px" }}>
                           VERIFIED ARTISTS
@@ -671,7 +815,7 @@ function MapPage() {
           </MapContainer>
         </div>
 
-      
+        {/* Directory List */}
         <div style={{ width: "100%", maxWidth: "1000px" }}>
           <h3
             style={{
@@ -683,7 +827,7 @@ function MapPage() {
               paddingBottom: "8px",
             }}
           >
-            Studio Directory
+            Studio Directory ({activeCity})
           </h3>
 
           <div
@@ -693,7 +837,7 @@ function MapPage() {
               gap: "20px",
             }}
           >
-            {CREATOR_LOCATIONS.map((shop) => (
+            {activeLocations.map((shop) => (
               <div
                 key={shop.id}
                 style={{
