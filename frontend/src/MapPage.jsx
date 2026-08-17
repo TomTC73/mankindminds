@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -22,7 +22,6 @@ const generateRefCode = () => {
   }
   return result;
 };
-
 
 const CREATOR_LOCATIONS = [
   // --- Original Studios ---
@@ -366,7 +365,6 @@ const CREATOR_LOCATIONS = [
   },
 ];
 
-
 const createCustomPinIcon = () => {
   const iconHtml = `
     <div style="
@@ -406,7 +404,20 @@ function MapPage() {
   const mapRef = useRef(null);
   const markerRefs = useRef({});
 
- 
+  // Search State
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+  // Filter ONLY by Studio Name and Ref Code
+  const filteredShops = CREATOR_LOCATIONS.filter((shop) => {
+    const query = searchTerm.toLowerCase().trim();
+    if (!query) return false;
+    return (
+      shop.name.toLowerCase().includes(query) ||
+      shop.refCode.toLowerCase().includes(query)
+    );
+  });
+
   const handleSelectShop = (shop) => {
     if (mapRef.current) {
       mapRef.current.flyTo([shop.lat, shop.lng], 15, { duration: 1.2 });
@@ -415,6 +426,8 @@ function MapPage() {
         marker.openPopup();
       }
     }
+    setSearchTerm("");
+    setIsDropdownOpen(false);
   };
 
   return (
@@ -430,7 +443,7 @@ function MapPage() {
       >
         <h2
           style={{
-            marginBottom: "24px",
+            margin: "0 0 24px 0",
             fontWeight: "600",
             fontSize: "28px",
             letterSpacing: "-0.5px",
@@ -440,9 +453,10 @@ function MapPage() {
           Find Certified Studios Near You
         </h2>
 
-        {/* Interactive Map Box */}
+        
         <div
           style={{
+            position: "relative",
             width: "100%",
             maxWidth: "1000px",
             height: "550px",
@@ -454,6 +468,81 @@ function MapPage() {
             marginBottom: "50px",
           }}
         >
+      
+          <div style={{ position: "absolute", top: "14px", right: "14px", zIndex: 1000, width: "280px" }}>
+            <input
+              type="text"
+              placeholder="Search studio or ref code..."
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setIsDropdownOpen(true);
+              }}
+              onFocus={() => setIsDropdownOpen(true)}
+              style={{
+                width: "100%",
+                padding: "10px 14px",
+                fontSize: "13px",
+                borderRadius: "8px",
+                border: "1px solid #cbd5e1",
+                outline: "none",
+                backgroundColor: "#ffffff",
+                boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                boxSizing: "border-box",
+              }}
+            />
+
+           
+            {isDropdownOpen && searchTerm.trim().length > 0 && (
+              <div
+                style={{
+                  position: "absolute",
+                  top: "100%",
+                  left: 0,
+                  right: 0,
+                  marginTop: "6px",
+                  backgroundColor: "#ffffff",
+                  border: "1px solid #e2e8f0",
+                  borderRadius: "8px",
+                  boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.15)",
+                  maxHeight: "240px",
+                  overflowY: "auto",
+                }}
+              >
+                {filteredShops.length > 0 ? (
+                  filteredShops.map((shop) => (
+                    <div
+                      key={shop.id}
+                      onClick={() => handleSelectShop(shop)}
+                      style={{
+                        padding: "10px 12px",
+                        cursor: "pointer",
+                        borderBottom: "1px solid #f1f5f9",
+                        transition: "background-color 0.15s ease",
+                        display: "flex",
+                        justify: "space-between",
+                        alignItems: "center",
+                      }}
+                      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#f8fafc")}
+                      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#ffffff")}
+                    >
+                      <span style={{ fontSize: "13px", fontWeight: "600", color: "#0f172a" }}>
+                        {shop.name}
+                      </span>
+                      <span style={{ fontSize: "11px", color: "#0284c7", fontWeight: "600" }}>
+                        Ref: {shop.refCode}
+                      </span>
+                    </div>
+                  ))
+                ) : (
+                  <div style={{ padding: "12px", fontSize: "12px", color: "#94a3b8", textAlign: "center" }}>
+                    No studios found
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
           <MapContainer
             ref={mapRef}
             center={LONDON_CENTER}
@@ -469,7 +558,6 @@ function MapPage() {
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
             />
 
-            
             {CREATOR_LOCATIONS.map((loc) => (
               <Marker
                 key={loc.id}
@@ -503,7 +591,6 @@ function MapPage() {
                         {loc.description}
                       </p>
 
-                      
                       <div
                         style={{
                           display: "flex",
@@ -524,7 +611,7 @@ function MapPage() {
                         </span>
                       </div>
 
-                      {/* Verified Artists Section */}
+                   
                       <div style={{ borderTop: "1px solid #e2e8f0", paddingTop: "8px" }}>
                         <p style={{ margin: "0 0 8px 0", fontSize: "11px", fontWeight: "700", color: "#64748b", letterSpacing: "0.5px" }}>
                           VERIFIED ARTISTS
@@ -584,7 +671,7 @@ function MapPage() {
           </MapContainer>
         </div>
 
-        {/* Shop Directory Section Below Map */}
+      
         <div style={{ width: "100%", maxWidth: "1000px" }}>
           <h3
             style={{
@@ -619,7 +706,6 @@ function MapPage() {
                   flexDirection: "column",
                 }}
               >
-                
                 <div style={{ height: "150px", overflow: "hidden", position: "relative" }}>
                   <img
                     src={shop.image}
@@ -628,7 +714,6 @@ function MapPage() {
                   />
                 </div>
 
-                
                 <div style={{ padding: "14px", display: "flex", flexDirection: "column", flexGrow: 1 }}>
                   <h4 style={{ margin: "0 0 4px 0", fontSize: "16px", fontWeight: "600", color: "#0f172a" }}>
                     {shop.name}
