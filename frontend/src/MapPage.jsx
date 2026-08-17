@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -510,6 +510,10 @@ function MapPage() {
 
     if (mapRef.current) {
       const targetCenter = city === "London" ? LONDON_CENTER : NORWICH_CENTER;
+      const targetBounds = city === "London" ? LONDON_BOUNDS : NORWICH_BOUNDS;
+
+      // Update bounds first so Leaflet allows panning to the new city
+      mapRef.current.setMaxBounds(targetBounds);
       mapRef.current.flyTo(targetCenter, 13, { duration: 1.2 });
     }
   };
@@ -692,7 +696,7 @@ function MapPage() {
             center={LONDON_CENTER}
             zoom={13}
             minZoom={10}
-            maxBounds={activeCity === "London" ? LONDON_BOUNDS : NORWICH_BOUNDS}
+            maxBounds={LONDON_BOUNDS}
             maxBoundsViscosity={1.0}
             style={{ width: "100%", height: "100%" }}
             zoomControl={true}
@@ -702,7 +706,7 @@ function MapPage() {
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
             />
 
-            {/* Markers always render regardless of zoom level */}
+            {/* Markers always remain visible */}
             {activeLocations.map((loc) => (
               <Marker
                 key={loc.id}
