@@ -453,7 +453,7 @@ function MapPage() {
           Find Certified Studios Near You
         </h2>
 
-        {/* Interactive Map Box with Search Overlay */}
+        
         <div
           style={{
             position: "relative",
@@ -468,7 +468,7 @@ function MapPage() {
             marginBottom: "50px",
           }}
         >
-          {/* Top Right Corner Search Bar Overlay */}
+      
           <div style={{ position: "absolute", top: "14px", right: "14px", zIndex: 1000, width: "280px" }}>
             <input
               type="text"
@@ -492,7 +492,7 @@ function MapPage() {
               }}
             />
 
-            {/* Dropdown Results List */}
+           
             {isDropdownOpen && searchTerm.trim().length > 0 && (
               <div
                 style={{
@@ -611,7 +611,7 @@ function MapPage() {
                         </span>
                       </div>
 
-                      {/* Verified Artists Section */}
+                   
                       <div style={{ borderTop: "1px solid #e2e8f0", paddingTop: "8px" }}>
                         <p style={{ margin: "0 0 8px 0", fontSize: "11px", fontWeight: "700", color: "#64748b", letterSpacing: "0.5px" }}>
                           VERIFIED ARTISTS
@@ -671,7 +671,7 @@ function MapPage() {
           </MapContainer>
         </div>
 
-        {/* Shop Directory Section Below Map */}
+      
         <div style={{ width: "100%", maxWidth: "1000px" }}>
           <h3
             style={{
