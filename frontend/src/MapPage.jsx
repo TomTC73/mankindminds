@@ -699,17 +699,10 @@ export default function MapPage() {
   const mapRef = useRef(null);
   const containerRef = useRef(null);
   const markerRefs = useRef({});
-
-  // Active City State
   const [activeCity, setActiveCity] = useState("London");
-
-  // Search State
   const [searchTerm, setSearchTerm] = useState("");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-
-  // Active Dataset
   const activeLocations = activeCity === "London" ? LONDON_LOCATIONS : NORWICH_LOCATIONS;
-
   const filteredShops = activeLocations.filter((shop) => {
     const query = searchTerm.toLowerCase().trim();
     if (!query) return false;
@@ -782,7 +775,6 @@ export default function MapPage() {
             marginBottom: "50px",
           }}
         >
-          {/* Top-Left City Toggle Bar */}
           <div
             style={{
               position: "absolute",
