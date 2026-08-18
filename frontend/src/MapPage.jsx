@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from "react";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
@@ -7,11 +7,10 @@ import Header from "./Header";
 
 const logoIcon = "/favicon.png";
 
-// Center Coordinates
+
 const LONDON_CENTER = [51.5246, -0.0718];
 const NORWICH_CENTER = [52.6309, 1.2974];
 
-// Map Bounds
 const LONDON_BOUNDS = [
   [51.25, -0.55], 
   [51.7, 0.3],    
@@ -375,73 +374,269 @@ const LONDON_LOCATIONS = [
 const NORWICH_LOCATIONS = [
   {
     id: 101,
-    name: "Norwich City Tattoo Studio",
-    hubTitle: "London Street Studio",
-    postcode: "NR2 1LD",
+    name: "Golden Canary Tattoo",
+    hubTitle: "St Augustines Street Studio",
+    postcode: "NR3 3BY",
     refCode: generateRefCode(),
-    image: "/Tatooshops/image.png",
-    description: "Premier custom tattooing studio located in historic central Norwich.",
-    starRating: 4.9,
+    image: "/Tatooshops/Golden-Canary-Tattoo.png",
+    description: "The tattoo exceeded all my expectations and the detail is incredible.",
+    starRating: 5.0,
     aiPercentage: "Unverified",
     artists: ["Artist 1", "Artist 2", "Artist 3", "Artist 4"],
-    lat: 52.6288,
-    lng: 1.2941,
+    lat: 52.6368,
+    lng: 1.2917,
   },
   {
     id: 102,
-    name: "Elm Hill Ink Collective",
-    hubTitle: "Elm Hill Studio",
-    postcode: "NR3 1HG",
+    name: "Inkaddiction",
+    hubTitle: "Wensum Street Studio",
+    postcode: "NR3 1LA",
     refCode: generateRefCode(),
-    image: "/Tatooshops/image copy.png",
-    description: "Bespoke fine line and traditional art in a historic cobblestone setting.",
-    starRating: 4.8,
-    aiPercentage: "Unverified",
-    artists: ["Artist 1", "Artist 2", "Artist 3", "Artist 4"],
-    lat: 52.6315,
-    lng: 1.2982,
-  },
-  {
-    id: 103,
-    name: "Lanes Tattoo Parlour",
-    hubTitle: "Norwich Lanes Studio",
-    postcode: "NR2 1AT",
-    refCode: generateRefCode(),
-    image: "/Tatooshops/image copy 2.png",
-    description: "Contemporary flash, illustrative art, and custom blackwork.",
-    starRating: 4.7,
-    aiPercentage: "Unverified",
-    artists: ["Artist 1", "Artist 2", "Artist 3", "Artist 4"],
-    lat: 52.6295,
-    lng: 1.2915,
-  },
-  {
-    id: 104,
-    name: "Castle Hill Tattoos",
-    hubTitle: "Castle Meadow Studio",
-    postcode: "NR1 3BY",
-    refCode: generateRefCode(),
-    image: "/Tatooshops/image copy 3.png",
-    description: "Bold traditional and realism tattooing next to historic Norwich Castle.",
+    image: "/Tatooshops/Wensum Street Studio.png",
+    description: "High quality tattooing, relaxed friendly staff, great studio.",
     starRating: 4.9,
     aiPercentage: "Unverified",
     artists: ["Artist 1", "Artist 2", "Artist 3", "Artist 4"],
-    lat: 52.6279,
-    lng: 1.2965,
+    lat: 52.6318,
+    lng: 1.2981,
+  },
+  {
+    id: 103,
+    name: "Hollow Bones Tattoo Studio",
+    hubTitle: "London Street Studio",
+    postcode: "NR2 1LA",
+    refCode: generateRefCode(),
+    image: "/Tatooshops/Hollow Bones.png",
+    description: "I saw Jaz for my back tattoo and was blown away with the results.",
+    starRating: 4.9,
+    aiPercentage: "Unverified",
+    artists: ["Artist 1", "Artist 2", "Artist 3", "Artist 4"],
+    lat: 52.6289,
+    lng: 1.2943,
+  },
+  {
+    id: 104,
+    name: "Factotum",
+    hubTitle: "St John Maddermarket Studio",
+    postcode: "NR2 1DN",
+    refCode: generateRefCode(),
+    image: "/Tatooshops/factotum.png",
+    description: "Staff were lovely and the tattoo was awesome would recommend x",
+    starRating: 4.9,
+    aiPercentage: "Unverified",
+    artists: ["Artist 1", "Artist 2", "Artist 3", "Artist 4"],
+    lat: 52.6297,
+    lng: 1.2932,
   },
   {
     id: 105,
-    name: "Riverside Ink Studio",
-    hubTitle: "Riverside Studio",
-    postcode: "NR1 1EE",
+    name: "True Love Tattoos - Norwich",
+    hubTitle: "St Gregorys Alley Studio",
+    postcode: "NR2 1ER",
     refCode: generateRefCode(),
-    image: "/Tatooshops/image copy 4.png",
-    description: "Modern boutique studio specializing in color, realism, and fine line work.",
+    image: "/Tatooshops/True Love Tattoos.jpg",
+    description: "AMAZING - beautiful, quick tattoo done to remember my late dad.",
+    starRating: 5.0,
+    aiPercentage: "Unverified",
+    artists: ["Artist 1", "Artist 2", "Artist 3", "Artist 4"],
+    lat: 52.6298,
+    lng: 1.2919,
+  },
+  {
+    id: 106,
+    name: "New Leaf Tattoo Norwich",
+    hubTitle: "Magdalen Street Studio",
+    postcode: "NR3 1JD",
+    refCode: generateRefCode(),
+    image: "/Tatooshops/New Leaf Tattoo.png",
+    description: "This was my first tattoo and Poppy instantly made me feel relaxed and safe.",
+    starRating: 5.0,
+    aiPercentage: "Unverified",
+    artists: ["Artist 1", "Artist 2", "Artist 3", "Artist 4"],
+    lat: 52.6352,
+    lng: 1.2971,
+  },
+  {
+    id: 107,
+    name: "Mother of Pearl Tattoo",
+    hubTitle: "Ber Street Studio",
+    postcode: "NR1 3EY",
+    refCode: generateRefCode(),
+    image: "/Tatooshops/Mother of Pearl Tattoo.png",
+    description: "Beyond thrilled with my tattoo, perfect design and placement.",
+    starRating: 5.0,
+    aiPercentage: "Unverified",
+    artists: ["Artist 1", "Artist 2", "Artist 3", "Artist 4"],
+    lat: 52.6241,
+    lng: 1.2979,
+  },
+  {
+    id: 108,
+    name: "Cold Iron Tattoo Company",
+    hubTitle: "Rose Lane Studio",
+    postcode: "NR1 1JY",
+    refCode: generateRefCode(),
+    image: "/Tatooshops/Cold Iron Tattoo Company.png",
+    description: "Amazing artists and very friendly staff",
+    starRating: 4.9,
+    aiPercentage: "Unverified",
+    artists: ["Artist 1", "Artist 2", "Artist 3", "Artist 4"],
+    lat: 52.6272,
+    lng: 1.2996,
+  },
+  {
+    id: 109,
+    name: "Dark Tattoo Company",
+    hubTitle: "City View Road Studio",
+    postcode: "NR2 4TN",
+    refCode: generateRefCode(),
+    image: "/Tatooshops/Dark Tattoo Company.jpg",
+    description: "Very friendly service, very relaxed and amazing tattoo.",
+    starRating: 5.0,
+    aiPercentage: "Unverified",
+    artists: ["Artist 1", "Artist 2", "Artist 3", "Artist 4"],
+    lat: 52.6415,
+    lng: 1.2842,
+  },
+  {
+    id: 110,
+    name: "Indigo",
+    hubTitle: "St Giles Street Studio",
+    postcode: "NR2 1JR",
+    refCode: generateRefCode(),
+    image: "/Tatooshops/Indigo.png",
+    description: "Really professional and welcoming looking to be tattooed here also 😊",
     starRating: 4.8,
     aiPercentage: "Unverified",
     artists: ["Artist 1", "Artist 2", "Artist 3", "Artist 4"],
-    lat: 52.6254,
-    lng: 1.3051,
+    lat: 52.6288,
+    lng: 1.2905,
+  },
+  {
+    id: 111,
+    name: "Rude Boy Studios",
+    hubTitle: "Orford Place Studio",
+    postcode: "NR1 3RU",
+    refCode: generateRefCode(),
+    image: "/Tatooshops/RudeBoyStudios.png",
+    description: "Fantastic service, including pre-tattoo advice and aftercare.",
+    starRating: 4.8,
+    aiPercentage: "Unverified",
+    artists: ["Artist 1", "Artist 2", "Artist 3", "Artist 4"],
+    lat: 52.6276,
+    lng: 1.2941,
+  },
+  {
+    id: 112,
+    name: "Wildflower Tattoo",
+    hubTitle: "Ber Street Studio",
+    postcode: "NR1 3EY",
+    refCode: generateRefCode(),
+    image: "/Tatooshops/WildflowerTatoo.png",
+    description: "Funky little shop to get too",
+    starRating: 4.9,
+    aiPercentage: "Unverified",
+    artists: ["Artist 1", "Artist 2", "Artist 3", "Artist 4"],
+    lat: 52.6243,
+    lng: 1.2977,
+  },
+  {
+    id: 113,
+    name: "Crow Temple Tattoo",
+    hubTitle: "Prince of Wales Road Studio",
+    postcode: "NR1 1DG",
+    refCode: generateRefCode(),
+    image: "/Tatooshops/CrowTempleTatoo.png",
+    description: "Highly recommended, great work, great artists, always a welcoming vibe.",
+    starRating: 5.0,
+    aiPercentage: "Unverified",
+    artists: ["Artist 1", "Artist 2", "Artist 3", "Artist 4"],
+    lat: 52.6279,
+    lng: 1.3025,
+  },
+  {
+    id: 114,
+    name: "Black Dagger Tattoo",
+    hubTitle: "Borrowdale Drive Studio",
+    postcode: "NR1 4NS",
+    refCode: generateRefCode(),
+    image: "/Tatooshops/BlackDaggerTatoo.png",
+    description: "A really welcoming tattoo studio with great artists and a friendly service.",
+    starRating: 4.9,
+    aiPercentage: "Unverified",
+    artists: ["Artist 1", "Artist 2", "Artist 3", "Artist 4"],
+    lat: 52.6382,
+    lng: 1.3251,
+  },
+  {
+    id: 115,
+    name: "Sith Tattoo & Piercing",
+    hubTitle: "Dereham Road Studio",
+    postcode: "NR2 4HX",
+    refCode: generateRefCode(),
+    image: "/Tatooshops/SithTatoo&Piercing.png",
+    description: "Clean friendly awesome decor and nice artist perfect place",
+    starRating: 4.9,
+    aiPercentage: "Unverified",
+    artists: ["Artist 1", "Artist 2", "Artist 3", "Artist 4"],
+    lat: 52.6312,
+    lng: 1.2825,
+  },
+  {
+    id: 116,
+    name: "Black Plague Tattoo",
+    hubTitle: "Pottergate Studio",
+    postcode: "NR2 1DX",
+    refCode: generateRefCode(),
+    image: "/Tatooshops/BlackPlagueTatoo.png",
+    description: "Been tattooed here on numerous occasions, always really clean and bright.",
+    starRating: 5.0,
+    aiPercentage: "Unverified",
+    artists: ["Artist 1", "Artist 2", "Artist 3", "Artist 4"],
+    lat: 52.6294,
+    lng: 1.2918,
+  },
+  {
+    id: 117,
+    name: "Cavalry Tattoo Studio",
+    hubTitle: "Bank Plain Studio",
+    postcode: "NR2 4SF",
+    refCode: generateRefCode(),
+    image: "/Tatooshops/CalvaryTatoo.png",
+    description: "Quick, lovely people (especially Josh), decent price",
+    starRating: 4.8,
+    aiPercentage: "Unverified",
+    artists: ["Artist 1", "Artist 2", "Artist 3", "Artist 4"],
+    lat: 52.6283,
+    lng: 1.2972,
+  },
+  {
+    id: 118,
+    name: "Enter The Void Tattoos",
+    hubTitle: "Orford Street Studio",
+    postcode: "NR1 3BN",
+    refCode: generateRefCode(),
+    image: "/Tatooshops/EntertheVoid.png",
+    description: "Awesome new design created and 'installed' by the artist that is Gee.",
+    starRating: 4.7,
+    aiPercentage: "Unverified",
+    artists: ["Artist 1", "Artist 2", "Artist 3", "Artist 4"],
+    lat: 52.6272,
+    lng: 1.2938,
+  },
+  {
+    id: 119,
+    name: "Lemon Head Tattoo",
+    hubTitle: "King Street Studio",
+    postcode: "NR1 1QH",
+    refCode: generateRefCode(),
+    image: "/Tatooshops/LemonHeadTatoo.png",
+    description: "Amazing tattoo space with a quirky interior.",
+    starRating: 5.0,
+    aiPercentage: "Unverified",
+    artists: ["Artist 1", "Artist 2", "Artist 3", "Artist 4"],
+    lat: 52.6238,
+    lng: 1.3005,
   },
 ];
 
@@ -479,9 +674,30 @@ const createCustomPinIcon = () => {
   });
 };
 
-function MapPage() {
+function MapController({ activeCity }) {
+  const map = useMap();
+
+  useEffect(() => {
+    const targetCenter = activeCity === "London" ? LONDON_CENTER : NORWICH_CENTER;
+    const targetBounds = activeCity === "London" ? LONDON_BOUNDS : NORWICH_BOUNDS;
+
+    map.setMaxBounds(null);
+    map.flyTo(targetCenter, 13, { duration: 1.2 });
+
+    const timer = setTimeout(() => {
+      map.setMaxBounds(targetBounds);
+    }, 1200);
+
+    return () => clearTimeout(timer);
+  }, [activeCity, map]);
+
+  return null;
+}
+
+export default function MapPage() {
   const customIcon = createCustomPinIcon();
   const mapRef = useRef(null);
+  const containerRef = useRef(null);
   const markerRefs = useRef({});
 
   // Active City State
@@ -507,18 +723,12 @@ function MapPage() {
     setActiveCity(city);
     setSearchTerm("");
     setIsDropdownOpen(false);
-
-    if (mapRef.current) {
-      const targetCenter = city === "London" ? LONDON_CENTER : NORWICH_CENTER;
-      const targetBounds = city === "London" ? LONDON_BOUNDS : NORWICH_BOUNDS;
-
-      // Update bounds first so Leaflet allows panning to the new city
-      mapRef.current.setMaxBounds(targetBounds);
-      mapRef.current.flyTo(targetCenter, 13, { duration: 1.2 });
-    }
   };
 
   const handleSelectShop = (shop) => {
+    if (containerRef.current) {
+      containerRef.current.scrollIntoView({ behavior: "smooth" });
+    }
     if (mapRef.current) {
       mapRef.current.flyTo([shop.lat, shop.lng], 15, { duration: 1.2 });
       const marker = markerRefs.current[shop.id];
@@ -529,6 +739,9 @@ function MapPage() {
     setSearchTerm("");
     setIsDropdownOpen(false);
   };
+    const handleVerifyArtist = (artistName, shopName) => {
+      window.open("https://www.mankindminds.com/apply", "_blank", "noopener,noreferrer");
+    };
 
   return (
     <div style={{ fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif", backgroundColor: "#ffffff", minHeight: "100vh" }}>
@@ -553,8 +766,9 @@ function MapPage() {
           Find Certified Studios Near You
         </h2>
 
-        {/* Map Box */}
+        {/* Map Container */}
         <div
+          ref={containerRef}
           style={{
             position: "relative",
             width: "100%",
@@ -568,7 +782,7 @@ function MapPage() {
             marginBottom: "50px",
           }}
         >
-          {/* Top-Left City Toggle Bar inside Map */}
+          {/* Top-Left City Toggle Bar */}
           <div
             style={{
               position: "absolute",
@@ -617,7 +831,7 @@ function MapPage() {
             </button>
           </div>
 
-          {/* Top-Right Search Bar inside Map */}
+          {/* Top-Right Search Bar */}
           <div style={{ position: "absolute", top: "14px", right: "14px", zIndex: 1000, width: "280px" }}>
             <input
               type="text"
@@ -695,18 +909,17 @@ function MapPage() {
             ref={mapRef}
             center={LONDON_CENTER}
             zoom={13}
-            minZoom={10}
-            maxBounds={LONDON_BOUNDS}
-            maxBoundsViscosity={1.0}
+            minZoom={8}
             style={{ width: "100%", height: "100%" }}
             zoomControl={true}
           >
+            <MapController activeCity={activeCity} />
             <TileLayer
               url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
             />
 
-            {/* Markers always remain visible */}
+            {/* Markers for active city */}
             {activeLocations.map((loc) => (
               <Marker
                 key={loc.id}
@@ -760,6 +973,7 @@ function MapPage() {
                         </span>
                       </div>
 
+                      {/* Verified Artists Section with Verify Link */}
                       <div style={{ borderTop: "1px solid #e2e8f0", paddingTop: "8px" }}>
                         <p style={{ margin: "0 0 8px 0", fontSize: "11px", fontWeight: "700", color: "#64748b", letterSpacing: "0.5px" }}>
                           VERIFIED ARTISTS
@@ -781,37 +995,39 @@ function MapPage() {
                                 width: "100%",
                                 backgroundColor: "#ffffff",
                                 border: "1px solid #e2e8f0",
-                                borderRadius: "6px",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "space-between",
                                 padding: "8px 12px",
+                                borderRadius: "8px",
+                                fontSize: "13px",
+                                fontWeight: "600",
+                                color: "#0f172a",
+                                display: "flex",
+                                justifyContent: "space-between",
+                                alignItems: "center",
                                 boxSizing: "border-box",
                               }}
                             >
-                              <span style={{ fontSize: "12px", fontWeight: "600", color: "#1e293b" }}>
-                                {artist}
-                              </span>
-                              <a
-                                href={`https://www.mankindminds.com/apply?ref=${loc.refCode}`}
+                              <span>{artist}</span>
+                              <button
+                                onClick={() => handleVerifyArtist(artist, loc.name)}
                                 style={{
-                                  fontSize: "12px",
+                                  background: "none",
+                                  border: "none",
                                   color: "#2563eb",
                                   textDecoration: "underline",
-                                  fontWeight: "500",
+                                  fontWeight: "600",
+                                  fontSize: "12px",
                                   cursor: "pointer",
-                                  marginLeft: "8px",
-                                  whiteSpace: "nowrap"
+                                  padding: 0,
                                 }}
                               >
                                 Verify Yourself
-                              </a>
+                              </button>
                             </div>
                           ))}
                         </div>
                       </div>
-                    </div>
 
+                    </div>
                   </div>
                 </Popup>
               </Marker>
@@ -819,89 +1035,67 @@ function MapPage() {
           </MapContainer>
         </div>
 
-        {/* Directory List */}
-        <div style={{ width: "100%", maxWidth: "1000px" }}>
-          <h3
-            style={{
-              fontSize: "22px",
-              fontWeight: "600",
-              color: "#0f172a",
-              marginBottom: "16px",
-              borderBottom: "2px solid #e2e8f0",
-              paddingBottom: "8px",
-            }}
-          >
-            Studio Directory ({activeCity})
-          </h3>
-
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(290px, 1fr))",
-              gap: "20px",
-            }}
-          >
-            {activeLocations.map((shop) => (
-              <div
-                key={shop.id}
-                style={{
-                  border: "1px solid #e2e8f0",
-                  borderRadius: "10px",
-                  overflow: "hidden",
-                  backgroundColor: "#ffffff",
-                  boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
-                  display: "flex",
-                  flexDirection: "column",
-                }}
-              >
-                <div style={{ height: "150px", overflow: "hidden", position: "relative" }}>
-                  <img
-                    src={shop.image}
-                    alt={shop.name}
-                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                  />
-                </div>
-
-                <div style={{ padding: "14px", display: "flex", flexDirection: "column", flexGrow: 1 }}>
-                  <h4 style={{ margin: "0 0 4px 0", fontSize: "16px", fontWeight: "600", color: "#0f172a" }}>
-                    {shop.name}
-                  </h4>
-                  <p style={{ margin: "0 0 6px 0", fontSize: "12px", color: "#64748b", fontWeight: "500" }}>
-                    {shop.hubTitle} • {shop.postcode}
-                  </p>
-                  <p style={{ margin: "0 0 12px 0", fontSize: "12px", color: "#334155", lineHeight: "1.4" }}>
-                    {shop.description}
-                  </p>
-
-                  <div style={{ marginTop: "auto", display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: "10px", borderTop: "1px solid #f1f5f9" }}>
-                    <span style={{ fontSize: "12px", fontWeight: "600", color: "#d97706" }}>
-                      ★ {shop.starRating}
-                    </span>
-                    <button
-                      onClick={() => handleSelectShop(shop)}
-                      style={{
-                        backgroundColor: "#0f172a",
-                        color: "#ffffff",
-                        border: "none",
-                        padding: "6px 12px",
-                        borderRadius: "6px",
-                        fontSize: "12px",
-                        fontWeight: "500",
-                        cursor: "pointer",
-                      }}
-                    >
-                      View on Map
-                    </button>
-                  </div>
-                </div>
+        {/* Studios Cards Grid */}
+        <div
+          style={{
+            width: "100%",
+            maxWidth: "1000px",
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
+            gap: "24px",
+          }}
+        >
+          {activeLocations.map((loc) => (
+            <div
+              key={loc.id}
+              style={{
+                border: "1px solid #e2e8f0",
+                borderRadius: "12px",
+                overflow: "hidden",
+                backgroundColor: "#ffffff",
+                boxShadow: "0 4px 12px rgba(0,0,0,0.04)",
+                display: "flex",
+                flexDirection: "column",
+              }}
+            >
+              <img
+                src={loc.image}
+                alt={loc.name}
+                style={{ width: "100%", height: "180px", objectFit: "cover" }}
+              />
+              <div style={{ padding: "16px", display: "flex", flexDirection: "column", flexGrow: 1 }}>
+                <h3 style={{ margin: "0 0 4px 0", fontSize: "18px", color: "#0f172a" }}>{loc.name}</h3>
+                <p style={{ margin: "0 0 8px 0", fontSize: "13px", color: "#64748b" }}>
+                  {loc.hubTitle} • {loc.postcode}
+                </p>
+                <p style={{ fontSize: "13px", color: "#334155", flexGrow: 1, marginBottom: "16px" }}>
+                  {loc.description}
+                </p>
+                
+                <button
+                  onClick={() => handleSelectShop(loc)}
+                  style={{
+                    width: "100%",
+                    padding: "10px 0",
+                    backgroundColor: "#1B8A5A",
+                    color: "#ffffff",
+                    border: "none",
+                    borderRadius: "6px",
+                    fontWeight: "600",
+                    fontSize: "13px",
+                    cursor: "pointer",
+                    transition: "background-color 0.2s ease",
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#146c46")}
+                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#1B8A5A")}
+                >
+                  View on map
+                </button>
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
         </div>
-
       </div>
     </div>
   );
 }
-
-export default MapPage;
