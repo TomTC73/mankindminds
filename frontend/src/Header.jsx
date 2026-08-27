@@ -107,7 +107,13 @@ function Header() {
         <Link to={isTattooSection ? "/map" : "/certificates"}>
           {isTattooSection ? "Map" : "Certificates"}
         </Link>
-        <Link to="/apply" className="contact-link">
+        <Link
+          to={{
+            pathname: "/apply",
+            search: `?category=${selectedLabel.toLowerCase()}`,
+          }}
+          className="contact-link"
+        >
           Apply
         </Link>
       </nav>

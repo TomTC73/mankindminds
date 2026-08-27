@@ -5,22 +5,20 @@ body {
   color: black;
 }
 
-.header {
-  position: relative;
-  display: flex;
-  justify-content: space-between;
+header.header {
+  display: grid;
+  grid-template-areas: "section logo nav";
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
+  gap: 24px;
   padding: 12px 40px;
   border-bottom: 1px solid black;
 }
 
 .logo-container {
-  position: absolute;
-  top: 50%;
-  left: 50%;
+  grid-area: logo;
   display: flex;
   align-items: center;
-  transform: translate(-50%, -50%);
 }
 
 .logo-image {
@@ -31,6 +29,8 @@ body {
 }
 
 .section-switcher {
+  grid-area: section;
+  justify-self: start;
   position: relative;
 }
 
@@ -140,6 +140,8 @@ body {
 }
 
 .nav {
+  grid-area: nav;
+  justify-self: end;
   display: flex;
   align-items: center;
   gap: 24px;
@@ -170,15 +172,18 @@ body {
 }
 
 @media (max-width: 700px) {
-  .header {
-    flex-direction: column !important;
+  header.header {
+    grid-template-areas:
+      "logo"
+      "section"
+      "nav";
+    grid-template-columns: 1fr;
     padding: 12px;
     gap: 12px;
   }
 
   .logo-container {
-    position: static;
-    transform: none;
+    justify-self: center;
   }
 
   .logo-image {
@@ -193,9 +198,10 @@ body {
   }
 
   .nav {
+    justify-self: center;
     justify-content: center;
-    flex-wrap: nowrap; /* Keeps all items strictly on one row */
-    gap: 12px;         /* Tighter gap so elements don't overflow small screens */
+    flex-wrap: wrap;
+    gap: 12px;
   }
 
   .nav a {
