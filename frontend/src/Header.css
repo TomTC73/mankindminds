@@ -173,22 +173,14 @@ header.header {
 
 @media (max-width: 700px) {
   header.header {
-    grid-template-areas:
-      "logo"
-      "section"
-      "nav";
-    grid-template-columns: 1fr;
+    grid-template-areas: "section nav";
+    grid-template-columns: auto minmax(0, 1fr);
     padding: 12px;
     gap: 12px;
   }
 
   .logo-container {
-    justify-self: center;
-  }
-
-  .logo-image {
-    width: 48px;
-    height: 48px;
+    display: none;
   }
 
   .section-switcher-trigger,
@@ -198,9 +190,9 @@ header.header {
   }
 
   .nav {
-    justify-self: center;
-    justify-content: center;
-    flex-wrap: wrap;
+    justify-self: end;
+    justify-content: flex-end;
+    flex-wrap: nowrap;
     gap: 12px;
   }
 
