@@ -1,6 +1,7 @@
 import "./Header.css";
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import logo from "./assets/favicon.png";
 
 const sections = [
   { label: "Tattoos", path: "/tattoos" },
@@ -96,6 +97,10 @@ function Header() {
           ))}
         </div>
       </div>
+
+      <Link to="/tattoos" className="logo-container" aria-label="Mankind Minds home">
+        <img src={logo} alt="Mankind Minds" className="logo-image" />
+      </Link>
 
       <nav className="nav">
         <Link to="/process">Process</Link>

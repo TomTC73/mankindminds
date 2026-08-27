@@ -6,11 +6,28 @@ body {
 }
 
 .header {
+  position: relative;
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 12px 40px;
   border-bottom: 1px solid black;
+}
+
+.logo-container {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: flex;
+  align-items: center;
+  transform: translate(-50%, -50%);
+}
+
+.logo-image {
+  display: block;
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
 }
 
 .section-switcher {
@@ -154,8 +171,19 @@ body {
 
 @media (max-width: 700px) {
   .header {
+    flex-direction: column !important;
     padding: 12px;
     gap: 12px;
+  }
+
+  .logo-container {
+    position: static;
+    transform: none;
+  }
+
+  .logo-image {
+    width: 48px;
+    height: 48px;
   }
 
   .section-switcher-trigger,
