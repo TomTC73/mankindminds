@@ -694,7 +694,7 @@ function MapController({ activeCity }) {
   return null;
 }
 
-export default function MapPage() {
+export default function MapPage({ embedded = false }) {
   const customIcon = createCustomPinIcon();
   const mapRef = useRef(null);
   const containerRef = useRef(null);
@@ -737,8 +737,8 @@ export default function MapPage() {
     };
 
   return (
-    <div style={{ fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif", backgroundColor: "#ffffff", minHeight: "100vh" }}>
-      <Header />
+    <div style={{ fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif", backgroundColor: embedded ? "transparent" : "#ffffff", minHeight: embedded ? "auto" : "100vh" }}>
+      {!embedded && <Header />}
       <div
         style={{
           display: "flex",
