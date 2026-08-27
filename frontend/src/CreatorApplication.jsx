@@ -1,11 +1,33 @@
 import "./index.css";
 import Header from "./Header";
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
+
+const categories = ["Tattoos", "Music", "Writing", "Art"];
+
+const categoryFromSection = {
+  "/tattoos": "Tattoos",
+  "/music": "Music",
+  "/writing": "Writing",
+  "/art": "Art",
+};
 
 function CreatorApplication() {
+  const location = useLocation();
   const [selectedPlatform, setSelectedPlatform] = useState("Instagram");
   const [platformHandle, setPlatformHandle] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState(() => {
+    const requestedCategory = new URLSearchParams(location.search).get("category");
+    const matchingCategory = categories.find(
+      (category) => category.toLowerCase() === requestedCategory?.toLowerCase(),
+    );
+
+    return (
+      matchingCategory ||
+      categoryFromSection[sessionStorage.getItem("selectedSection")] ||
+      "Tattoos"
+    );
+  });
 
   const handleSubmit = (e) => {
     if (!platformHandle.trim()) {
@@ -100,14 +122,21 @@ function CreatorApplication() {
 
           <label>
             <span>
-              Creator Category <span className="optional">(Optional)</span>
+              Creator Category <span className="required">*</span>
             </span>
 
-            <input
-              type="text"
+            <select
               name="category"
-              placeholder="Photographer, artist, writer..."
-            />
+              value={selectedCategory}
+              onChange={(event) => setSelectedCategory(event.target.value)}
+              required
+            >
+              {categories.map((category) => (
+                <option key={category} value={category}>
+                  {category}
+                </option>
+              ))}
+            </select>
           </label>
 
           {/* Mobile-friendly flexible layout container */}
@@ -118,7 +147,7 @@ function CreatorApplication() {
             <div
               style={{
                 display: "flex",
-                flexWrap: "wrap",
+                flexWrap: "nowrap",
                 gap: "10px",
                 marginTop: "5px",
                 width: "100%",
@@ -126,6 +155,7 @@ function CreatorApplication() {
               }}
             >
               <select
+                className="platform-select"
                 value={selectedPlatform}
                 onChange={(e) => setSelectedPlatform(e.target.value)}
                 style={{
