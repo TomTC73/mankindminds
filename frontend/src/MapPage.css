@@ -1,0 +1,76 @@
+.map-controls {
+  position: absolute;
+  z-index: 1100;
+  top: 14px;
+  right: 14px;
+  left: 14px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  pointer-events: none;
+}
+
+.map-city-picker,
+.map-search {
+  pointer-events: auto;
+}
+
+.studio-map-shell .leaflet-top.leaflet-left {
+  top: 58px;
+}
+
+.map-city-picker {
+  position: static !important;
+  flex: 0 0 auto;
+}
+
+.map-search {
+  position: relative !important;
+  top: auto !important;
+  right: auto !important;
+  width: min(280px, 100%) !important;
+}
+
+@media (max-width: 640px) {
+  .map-explorer {
+    padding: 32px 12px !important;
+  }
+
+  .studio-map-shell {
+    height: 460px !important;
+    margin-bottom: 32px !important;
+  }
+
+  .map-controls {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .map-city-picker {
+    align-self: flex-start;
+  }
+
+  .map-search {
+    width: 100% !important;
+  }
+
+  .studio-map-shell .leaflet-top.leaflet-left {
+    top: 104px;
+  }
+
+  .studio-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 16px !important;
+  }
+}
+
+@media (max-width: 420px) {
+  .studio-map-shell {
+    height: 420px !important;
+  }
+
+  .map-city-picker button {
+    padding: 7px 12px !important;
+  }
+}
