@@ -55,10 +55,17 @@ body {
    HOME HERO
 =========================== */
 
+.home-page {
+  background-position: right bottom;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-attachment: fixed;
+}
+
 .home-hero {
   position: relative;
 
-  height: calc(100vh - 81px);
+  min-height: calc(100vh - 81px);
 
   display: flex;
   justify-content: center;
@@ -66,11 +73,17 @@ body {
 
   padding: 0 20px;
 
-  background-size: cover;
-  background-position: right bottom;
-  background-repeat: no-repeat;
-
   overflow: hidden;
+}
+
+.home-content {
+  display: flex;
+  flex-direction: column;
+  width: min(100%, 800px);
+}
+
+.home-map {
+  background: transparent;
 }
 
 /*
@@ -86,7 +99,9 @@ body {
   position: relative;
   z-index: 1;
 
-  max-width: 720px;
+  box-sizing: border-box;
+  max-width: none;
+  width: 100%;
   padding: 56px 40px;
 
   text-align: center;
@@ -343,29 +358,4 @@ width:100%;
 max-width:100%;
 }
 
-}
-.map-container {
-  width: 100%;
-  height: 400px; 
-  border-radius: 8px;
-}
-.floating-map-btn {
-  position: fixed;
-  bottom: 24px;
-  right: 24px;
-  background-color: #000;
-  color: #fff;
-  padding: 12px 20px;
-  border-radius: 30px;
-  text-decoration: none;
-  font-weight: 600;
-  font-size: 14px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
-  transition: transform 0.2s ease, background-color 0.2s ease;
-  z-index: 1000;
-}
-
-.floating-map-btn:hover {
-  background-color: #333;
-  transform: translateY(-2px);
 }

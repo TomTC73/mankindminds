@@ -2,6 +2,7 @@ import React, { useRef, useState, useEffect } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import "./MapPage.css";
 
 import Header from "./Header";
 
@@ -694,7 +695,7 @@ function MapController({ activeCity }) {
   return null;
 }
 
-export default function MapPage() {
+export default function MapPage({ embedded = false }) {
   const customIcon = createCustomPinIcon();
   const mapRef = useRef(null);
   const containerRef = useRef(null);
@@ -737,9 +738,10 @@ export default function MapPage() {
     };
 
   return (
-    <div style={{ fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif", backgroundColor: "#ffffff", minHeight: "100vh" }}>
-      <Header />
+    <div style={{ fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif", backgroundColor: embedded ? "transparent" : "#ffffff", minHeight: embedded ? "auto" : "100vh" }}>
+      {!embedded && <Header />}
       <div
+        className="map-explorer"
         style={{
           display: "flex",
           flexDirection: "column",
@@ -762,6 +764,7 @@ export default function MapPage() {
         {/* Map Container */}
         <div
           ref={containerRef}
+          className="studio-map-shell"
           style={{
             position: "relative",
             width: "100%",
@@ -775,7 +778,9 @@ export default function MapPage() {
             marginBottom: "50px",
           }}
         >
-          <div
+          <div className="map-controls">
+            <div
+              className="map-city-picker"
             style={{
               position: "absolute",
               top: "14px",
@@ -823,8 +828,8 @@ export default function MapPage() {
             </button>
           </div>
 
-          {/* Top-Right Search Bar */}
-          <div style={{ position: "absolute", top: "14px", right: "14px", zIndex: 1000, width: "280px" }}>
+          {/* Studio search */}
+          <div className="map-search" style={{ position: "absolute", top: "14px", right: "14px", zIndex: 1000, width: "280px" }}>
             <input
               type="text"
               placeholder={`Search ${activeCity} studio or ref...`}
@@ -895,6 +900,7 @@ export default function MapPage() {
                 )}
               </div>
             )}
+          </div>
           </div>
 
           <MapContainer
@@ -1029,6 +1035,7 @@ export default function MapPage() {
 
         {/* Studios Cards Grid */}
         <div
+          className="studio-grid"
           style={{
             width: "100%",
             maxWidth: "1000px",
@@ -1040,6 +1047,7 @@ export default function MapPage() {
           {activeLocations.map((loc) => (
             <div
               key={loc.id}
+              className="studio-card"
               style={{
                 border: "1px solid #e2e8f0",
                 borderRadius: "12px",

@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import {
   BrowserRouter,
+  Navigate,
   Routes,
   Route,
   useLocation,
@@ -30,7 +31,11 @@ function App() {
     <BrowserRouter>
       <ScrollToTop />
       <Routes>
-        <Route path="/" element={<Home />} />
+        <Route path="/" element={<Navigate to="/tattoos" replace />} />
+        <Route path="/tattoos" element={<Home />} />
+        <Route path="/music" element={<Home />} />
+        <Route path="/writing" element={<Home />} />
+        <Route path="/art" element={<Home />} />
         <Route path="/map" element={<MapPage />} />
         <Route path="/about" element={<About />} />
         <Route path="/process" element={<Process />} />
