@@ -957,7 +957,7 @@ export default function MapPage({ embedded = false }) {
               >
                 Close details <span aria-hidden="true">×</span>
               </button>
-              <div className="studio-detail-content">
+              <div className="studio-detail-content" onWheel={(event) => event.stopPropagation()}>
                 <div style={{ padding: "0px", backgroundColor: "#ffffff", color: "#0f172a", overflow: "hidden" }}>
                     
                     <div className="studio-detail-image-frame">
