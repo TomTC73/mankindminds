@@ -23,9 +23,9 @@ function VerifiedCreators() {
   }, []);
 
   return (
-    <div>
+    <div className="verified-creators-page">
       <Header />
-      <section className="hero">
+      <section className="hero verified-creators-hero">
         <div className="hero-box">
           <h2>View Our Verified Creators</h2>
           <p>

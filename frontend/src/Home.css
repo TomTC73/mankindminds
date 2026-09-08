@@ -10,10 +10,16 @@ body {
 =========================== */
 
 .home-page {
+  background-color: #ffffff;
+  color: #111111;
   background-position: right bottom;
   background-repeat: no-repeat;
   background-size: cover;
   background-attachment: fixed;
+}
+
+.home-page .home-hero {
+  background-color: transparent;
 }
 
 .home-hero {
@@ -72,6 +78,11 @@ body {
   box-shadow: 0 20px 60px rgba(0,0,0,.25);
 }
 
+.home-page .hero-box {
+  background: #ffffff;
+  box-shadow: none;
+}
+
 .hero-box h2 {
   font-size: 44px;
   font-weight: 300;
@@ -117,10 +128,21 @@ body {
 }
 
 .secondary-button {
-  margin-left: 12px;
+  margin-left: 14px;
   background: transparent;
   border: 1px solid black;
   color: black;
+}
+
+.home-page .hero-box .button {
+  background: #ffffff;
+  border: 1px solid #111111;
+  color: #111111;
+}
+
+.home-page .hero-box .button:hover {
+  background: #111111;
+  color: #ffffff;
 }
 
 .secondary-button:hover {
@@ -324,11 +346,22 @@ body {
   border-top: 1px solid #171717;
 }
 
+.tattoo-process-gallery {
+  display: grid;
+  gap: 22px;
+}
+
 .tattoo-process-image-frame {
   margin: 0;
   background: #111111;
   padding: 12px 12px 18px;
   transform: rotate(-2deg);
+}
+
+.tattoo-process-history-image {
+  width: 78%;
+  justify-self: end;
+  transform: rotate(2deg);
 }
 
 .tattoo-process-image-frame img {
@@ -339,7 +372,7 @@ body {
   filter: saturate(0.7) contrast(1.1);
 }
 
-.tattoo-process-image-frame p {
+.tattoo-process-image-frame figcaption {
   margin: 12px 8px 0;
   color: #f3f3f3;
   font-family: Georgia, "Times New Roman", serif;
@@ -533,8 +566,14 @@ font-size:34px;
 }
 
 .secondary-button{
-margin-left:0;
+margin-left:14px;
 margin-top:12px;
+}
+
+.home-page .hero-box .secondary-button {
+ display: block;
+ margin-left: auto;
+ margin-right: auto;
 }
 
 .certificate{

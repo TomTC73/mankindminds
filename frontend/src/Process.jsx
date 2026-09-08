@@ -11,23 +11,32 @@ const processBySection = {
     work: "Tattoo portfolios, studio pages, and examples of original tattoo work.",
   },
   music: {
-    title: "The Music Verification Process",
+    title: "The Resonance Verification",
     intro:
-      "We review musicians and producers to help listeners and collaborators find authentic creative work.",
+      "A listening-led review for musicians, producers, and performers whose work carries a human pulse.",
     work: "Artist profiles, releases, performances, and examples of original music.",
+    storyTitle: "Keep the signal human.",
+    story:
+      "Every track has a trail: a room, a take, a choice, a voice. We look for the details that show how a piece came into being, from rough demos to finished releases.",
   },
   writing: {
-    title: "The Writing Verification Process",
+    title: "The Signal Verification",
     intro:
-      "We review writers to help readers and collaborators identify original written work.",
+      "A human-first review for writers working against the noise of endless synthetic language.",
     work: "Stories, books, articles, essays, poetry, scripts, lyrics, and blogs.",
+    storyTitle: "A mind is more than its output.",
+    story:
+      "Some systems can imitate a voice without living a life. We look for the pressure behind the page: intent, contradiction, memory, rhythm, and the strange fingerprints of a mind making meaning.",
   },
   art: {
-    title: "The Art Verification Process",
+    title: "The Material Verification",
     intro:
-      "We review artists to help audiences and collaborators discover authentic visual work.",
+      "A studio-aware review for artists whose work is shaped by materials, decisions, and time.",
     work:
       "Photography, digital art, illustrations, paintings, graphic design, and concept art.",
+    storyTitle: "Look for the hand behind the image.",
+    story:
+      "We follow the development of a piece and the practice around it: sketches, studies, revisions, materials, and the visual choices that make an artist recognisable.",
   },
 };
 
@@ -73,12 +82,21 @@ function Process() {
           </section>
 
           <section className="tattoo-process-story">
-            <div className="tattoo-process-image-frame">
-              <img
-                src="/Tatooshops/image.png"
-                alt="Tattoo detail from a contemporary studio"
-              />
-              <p>Living linework, carrying the tradition forward.</p>
+            <div className="tattoo-process-gallery">
+              <figure className="tattoo-process-image-frame">
+                <img
+                  src="/Tatooshops/image.png"
+                  alt="Tattoo detail from a contemporary studio"
+                />
+                <figcaption>Living linework, carrying the tradition forward.</figcaption>
+              </figure>
+              <figure className="tattoo-process-image-frame tattoo-process-history-image">
+                <img
+                  src="https://www.tattooarchive.com/assets/img/history/burchett-george-charles.jpg"
+                  alt="George Burchett tattooing his brother Charles"
+                />
+                <figcaption>George Burchett at work, from the Tattoo Archive.</figcaption>
+              </figure>
             </div>
             <div className="tattoo-process-story-copy">
               <p className="eyebrow">The Burchett principle</p>
@@ -209,6 +227,14 @@ function Process() {
             We assess the work submitted for this category and the public
             information that supports its origin and authenticity.
           </p>
+        </div>
+      </section>
+
+      <section className="section process-story-section">
+        <div className="process-story">
+          <p className="eyebrow">The {section} principle</p>
+          <h3>{process.storyTitle}</h3>
+          <p>{process.story}</p>
         </div>
       </section>
 
