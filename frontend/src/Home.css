@@ -140,6 +140,17 @@ body {
   color: #111111;
 }
 
+.hero-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+}
+
+.hero-actions .secondary-button {
+  margin-left: 0;
+}
+
 .home-page .hero-box .button:hover {
   background: #111111;
   color: #ffffff;
@@ -565,15 +576,13 @@ padding:40px 24px;
 font-size:34px;
 }
 
-.secondary-button{
-margin-left:14px;
-margin-top:12px;
+.hero-actions {
+ gap: 8px;
 }
 
-.home-page .hero-box .secondary-button {
- display: block;
- margin-left: auto;
- margin-right: auto;
+.hero-actions .button {
+ padding-left: 18px;
+ padding-right: 18px;
 }
 
 .certificate{
