@@ -245,7 +245,7 @@ const LONDON_LOCATIONS = [
   },
   {
     id: 16,
-    name: "Sixtyink – London Tattoo Studio",
+    name: "Sixtyink - London Tattoo Studio",
     hubTitle: "Denmark Street Studio",
     postcode: "WC2H 8NJ",
     refCode: generateRefCode(),
