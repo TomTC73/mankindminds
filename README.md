@@ -1,43 +1,50 @@
 # Mankind Minds
 
-## Structure
+Mankind Minds is a React and Vite website for browsing verified creators,
+exploring tattoo studios, and submitting creator applications.
 
-- `backend/` - Maven Spring Boot API
-- `frontend/` - React + Vite website
+## Project structure
 
-## What this app does
+```text
+frontend/
+  public/       Static images, map assets, and GitHub Pages fallback
+  src/          React components, routes, and styles
+  package.json  Frontend scripts and dependencies
+.github/
+  workflows/    GitHub Pages deployment
+```
 
-- Frontend loads verified creator profiles from the backend API
-- Creator profile images are served as backend static assets
-- Creator pages are rendered dynamically from `/api/creators`
+## Run locally
 
-## Run backend
+From the repository root:
 
-1. Open a terminal in `backend/`
-2. Run:
+```powershell
+cd frontend
+npm install
+npm run dev
+```
 
-   ```bash
-   mvn spring-boot:run
-   ```
+Open `http://localhost:5173/`. The root route redirects to the Tattoos section.
 
-Backend starts on `http://localhost:8080` and exposes:
+To create a production build:
 
-- `GET /api/creators`
-- `GET /api/creators/{slug}`
+```powershell
+cd frontend
+npm run build
+```
 
-## Run frontend
+## Main routes
 
-1. Open a separate terminal in `frontend/`
-2. Install dependencies:
+- `/tattoos`
+- `/music`
+- `/writing`
+- `/art`
+- `/process/tattoos`
+- `/process/music`
+- `/process/writing`
+- `/process/art`
+- `/certificates`
+- `/apply`
 
-   ```bash
-   npm install
-   ```
-
-3. Start dev server:
-
-   ```bash
-   npm run dev
-   ```
-
-Frontend starts on `http://localhost:5173` and fetches creator data from the backend API.\n## Production\n\nProduction API base: https://mankind-minds-api-151580998157.europe-west2.run.app\n
+Creator data is loaded from the configured API in
+`frontend/src/apiConfig.js`.
