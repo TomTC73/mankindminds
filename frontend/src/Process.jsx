@@ -11,32 +11,77 @@ const processBySection = {
     work: "Tattoo portfolios, studio pages, and examples of original tattoo work.",
   },
   music: {
-    title: "The Resonance Verification",
+    title: "Joplin Verification",
     intro:
       "A listening-led review for musicians, producers, and performers whose work carries a human pulse.",
     work: "Artist profiles, releases, performances, and examples of original music.",
     storyTitle: "Keep the signal human.",
     story:
-      "Every track has a trail: a room, a take, a choice, a voice. We look for the details that show how a piece came into being, from rough demos to finished releases.",
+      "Scott Joplin turned syncopation into architecture. His scores and performances remind us that a human work carries choices: a rhythm held back, a phrase repeated, a feeling made deliberate.",
+    figure: "Scott Joplin",
+    division: "Mankind Minds / Music division",
+    lede: "A listening-led standard inspired by the composer who made a new language out of timing, touch, and persistence.",
+    historyEyebrow: "Why Joplin?",
+    historyTitle: "A rhythm with a human fingerprint.",
+    history: "Born in Texas in 1868, Scott Joplin became the best-known composer of ragtime. His music combined rigorous composition with the physical energy of performance, while his opera Treemonisha showed an ambition that reached beyond the commercial world that first made his name.",
+    principleEyebrow: "The Joplin principle",
+    sourceUrl: "https://www.britannica.com/biography/Scott-Joplin",
+    sourceLabel: "Encyclopaedia Britannica",
+    image: "https://upload.wikimedia.org/wikipedia/commons/c/ca/Scott_Joplin_19072.jpg",
+    imageAlt: "Scott Joplin in 1903",
+    imageCaption: "Scott Joplin, photographed in 1903.",
+    secondImage: "https://upload.wikimedia.org/wikipedia/commons/6/68/Scott_Joplin_in_1912.jpg",
+    secondImageAlt: "Cover of the first edition of Maple Leaf Rag",
+    secondImageCaption: "The published score: a work made to be played, remembered, and passed on.",
   },
   writing: {
-    title: "The Signal Verification",
+    title: "Ellison Verification",
     intro:
       "A human-first review for writers working against the noise of endless synthetic language.",
     work: "Stories, books, articles, essays, poetry, scripts, lyrics, and blogs.",
     storyTitle: "A mind is more than its output.",
     story:
-      "Some systems can imitate a voice without living a life. We look for the pressure behind the page: intent, contradiction, memory, rhythm, and the strange fingerprints of a mind making meaning.",
+      "Harlan Ellison understood that technology is never neutral when it is allowed to replace judgment. His fiction used machines as warnings, not excuses: the voice behind the work still matters.",
+    figure: "Harlan Ellison",
+    division: "Mankind Minds / Writing division",
+    lede: "A human-first standard inspired by a writer who made the dangers of automated power impossible to ignore.",
+    historyEyebrow: "Why Ellison?",
+    historyTitle: "A warning written in a human voice.",
+    history: "Harlan Ellison was a prolific American writer and editor of science fiction, fantasy, television, and essays. His story I Have No Mouth, and I Must Scream imagined a supercomputer called AM whose total control had erased human agency. We take the story as a cultural warning about power and authorship—not as a claim that Ellison predicted today’s tools exactly.",
+    principleEyebrow: "The Ellison principle",
+    sourceUrl: "https://en.wikipedia.org/wiki/Harlan_Ellison",
+    sourceLabel: "Harlan Ellison biography",
+    image: "https://upload.wikimedia.org/wikipedia/commons/4/4d/Harlan_Ellison%2C_A._E._van_Vogt_and_Lydia_van_Vogt.jpg",
+    imageAlt: "Harlan Ellison with A. E. van Vogt and Lydia van Vogt",
+    imageCaption: "Harlan Ellison with fellow science-fiction writers.",
+    secondImage: "https://upload.wikimedia.org/wikipedia/commons/2/20/Harlan_Ellison_at_the_LA_Press_Club_%28cropped%29.jpg",
+    secondImageAlt: "Harlan Ellison speaking at the Los Angeles Press Club",
+    secondImageCaption: "Ellison speaking publicly: argument and authorship held in the open.",
   },
   art: {
-    title: "The Material Verification",
+    title: "Cassatt Verification",
     intro:
       "A studio-aware review for artists whose work is shaped by materials, decisions, and time.",
     work:
       "Photography, digital art, illustrations, paintings, graphic design, and concept art.",
     storyTitle: "Look for the hand behind the image.",
     story:
-      "We follow the development of a piece and the practice around it: sketches, studies, revisions, materials, and the visual choices that make an artist recognisable.",
+      "Mary Cassatt made intimacy visible through observation, repetition, and touch. Her work reminds us that an image is not only an output—it is the record of attention.",
+    figure: "Mary Cassatt",
+    division: "Mankind Minds / Art division",
+    lede: "A studio-aware standard inspired by an artist who made close looking feel like a form of truth.",
+    historyEyebrow: "Why Cassatt?",
+    historyTitle: "Look for the hand behind the image.",
+    history: "Mary Cassatt was an American painter and printmaker who built her career in France and exhibited with the Impressionists. She worked across painting, pastel, etching, aquatint, and drypoint, becoming known for intimate studies of women, mothers, and children.",
+    principleEyebrow: "The Cassatt principle",
+    sourceUrl: "https://www.britannica.com/biography/Mary-Cassatt",
+    sourceLabel: "Encyclopaedia Britannica",
+    image: "https://upload.wikimedia.org/wikipedia/commons/8/84/Mary_Cassatt_-_Under_the_Horse-Chestnut_Tree_-_Google_Art_Project.jpg?utm_source=commons.wikimedia.org",
+    imageAlt: "Mary Cassatt painting Under the Horse-Chestnut Tree",
+    imageCaption: "Mary Cassatt, Under the Horse-Chestnut Tree.",
+    secondImage: "https://upload.wikimedia.org/wikipedia/commons/7/72/Mary_Cassatt_-_The_Child%27s_Bath_-_Google_Art_Project.jpg?utm_source=commons.wikimedia.org",
+    secondImageAlt: "Mary Cassatt painting The Child's Bath",
+    secondImageCaption: "The Child's Bath: observation, structure, and the trace of a hand.",
   },
 };
 
@@ -178,80 +223,96 @@ function Process() {
   }
 
   return (
-    <div>
+    <div className="process-page tattoo-process-page">
       <Header />
+      <main>
+        <section className="tattoo-process-hero">
+          <div className="tattoo-process-hero-content">
+            <p className="eyebrow">{process.division}</p>
+            <h1>{process.title}</h1>
+            <p className="tattoo-process-lede">{process.lede}</p>
+            <div className="tattoo-process-stamp">
+              Human-led review · AI-free assessment
+            </div>
+          </div>
+        </section>
 
-      <section className="section">
-        <h3>{process.title}</h3>
+        <section className="tattoo-process-intro">
+          <div>
+            <p className="eyebrow">{process.historyEyebrow}</p>
+            <h2>{process.historyTitle}</h2>
+          </div>
+          <p>{process.history}</p>
+        </section>
 
-        <p className="section-intro">{process.intro}</p>
-
-        <div className="grid">
-          <div className="card">
-            <span>01</span>
-            <h4>Submit Your Work</h4>
-            <p>
-              Apply using your public social media profiles, portfolio links,
-              and examples of your original work for review.
+        <section className="tattoo-process-story">
+          <div className="tattoo-process-gallery">
+            <figure className="tattoo-process-image-frame">
+              <img src={process.image} alt={process.imageAlt} />
+              <figcaption>{process.imageCaption}</figcaption>
+            </figure>
+            <figure className="tattoo-process-image-frame tattoo-process-history-image">
+              <img src={process.secondImage} alt={process.secondImageAlt} />
+              <figcaption>{process.secondImageCaption}</figcaption>
+            </figure>
+          </div>
+          <div className="tattoo-process-story-copy">
+            <p className="eyebrow">{process.principleEyebrow}</p>
+            <h2>{process.storyTitle}</h2>
+            <p>{process.story}</p>
+            <p className="source-note">
+              Historical references:{" "}
+              <a href={process.sourceUrl} target="_blank" rel="noreferrer">
+                {process.sourceLabel}
+              </a>{" "}
+              and image credits are linked through the public-domain source
+              records where available.
             </p>
           </div>
+        </section>
 
-          <div className="card">
-            <span>02</span>
-            <h4>Analysis</h4>
-            <p>
-              Our specialised algorithms analyse the content available through
-              the links you provide for indicators of AI-generated material.
-            </p>
+        <section className="tattoo-process-check">
+          <div className="tattoo-process-check-heading">
+            <p className="eyebrow">Our review</p>
+            <h2>Three passes. One human signature.</h2>
           </div>
-
-          <div className="card">
-            <span>03</span>
-            <h4>Certification</h4>
-            <p>
-              If our analysis gives us no reason to believe your work is
-              AI-generated, you'll receive an official Mankind Minds
-              verification certificate to display online.
-            </p>
+          <div className="tattoo-process-check-grid">
+            <article>
+              <span>01</span>
+              <h3>Trace the practice</h3>
+              <p>
+                We follow the public trail: drafts, credits, performances,
+                studio history, portfolio continuity, and the context around
+                the work.
+              </p>
+            </article>
+            <article>
+              <span>02</span>
+              <h3>Read the evidence</h3>
+              <p>
+                Our specialist algorithms look for patterns associated with
+                synthetic material. The result is a signal for review, never a
+                substitute for a human eye.
+              </p>
+            </article>
+            <article>
+              <span>03</span>
+              <h3>Make the call</h3>
+              <p>
+                A reviewer weighs the evidence together. When we find no reason
+                to believe the submitted work is AI-generated, we issue{" "}
+                {process.title}.
+              </p>
+            </article>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <section className="section">
-        <h3>What We Review</h3>
-
-        <p className="section-intro">{process.work}</p>
-
-        <div style={{ maxWidth: "700px", margin: "0 auto" }}>
-          <p>
-            We assess the work submitted for this category and the public
-            information that supports its origin and authenticity.
-          </p>
-        </div>
-      </section>
-
-      <section className="section process-story-section">
-        <div className="process-story">
-          <p className="eyebrow">The {section} principle</p>
-          <h3>{process.storyTitle}</h3>
-          <p>{process.story}</p>
-        </div>
-      </section>
-
-      <section className="section">
-        <div className="certificate">
-          <h3>What Certification Means</h3>
-
-          <p>
-            A Mankind Minds certificate signifies that, based on our analysis,
-            we found no reason to believe the submitted work is AI-generated
-            within the categories reviewed. It provides creators with a
-            professional, shareable way to demonstrate authenticity.
-          </p>
-        </div>
-      </section>
-
-    <Footer />
+        <section className="tattoo-process-quote">
+          <p>Authenticity is not a texture. It is a trail of decisions.</p>
+          <span>A working belief behind {process.title}</span>
+        </section>
+      </main>
+      <Footer />
     </div>
   );
 }

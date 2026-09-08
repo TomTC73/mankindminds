@@ -11,12 +11,15 @@ function Home() {
 
   return (
     <div
-      className="home-page"
+      className={`home-page ${isTattooHome ? "tattoo-home" : ""}`}
       style={{ backgroundImage: `url(${backgroundImage})` }}
     >
       <Header />
 
-      <section className="home-hero">
+      <section
+        className={`home-hero ${isTattooHome ? "tattoo-home-hero" : ""}`}
+        style={isTattooHome ? { backgroundImage: `url(${backgroundImage})` } : undefined}
+      >
         <div className="home-content">
           <div className="hero-box">
             <h2>Human Creativity Certified</h2>
