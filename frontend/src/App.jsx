@@ -8,7 +8,6 @@ import {
 } from "react-router-dom";
 import Home from "./Home";
 import MapPage from "./MapPage";
-import About from "./About";
 import Process from "./Process";
 import VerifiedCreators from "./VerifiedCreators";
 import CreatorProfile from "./CreatorProfile";
@@ -37,8 +36,9 @@ function App() {
         <Route path="/writing" element={<Home />} />
         <Route path="/art" element={<Home />} />
         <Route path="/map" element={<MapPage />} />
-        <Route path="/about" element={<About />} />
-        <Route path="/process" element={<Process />} />
+        <Route path="/process" element={<Navigate to="/process/tattoos" replace />} />
+        <Route path="/process/:section" element={<Process />} />
+        <Route path="/about" element={<Navigate to="/process/tattoos" replace />} />
         <Route path="/certificates" element={<VerifiedCreators />} />
 
         {/* Dynamic Route to handle ALL creators */}

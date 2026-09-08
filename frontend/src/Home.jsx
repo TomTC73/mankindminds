@@ -30,9 +30,9 @@ function Home() {
               <button className="button">View Creators</button>
             </Link>
 
-            <Link to="/about">
+            <Link to={`/process${pathname}`}>
               <button className="button secondary-button">
-                About Verification
+                Process
               </button>
             </Link>
           </div>
