@@ -15,7 +15,10 @@ function Header() {
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const switcherRef = useRef(null);
-  const sectionFromPath = sections.find((section) => section.path === pathname);
+  const sectionFromPath = sections.find(
+    (section) =>
+      section.path === pathname || `/process${section.path}` === pathname,
+  );
   const [selectedSection, setSelectedSection] = useState(() => {
     const savedSection = sessionStorage.getItem("selectedSection");
     return (
@@ -103,7 +106,7 @@ function Header() {
       </Link>
 
       <nav className="nav">
-        <Link to="/process">Process</Link>
+        <Link to={`/process${selectedSection}`}>Process</Link>
         <Link to={isTattooSection ? "/map" : "/certificates"}>
           {isTattooSection ? "Map" : "Certificates"}
         </Link>

@@ -37,7 +37,10 @@ body {
 }
 
 .home-map {
-  background: transparent;
+  background: #ffffff;
+  border-top: 1px solid rgba(0, 0, 0, 0.15);
+  position: relative;
+  z-index: 1;
 }
 
 /*
@@ -212,6 +215,241 @@ body {
 
 .certificate p {
   line-height: 1.6;
+}
+
+/* BURCHETT VERIFICATION */
+
+.tattoo-process-page {
+  background: #f3f3f3;
+  color: #111111;
+}
+
+.tattoo-process-page .header {
+  background: #f3f3f3;
+}
+
+.tattoo-process-hero {
+  min-height: 560px;
+  padding: 80px max(24px, 8vw);
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 280px;
+  align-items: center;
+  gap: 48px;
+  background:
+    radial-gradient(circle at 80% 20%, rgba(0, 0, 0, 0.08), transparent 30%),
+    linear-gradient(135deg, #f3f3f3 0%, #d9d9d9 100%);
+  border-bottom: 1px solid #111111;
+}
+
+.tattoo-process-hero-content {
+  max-width: 760px;
+}
+
+.eyebrow {
+  margin: 0 0 18px;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #555555;
+  font-weight: 700;
+}
+
+.tattoo-process-hero h1 {
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(54px, 9vw, 124px);
+  line-height: 0.88;
+  font-weight: 400;
+  letter-spacing: -0.06em;
+}
+
+.tattoo-process-lede {
+  max-width: 560px;
+  margin: 34px 0 0;
+  font-size: 20px;
+  line-height: 1.5;
+}
+
+.tattoo-process-stamp {
+  display: inline-block;
+  margin-top: 34px;
+  padding: 10px 14px;
+  border: 1px solid #8d2d20;
+  color: #8d2d20;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  transform: rotate(-3deg);
+}
+
+.tattoo-process-intro,
+.tattoo-process-story,
+.tattoo-process-check {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 100px 24px;
+}
+
+.tattoo-process-intro {
+  display: grid;
+  grid-template-columns: 0.9fr 1.1fr;
+  gap: 80px;
+  align-items: start;
+}
+
+.tattoo-process-intro h2,
+.tattoo-process-story h2,
+.tattoo-process-check h2 {
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 400;
+  font-size: clamp(34px, 5vw, 64px);
+  line-height: 0.98;
+  letter-spacing: -0.04em;
+}
+
+.tattoo-process-intro > p,
+.tattoo-process-story-copy > p:not(.eyebrow):not(.source-note) {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.7;
+}
+
+.tattoo-process-story {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.85fr);
+  gap: 80px;
+  align-items: center;
+  border-top: 1px solid #171717;
+}
+
+.tattoo-process-image-frame {
+  margin: 0;
+  background: #111111;
+  padding: 12px 12px 18px;
+  transform: rotate(-2deg);
+}
+
+.tattoo-process-image-frame img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  filter: saturate(0.7) contrast(1.1);
+}
+
+.tattoo-process-image-frame p {
+  margin: 12px 8px 0;
+  color: #f3f3f3;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 17px;
+}
+
+.tattoo-process-story-copy {
+  padding: 20px 0;
+}
+
+.source-note {
+  margin-top: 28px !important;
+  font-size: 12px !important;
+  line-height: 1.5 !important;
+  color: #666666;
+}
+
+.source-note a {
+  text-decoration: underline;
+}
+
+.tattoo-process-check {
+  max-width: none;
+  padding-left: max(24px, 8vw);
+  padding-right: max(24px, 8vw);
+  background: #111111;
+  color: #f3f3f3;
+}
+
+.tattoo-process-check-heading {
+  max-width: 600px;
+  margin-bottom: 56px;
+}
+
+.tattoo-process-check .eyebrow {
+  color: #aaaaaa;
+}
+
+.tattoo-process-check-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+  max-width: 1120px;
+  margin: 0 auto;
+}
+
+.tattoo-process-check-grid article {
+  min-height: 250px;
+  padding: 28px;
+  border: 1px solid #5d554c;
+}
+
+.tattoo-process-check-grid span {
+  color: #aaaaaa;
+  font-size: 12px;
+  letter-spacing: 0.14em;
+}
+
+.tattoo-process-check-grid h3 {
+  margin: 54px 0 16px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 28px;
+  font-weight: 400;
+}
+
+.tattoo-process-check-grid p {
+  margin: 0;
+  color: #cfc5b5;
+  line-height: 1.6;
+}
+
+.tattoo-process-quote {
+  padding: 110px 24px;
+  text-align: center;
+  background: #555555;
+  color: #f3f3f3;
+}
+
+.tattoo-process-quote p {
+  max-width: 760px;
+  margin: 0 auto 24px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(30px, 5vw, 62px);
+  line-height: 1;
+}
+
+.tattoo-process-quote span {
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 700px) {
+  .tattoo-process-hero {
+    min-height: 620px;
+    grid-template-columns: 1fr;
+    padding-top: 64px;
+  }
+
+  .tattoo-process-intro,
+  .tattoo-process-story {
+    grid-template-columns: 1fr;
+    gap: 42px;
+    padding-top: 70px;
+    padding-bottom: 70px;
+  }
+
+  .tattoo-process-check-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .certificate-preview {

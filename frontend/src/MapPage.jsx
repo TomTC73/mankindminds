@@ -695,6 +695,23 @@ function MapController({ activeCity }) {
   return null;
 }
 
+function MapResizeHandler() {
+  const map = useMap();
+
+  useEffect(() => {
+    const invalidateSize = () => map.invalidateSize();
+    const frame = requestAnimationFrame(invalidateSize);
+
+    window.addEventListener("resize", invalidateSize);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("resize", invalidateSize);
+    };
+  }, [map]);
+
+  return null;
+}
+
 export default function MapPage({ embedded = false }) {
   const customIcon = createCustomPinIcon();
   const mapRef = useRef(null);
@@ -911,6 +928,7 @@ export default function MapPage({ embedded = false }) {
             style={{ width: "100%", height: "100%" }}
             zoomControl={true}
           >
+            <MapResizeHandler />
             <MapController activeCity={activeCity} />
             <TileLayer
               url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
