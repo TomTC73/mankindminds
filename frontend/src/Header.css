@@ -38,7 +38,7 @@ header.header {
 .section-switcher-trigger {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 6px;
   border: 1px solid #111;
   border-radius: 2px;
   background: #f3f3f3;
@@ -178,8 +178,9 @@ header.header {
   header.header {
     grid-template-areas: "section nav";
     grid-template-columns: auto minmax(0, 1fr);
-    padding: 12px;
-    gap: 12px;
+    padding: 10px 8px;
+    gap: 6px;
+    overflow: visible;
   }
 
   .logo-container {
@@ -192,18 +193,25 @@ header.header {
     padding: 8px 10px;
   }
 
+  .section-switcher {
+    justify-self: start;
+  }
+
   .nav {
+    min-width: 0;
+    width: 100%;
     justify-self: end;
     justify-content: flex-end;
     flex-wrap: nowrap;
-    gap: 12px;
+    gap: 8px;
   }
 
   .nav a {
     font-size: 11px;
+    white-space: nowrap;
   }
 
   .nav a.contact-link {
-    padding: 8px 12px; /* Slimmer button padding for a tighter fit */
+    padding: 8px 5px;
   }
 }
