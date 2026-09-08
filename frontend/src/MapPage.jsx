@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from "react";
-import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "./MapPage.css";
@@ -720,6 +720,7 @@ export default function MapPage({ embedded = false }) {
   const [activeCity, setActiveCity] = useState("London");
   const [searchTerm, setSearchTerm] = useState("");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [selectedStudio, setSelectedStudio] = useState(null);
   const activeLocations = activeCity === "London" ? LONDON_LOCATIONS : NORWICH_LOCATIONS;
   const filteredShops = activeLocations.filter((shop) => {
     const query = searchTerm.toLowerCase().trim();
@@ -732,6 +733,7 @@ export default function MapPage({ embedded = false }) {
 
   const handleCityChange = (city) => {
     setActiveCity(city);
+    setSelectedStudio(null);
     setSearchTerm("");
     setIsDropdownOpen(false);
   };
@@ -742,10 +744,7 @@ export default function MapPage({ embedded = false }) {
     }
     if (mapRef.current) {
       mapRef.current.flyTo([shop.lat, shop.lng], 15, { duration: 1.2 });
-      const marker = markerRefs.current[shop.id];
-      if (marker) {
-        marker.openPopup();
-      }
+      setSelectedStudio(shop);
     }
     setSearchTerm("");
     setIsDropdownOpen(false);
@@ -926,7 +925,7 @@ export default function MapPage({ embedded = false }) {
             zoom={13}
             minZoom={8}
             style={{ width: "100%", height: "100%" }}
-            zoomControl={true}
+            zoomControl={false}
           >
             <MapResizeHandler />
             <MapController activeCity={activeCity} />
@@ -942,31 +941,46 @@ export default function MapPage({ embedded = false }) {
                 position={[loc.lat, loc.lng]}
                 icon={customIcon}
                 ref={(el) => (markerRefs.current[loc.id] = el)}
+                eventHandlers={{ click: () => setSelectedStudio(loc) }}
               >
-                <Popup minWidth={270} maxWidth={300}>
-                  <div style={{ padding: "0px", backgroundColor: "#ffffff", color: "#0f172a", overflow: "hidden" }}>
+              </Marker>
+            ))}
+          </MapContainer>
+
+          {selectedStudio && (
+            <section className="studio-detail-panel" aria-label={`${selectedStudio.name} details`}>
+              <button
+                type="button"
+                className="studio-detail-close"
+                onClick={() => setSelectedStudio(null)}
+                aria-label="Close studio details"
+              >
+                Close details <span aria-hidden="true">×</span>
+              </button>
+              <div className="studio-detail-content">
+                <div style={{ padding: "0px", backgroundColor: "#ffffff", color: "#0f172a", overflow: "hidden" }}>
                     
-                    <div style={{ width: "100%", height: "130px", overflow: "hidden", position: "relative" }}>
+                    <div className="studio-detail-image-frame">
                       <img
-                        src={loc.image}
-                        alt={loc.name}
-                        style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                        className="studio-detail-image"
+                        src={selectedStudio.image}
+                        alt={selectedStudio.name}
                       />
                     </div>
 
                     <div style={{ padding: "10px 4px 4px 4px" }}>
                       <h3 style={{ margin: "0 0 2px 0", fontSize: "15px", fontWeight: "600", color: "#0f172a" }}>
-                        {loc.name}
+                        {selectedStudio.name}
                       </h3>
                       <p style={{ margin: "0 0 2px 0", fontSize: "12px", color: "#64748b", fontWeight: "500" }}>
-                        {loc.hubTitle} | {loc.postcode}
+                        {selectedStudio.hubTitle} | {selectedStudio.postcode}
                       </p>
                       <p style={{ margin: "0 0 8px 0", fontSize: "11px", color: "#0284c7", fontWeight: "600" }}>
-                        Ref Code: {loc.refCode}
+                        Ref Code: {selectedStudio.refCode}
                       </p>
 
                       <p style={{ margin: "0 0 10px 0", fontSize: "12px", lineHeight: "1.4", color: "#334155" }}>
-                        {loc.description}
+                        {selectedStudio.description}
                       </p>
 
                       <div
@@ -982,10 +996,10 @@ export default function MapPage({ embedded = false }) {
                         }}
                       >
                         <span style={{ color: "#d97706" }}>
-                          Rating: {loc.starRating} / 5.0
+                          Rating: {selectedStudio.starRating} / 5.0
                         </span>
                         <span style={{ color: "#475569", backgroundColor: "#f1f5f9", padding: "2px 8px", borderRadius: "4px" }}>
-                          AI Status: {loc.aiPercentage}
+                          AI Status: {selectedStudio.aiPercentage}
                         </span>
                       </div>
 
@@ -1004,7 +1018,7 @@ export default function MapPage({ embedded = false }) {
                             paddingRight: "4px",
                           }}
                         >
-                          {loc.artists.map((artist, idx) => (
+                          {selectedStudio.artists.map((artist, idx) => (
                             <div
                               key={idx}
                               style={{
@@ -1024,7 +1038,7 @@ export default function MapPage({ embedded = false }) {
                             >
                               <span>{artist}</span>
                               <button
-                                onClick={() => handleVerifyArtist(artist, loc.name)}
+                                onClick={() => handleVerifyArtist(artist, selectedStudio.name)}
                                 style={{
                                   background: "none",
                                   border: "none",
@@ -1045,10 +1059,9 @@ export default function MapPage({ embedded = false }) {
 
                     </div>
                   </div>
-                </Popup>
-              </Marker>
-            ))}
-          </MapContainer>
+              </div>
+            </section>
+          )}
         </div>
 
         {/* Studios Cards Grid */}
