@@ -26,15 +26,20 @@ function Home() {
               followers, and collaborators confidence in who they are working with.
             </p>
 
-            <Link to="/certificates">
-              <button className="button">View Creators</button>
-            </Link>
-
-            <Link to={`/process${pathname}`}>
-              <button className="button secondary-button">
-                Process
-              </button>
-            </Link>
+            <div className="hero-actions">
+              <Link to={isTattooHome ? "/process/tattoos" : `/process${pathname}`}>
+                <button className="button">Process</button>
+              </Link>
+              {isTattooHome ? (
+                <Link to="/apply?category=tattoos">
+                  <button className="button secondary-button">Apply</button>
+                </Link>
+              ) : (
+                <Link to="/certificates">
+                  <button className="button secondary-button">View Creators</button>
+                </Link>
+              )}
+            </div>
           </div>
 
         </div>
