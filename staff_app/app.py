@@ -32,6 +32,13 @@ PALETTE = {
     "line": "#d8d0c5",
     "accent": "#984132",
 }
+STANDARD_BADGE = "Verified Creator"
+STANDARD_CARD = {
+    "title": "AI-Free Verification",
+    "description": "This creator's submitted work and process have been reviewed by Mankind Minds and approved as human-made.",
+    "status": "Proven AI-Free Creator",
+}
+DRAFT_PATH = os.path.join(os.environ.get("APPDATA", os.path.expanduser("~")), "MankindMindsStaffManager", "draft.json")
 
 
 class GitHubError(RuntimeError):
@@ -185,8 +192,10 @@ class App(tk.Tk):
         main.pack(fill="both", expand=True, padx=22, pady=(0, 16))
         left = ttk.Frame(main, style="Panel.TFrame", padding=16)
         right = ttk.Frame(main, style="Panel.TFrame", padding=20)
+        preview = ttk.Frame(main, style="Panel.TFrame", padding=16)
         main.add(left, weight=1)
         main.add(right, weight=3)
+        main.add(preview, weight=2)
 
         list_header = ttk.Frame(left, style="Panel.TFrame")
         list_header.pack(fill="x")
@@ -217,11 +226,24 @@ class App(tk.Tk):
         scrollbar.pack(side="right", fill="y")
         self.canvas.bind_all("<MouseWheel>", self.scroll_form)
         self.build_form()
+        ttk.Label(preview, text="Live preview", style="Section.TLabel").pack(anchor="w")
+        ttk.Label(preview, text="This is how the public profile will read.", style="Muted.TLabel").pack(anchor="w", pady=(2, 10))
+        self.preview_text = tk.Text(
+            preview, wrap="word", state="disabled", bg="#ffffff", fg=PALETTE["ink"],
+            relief="solid", borderwidth=1, padx=18, pady=18,
+        )
+        self.preview_text.pack(fill="both", expand=True)
+        self.preview_text.tag_configure("title", font=("Georgia", 22), spacing3=8)
+        self.preview_text.tag_configure("heading", font=("Georgia", 14), spacing1=12, spacing3=4)
+        self.preview_text.tag_configure("label", foreground=PALETTE["accent"], font=("Segoe UI Semibold", 9))
+        self.update_preview()
 
         footer = ttk.Frame(self, padding=(22, 0, 22, 14))
         footer.pack(fill="x")
         self.status = ttk.Label(footer, text="Sign in to load creator records.", style="Status.TLabel")
         self.status.pack(side="left")
+        ttk.Button(footer, text="Load draft", command=self.load_draft).pack(side="right", padx=(8, 0))
+        ttk.Button(footer, text="Save draft", style="Outline.TButton", command=self.save_draft).pack(side="right", padx=(8, 0))
         ttk.Button(footer, text="Refresh", command=self.load_users).pack(side="right", padx=(8, 0))
         self.publish_button = ttk.Button(footer, text="Publish changes as GitHub PR", style="Accent.TButton", command=self.publish)
         self.publish_button.pack(side="right")
@@ -235,19 +257,17 @@ class App(tk.Tk):
             ("name", "Name", "Creator's public name"),
             ("slug", "Profile slug", "Used in the profile URL"),
             ("description", "Short description", "Shown on the creator listing"),
-            ("badgeText", "Badge text", "Usually Verified Creator"),
             ("bio", "Bio", "The longer profile introduction"),
         ]
         for key, label, hint in fields:
             self.add_labeled_entry(key, label, hint)
         self.add_labeled_combo("category", "Category", ("Tattoos", "Music", "Writing", "Videos", "Art"))
 
-        self.add_heading("Verification card", "This is the standard verification panel on each profile.")
-        self.add_labeled_entry("aiTitle", "Card title", "Example: AI-Free Verification")
-        self.add_labeled_entry("aiDescription", "Card description", "Explain what was reviewed")
-        self.add_labeled_entry("aiStatus", "Status", "Example: Proven AI-Free Creator")
+        self.add_heading("Verification", "Standard Mankind Minds verification is added automatically.")
+        ttk.Label(self.form, text="Verified Creator  ·  AI-Free Verification  ·  Proven AI-Free Creator",
+                  style="Muted.TLabel").pack(anchor="w", pady=(0, 16))
 
-        self.add_heading("Profile sections", "Add as many titled sections as the profile needs.")
+        self.add_heading("Profile sections", "The first two sections are standard. Add optional sections below them.")
         self.sections_container = ttk.Frame(self.form, style="Panel.TFrame")
         self.sections_container.pack(fill="x")
         ttk.Button(self.form, text="+  Add section", style="Outline.TButton", command=self.add_section_row).pack(anchor="w", pady=(8, 16))
@@ -281,6 +301,9 @@ class App(tk.Tk):
         widget.pack(fill="x")
         ttk.Label(field_frame, text=hint, style="Muted.TLabel").pack(anchor="w")
         self.fields[key] = widget
+        widget.bind("<KeyRelease>", lambda _event: self.update_preview())
+        if key == "name":
+            widget.bind("<KeyRelease>", lambda _event: self.update_standard_section_title())
 
     def add_labeled_combo(self, key, label, values):
         frame = ttk.Frame(self.form, style="Panel.TFrame")
@@ -289,6 +312,7 @@ class App(tk.Tk):
         widget = ttk.Combobox(frame, values=values, state="readonly")
         widget.pack(side="left", fill="x", expand=True)
         self.fields[key] = widget
+        widget.bind("<<ComboboxSelected>>", lambda _event: self.update_preview())
 
     def add_section_row(self, value=None):
         value = value or {"title": "", "content": ""}
@@ -300,8 +324,12 @@ class App(tk.Tk):
         content = tk.Text(row, height=3, width=46, wrap="word", bg="#ffffff", fg=PALETTE["ink"], relief="solid", borderwidth=1)
         content.insert("1.0", value.get("content", ""))
         content.pack(side="left", fill="x", expand=True, padx=(0, 8))
-        ttk.Button(row, text="Remove", command=lambda: self.remove_row(row, self.section_rows)).pack(side="right")
+        if len(self.section_rows) >= 2:
+            ttk.Button(row, text="Remove", command=lambda: self.remove_row(row, self.section_rows)).pack(side="right")
         self.section_rows.append((row, title, content))
+        title.bind("<KeyRelease>", lambda _event: self.update_preview())
+        content.bind("<KeyRelease>", lambda _event: self.update_preview())
+        self.update_preview()
 
     def add_social_row(self, value=None):
         value = value or {"name": "", "url": ""}
@@ -315,11 +343,56 @@ class App(tk.Tk):
         url.pack(side="left", fill="x", expand=True, padx=(0, 8))
         ttk.Button(row, text="Remove", command=lambda: self.remove_row(row, self.social_rows)).pack(side="right")
         self.social_rows.append((row, name, url))
+        name.bind("<KeyRelease>", lambda _event: self.update_preview())
+        url.bind("<KeyRelease>", lambda _event: self.update_preview())
+        self.update_preview()
 
-    @staticmethod
     def remove_row(row, collection):
         row.destroy()
         collection[:] = [item for item in collection if item[0] is not row]
+        self.update_preview()
+        
+    def update_standard_section_title(self):
+        if not self.section_rows:
+            return
+        name = self.fields["name"].get().strip() or "[Name]"
+        self.section_rows[0][1].delete(0, tk.END)
+        self.section_rows[0][1].insert(0, f"About {name}'s Work")
+        self.update_preview()
+
+    def update_preview(self):
+        if not hasattr(self, "preview_text"):
+            return
+        name = self.fields.get("name").get().strip() if self.fields.get("name") else "Creator name"
+        category = self.fields.get("category").get().strip() if self.fields.get("category") else ""
+        description = self.fields.get("description").get().strip() if self.fields.get("description") else ""
+        bio = self.fields.get("bio").get().strip() if self.fields.get("bio") else ""
+        sections = [
+            {"title": title.get().strip(), "content": content.get("1.0", tk.END).strip()}
+            for _, title, content in self.section_rows
+        ]
+        links = [{"name": name.get().strip(), "url": url.get().strip()} for _, name, url in self.social_rows]
+        self.preview_text.config(state="normal")
+        self.preview_text.delete("1.0", tk.END)
+        self.preview_text.insert(tk.END, STANDARD_BADGE.upper() + "\n", "label")
+        self.preview_text.insert(tk.END, name + "\n", "title")
+        self.preview_text.insert(tk.END, category + "\n\n", "label")
+        self.preview_text.insert(tk.END, description + "\n\n" if description else "Short description will appear here.\n\n")
+        self.preview_text.insert(tk.END, "AI-FREE VERIFICATION\n", "heading")
+        self.preview_text.insert(tk.END, STANDARD_CARD["description"] + "\n")
+        self.preview_text.insert(tk.END, STANDARD_CARD["status"] + "\n\n", "label")
+        if bio:
+            self.preview_text.insert(tk.END, bio + "\n\n")
+        for section in sections:
+            if section["title"] or section["content"]:
+                self.preview_text.insert(tk.END, section["title"] + "\n", "heading")
+                self.preview_text.insert(tk.END, section["content"] + "\n\n")
+        if links:
+            self.preview_text.insert(tk.END, "LINKS\n", "heading")
+            for link in links:
+                if link["name"] or link["url"]:
+                    self.preview_text.insert(tk.END, f"{link['name']}: {link['url']}\n")
+        self.preview_text.config(state="disabled")
 
     def clear_search_placeholder(self, _event):
         if self.search.get() == "Search creators...":
@@ -411,22 +484,30 @@ class App(tk.Tk):
         self.fill_form(self.selected)
 
     def fill_form(self, creator):
-        for key in ("name", "slug", "description", "badgeText", "bio"):
+        for key in ("name", "slug", "description", "bio"):
             self.fields[key].delete(0, tk.END)
             self.fields[key].insert(0, creator.get(key, ""))
         self.fields["category"].set(creator.get("category", ""))
-        card = creator.get("aiFreeCard") or {}
-        for key, value in (("aiTitle", card.get("title", "")), ("aiDescription", card.get("description", "")), ("aiStatus", card.get("status", ""))):
-            self.fields[key].delete(0, tk.END)
-            self.fields[key].insert(0, value)
         for row, _, _ in self.section_rows:
             row.destroy()
         for row, _, _ in self.social_rows:
             row.destroy()
         self.section_rows = []
         self.social_rows = []
-        for section in creator.get("sections", []):
+        existing_sections = creator.get("sections", [])
+        defaults = [
+            {"title": f"About {creator.get('name', '').strip() or '[Name]'}'s Work", "content": ""},
+            {"title": "Verification Review", "content": ""},
+        ]
+        for index, section in enumerate(existing_sections[:2]):
+            defaults[index] = {
+                "title": defaults[index]["title"],
+                "content": section.get("content", ""),
+            }
+        for section in defaults:
             self.add_section_row(section)
+        for link in existing_sections[2:]:
+            self.add_section_row(link)
         for link in creator.get("socialLinks", []):
             self.add_social_row(link)
         self.photo_path = None
@@ -434,6 +515,7 @@ class App(tk.Tk):
         self.photo_label.config(text=f"Current profile photo: {creator.get('imageUrl', 'none')}")
         self.gallery_label.config(text=f"{len(creator.get('gallery', []))} existing gallery photos")
         self.canvas.yview_moveto(0)
+        self.update_preview()
 
     def new_user(self):
         self.selected = {"slug": "", "name": "", "category": "Tattoos", "sections": [], "socialLinks": [], "gallery": []}
@@ -453,12 +535,18 @@ class App(tk.Tk):
     def read_form(self):
         sections = [{"title": title.get().strip(), "content": content.get("1.0", tk.END).strip()} for _, title, content in self.section_rows]
         links = [{"name": name.get().strip(), "url": url.get().strip()} for _, name, url in self.social_rows]
+        if len(sections) < 2:
+            raise ValueError("The standard About Work and Verification Review sections are required.")
+        creator_name = self.fields["name"].get().strip()
+        sections[0]["title"] = f"About {creator_name or '[Name]'}'s Work"
+        sections[1]["title"] = "Verification Review"
         if any(not item["title"] or not item["content"] for item in sections):
             raise ValueError("Complete or remove every profile section.")
         if any(not item["name"] or not item["url"] for item in links):
             raise ValueError("Complete or remove every social link.")
         creator = {key: widget.get().strip() for key, widget in self.fields.items()}
-        creator["aiFreeCard"] = {"title": creator.pop("aiTitle"), "description": creator.pop("aiDescription"), "status": creator.pop("aiStatus")}
+        creator["badgeText"] = STANDARD_BADGE
+        creator["aiFreeCard"] = STANDARD_CARD.copy()
         creator["sections"] = sections
         creator["socialLinks"] = links
         creator["imageUrl"] = self.selected.get("imageUrl", "") if self.selected else ""
@@ -468,6 +556,29 @@ class App(tk.Tk):
         if not creator["slug"]:
             creator["slug"] = "-".join(creator["name"].lower().split())
         return creator
+
+    def save_draft(self):
+        try:
+            creator = self.read_form()
+            os.makedirs(os.path.dirname(DRAFT_PATH), exist_ok=True)
+            with open(DRAFT_PATH, "w", encoding="utf-8") as draft:
+                json.dump(creator, draft, indent=2, ensure_ascii=False)
+            self.set_status("Draft saved locally. It has not been submitted.", "#46705b")
+        except ValueError as error:
+            messagebox.showerror("Draft not saved", str(error))
+
+    def load_draft(self):
+        if not os.path.exists(DRAFT_PATH):
+            messagebox.showinfo("No draft found", "There is no saved local draft yet.")
+            return
+        try:
+            with open(DRAFT_PATH, "r", encoding="utf-8") as draft:
+                creator = json.load(draft)
+            self.selected = creator
+            self.fill_form(creator)
+            self.set_status("Draft loaded locally. Review it before publishing.")
+        except (OSError, json.JSONDecodeError) as error:
+            messagebox.showerror("Draft could not be loaded", str(error))
 
     def publish(self):
         if not self.client:
