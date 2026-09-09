@@ -980,7 +980,7 @@ export default function MapPage({ embedded = false }) {
             <MapResizeHandler />
             <MapController activeCity={activeCity} />
             <TileLayer
-              url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+              url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png?key=cb1_33h6_1_17466d83582460ee6d073f4c"
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
             />
 
