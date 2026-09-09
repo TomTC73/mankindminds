@@ -20,6 +20,7 @@ header.header {
   grid-area: logo;
   display: flex;
   align-items: center;
+  background: transparent !important;
 }
 
 .logo-image {
@@ -27,6 +28,8 @@ header.header {
   width: 56px;
   height: 56px;
   object-fit: contain;
+  background: transparent !important;
+  mix-blend-mode: multiply;
 }
 
 .section-switcher {
@@ -179,7 +182,7 @@ header.header {
     grid-template-areas: "section nav";
     grid-template-columns: auto minmax(0, 1fr);
     padding: 10px 8px;
-    gap: 6px;
+    gap: 4px;
     overflow: visible;
   }
 
@@ -191,6 +194,7 @@ header.header {
   .section-menu-option {
     font-size: 14px;
     padding: 8px 10px;
+    font-family: Arial, Helvetica, sans-serif;
   }
 
   .section-switcher {
@@ -203,15 +207,36 @@ header.header {
     justify-self: end;
     justify-content: flex-end;
     flex-wrap: nowrap;
-    gap: 8px;
+    gap: 6px;
   }
 
   .nav a {
-    font-size: 11px;
+    font-size: 10px;
     white-space: nowrap;
+    font-family: Arial, Helvetica, sans-serif;
   }
 
   .nav a.contact-link {
-    padding: 8px 5px;
+    padding: 8px 6px;
   }
+}
+
+/* The Process page header is the shared site standard on every route. */
+header.header,
+.section-switcher-trigger,
+.section-menu,
+.section-menu-option {
+  background: #f3f3f3 !important;
+}
+
+.section-switcher-trigger:hover,
+.section-switcher-trigger[aria-expanded="true"] {
+  background: #111 !important;
+  color: #fff !important;
+}
+
+.section-menu-option:hover,
+.section-menu-option:focus-visible {
+  background: #111 !important;
+  color: #fff !important;
 }
