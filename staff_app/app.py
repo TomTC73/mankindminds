@@ -25,7 +25,7 @@ REPO = "MankindMindsBackend"
 DATA_PATH = "backend/src/main/resources/data/creators.json"
 ASSET_PATH = "backend/src/main/resources/static/assets"
 API = "https://api.github.com"
-CLIENT_ID = os.environ.get("MM_GITHUB_CLIENT_ID", "")
+CLIENT_ID = os.environ.get("MM_GITHUB_CLIENT_ID", "Ov23liZIMcO7043zppb9")
 
 
 class GitHubError(RuntimeError):
