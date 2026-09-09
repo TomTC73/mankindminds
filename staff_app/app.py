@@ -32,6 +32,13 @@ PALETTE = {
     "line": "#d8d0c5",
     "accent": "#984132",
 }
+STANDARD_REVIEW_CONTENT = (
+    "Mankind Minds reviews the materials submitted by each creator to assess "
+    "whether their creative output is human-made and free from AI generation. "
+    "The review considers the creator's submitted work, process, portfolio "
+    "links, and supporting evidence. Based on the reviewed materials, this "
+    "creator profile has been approved as AI-free."
+)
 STANDARD_BADGE = "Verified Creator"
 STANDARD_CARD = {
     "title": "AI-Free Verification",
@@ -267,7 +274,7 @@ class App(tk.Tk):
         ttk.Label(self.form, text="Verified Creator  ·  AI-Free Verification  ·  Proven AI-Free Creator",
                   style="Muted.TLabel").pack(anchor="w", pady=(0, 16))
 
-        self.add_heading("Profile sections", "The first two sections are standard. Add optional sections below them.")
+        self.add_heading("Profile sections", "Add the creator's unique work description. The verification review is standard.")
         self.sections_container = ttk.Frame(self.form, style="Panel.TFrame")
         self.sections_container.pack(fill="x")
         ttk.Button(self.form, text="+  Add section", style="Outline.TButton", command=self.add_section_row).pack(anchor="w", pady=(8, 16))
@@ -324,11 +331,16 @@ class App(tk.Tk):
         content = tk.Text(row, height=3, width=46, wrap="word", bg="#ffffff", fg=PALETTE["ink"], relief="solid", borderwidth=1)
         content.insert("1.0", value.get("content", ""))
         content.pack(side="left", fill="x", expand=True, padx=(0, 8))
+        if len(self.section_rows) == 1:
+            content.config(state="disabled", bg="#eeeae3", fg=PALETTE["muted"])
+            content.delete("1.0", tk.END)
+            content.insert("1.0", STANDARD_REVIEW_CONTENT)
         if len(self.section_rows) >= 2:
             ttk.Button(row, text="Remove", command=lambda: self.remove_row(row, self.section_rows)).pack(side="right")
         self.section_rows.append((row, title, content))
         title.bind("<KeyRelease>", lambda _event: self.update_preview())
-        content.bind("<KeyRelease>", lambda _event: self.update_preview())
+        if len(self.section_rows) != 2:
+            content.bind("<KeyRelease>", lambda _event: self.update_preview())
         self.update_preview()
 
     def add_social_row(self, value=None):
@@ -383,7 +395,7 @@ class App(tk.Tk):
         self.preview_text.insert(tk.END, STANDARD_CARD["status"] + "\n\n", "label")
         if bio:
             self.preview_text.insert(tk.END, bio + "\n\n")
-        for section in sections:
+        for index, section in enumerate(sections):
             if section["title"] or section["content"]:
                 self.preview_text.insert(tk.END, section["title"] + "\n", "heading")
                 self.preview_text.insert(tk.END, section["content"] + "\n\n")
@@ -506,8 +518,8 @@ class App(tk.Tk):
             }
         for section in defaults:
             self.add_section_row(section)
-        for link in existing_sections[2:]:
-            self.add_section_row(link)
+        for section in existing_sections[2:]:
+            self.add_section_row(section)
         for link in creator.get("socialLinks", []):
             self.add_social_row(link)
         self.photo_path = None
@@ -540,6 +552,7 @@ class App(tk.Tk):
         creator_name = self.fields["name"].get().strip()
         sections[0]["title"] = f"About {creator_name or '[Name]'}'s Work"
         sections[1]["title"] = "Verification Review"
+        sections[1]["content"] = STANDARD_REVIEW_CONTENT
         if any(not item["title"] or not item["content"] for item in sections):
             raise ValueError("Complete or remove every profile section.")
         if any(not item["name"] or not item["url"] for item in links):
