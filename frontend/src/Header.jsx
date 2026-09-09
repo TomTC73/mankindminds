@@ -7,6 +7,7 @@ const sections = [
   { label: "Tattoos", path: "/tattoos" },
   { label: "Music", path: "/music" },
   { label: "Writing", path: "/writing" },
+  { label: "Videos", path: "/videos" },
   { label: "Art", path: "/art" },
 ];
 
@@ -86,19 +87,19 @@ function Header() {
           className={`section-menu ${isMenuOpen ? "is-open" : ""}`}
           aria-hidden={!isMenuOpen}
         >
-          {sections.map((section) => (
-            <button
-              type="button"
-              key={section.path}
-              className={`section-menu-option ${
-                section.path === selectedSection ? "is-active" : ""
-              }`}
-              tabIndex={isMenuOpen ? 0 : -1}
-              onClick={() => selectSection(section.path)}
-            >
-              {section.label}
-            </button>
-          ))}
+          {sections
+            .filter((section) => section.path !== selectedSection)
+            .map((section) => (
+              <button
+                type="button"
+                key={section.path}
+                className="section-menu-option"
+                tabIndex={isMenuOpen ? 0 : -1}
+                onClick={() => selectSection(section.path)}
+              >
+                {section.label}
+              </button>
+            ))}
         </div>
       </div>
 
