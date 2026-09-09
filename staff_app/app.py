@@ -329,12 +329,11 @@ class App(tk.Tk):
         title.insert(0, value.get("title", ""))
         title.pack(side="left", fill="x", expand=True, padx=(0, 8))
         content = tk.Text(row, height=3, width=46, wrap="word", bg="#ffffff", fg=PALETTE["ink"], relief="solid", borderwidth=1)
-        content.insert("1.0", value.get("content", ""))
+        is_review = len(self.section_rows) == 1
+        content.insert("1.0", STANDARD_REVIEW_CONTENT if is_review else value.get("content", ""))
         content.pack(side="left", fill="x", expand=True, padx=(0, 8))
-        if len(self.section_rows) == 1:
+        if is_review:
             content.config(state="disabled", bg="#eeeae3", fg=PALETTE["muted"])
-            content.delete("1.0", tk.END)
-            content.insert("1.0", STANDARD_REVIEW_CONTENT)
         if len(self.section_rows) >= 2:
             ttk.Button(row, text="Remove", command=lambda: self.remove_row(row, self.section_rows)).pack(side="right")
         self.section_rows.append((row, title, content))
@@ -367,7 +366,7 @@ class App(tk.Tk):
     def update_standard_section_title(self):
         if not self.section_rows:
             return
-        name = self.fields["name"].get().strip() or "[Name]"
+        name = self.fields["name"].get().strip().split()[0] if self.fields["name"].get().strip() else "[Name]"
         self.section_rows[0][1].delete(0, tk.END)
         self.section_rows[0][1].insert(0, f"About {name}'s Work")
         self.update_preview()
@@ -507,8 +506,9 @@ class App(tk.Tk):
         self.section_rows = []
         self.social_rows = []
         existing_sections = creator.get("sections", [])
+        first_name = creator.get("name", "").strip().split()[0] if creator.get("name", "").strip() else "[Name]"
         defaults = [
-            {"title": f"About {creator.get('name', '').strip() or '[Name]'}'s Work", "content": ""},
+            {"title": f"About {first_name}'s Work", "content": ""},
             {"title": "Verification Review", "content": ""},
         ]
         for index, section in enumerate(existing_sections[:2]):
@@ -550,7 +550,8 @@ class App(tk.Tk):
         if len(sections) < 2:
             raise ValueError("The standard About Work and Verification Review sections are required.")
         creator_name = self.fields["name"].get().strip()
-        sections[0]["title"] = f"About {creator_name or '[Name]'}'s Work"
+        first_name = creator_name.split()[0] if creator_name else "[Name]"
+        sections[0]["title"] = f"About {first_name}'s Work"
         sections[1]["title"] = "Verification Review"
         sections[1]["content"] = STANDARD_REVIEW_CONTENT
         if any(not item["title"] or not item["content"] for item in sections):
