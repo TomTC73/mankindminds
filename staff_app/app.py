@@ -277,6 +277,8 @@ class App(tk.Tk):
         self.add_heading("Profile sections", "Add the creator's unique work description. The verification review is standard.")
         self.sections_container = ttk.Frame(self.form, style="Panel.TFrame")
         self.sections_container.pack(fill="x")
+        self.add_section_row()
+        self.add_section_row()
         ttk.Button(self.form, text="+  Add section", style="Outline.TButton", command=self.add_section_row).pack(anchor="w", pady=(8, 16))
 
         self.add_heading("Social links", "Add Instagram, websites, email, or any other public link.")
@@ -341,6 +343,22 @@ class App(tk.Tk):
         if len(self.section_rows) != 2:
             content.bind("<KeyRelease>", lambda _event: self.update_preview())
         self.update_preview()
+
+    def ensure_standard_sections(self):
+        while len(self.section_rows) < 2:
+            self.add_section_row()
+        name = self.fields["name"].get().strip() or "[Name]"
+        first_name = name.split()[0]
+        first_title = f"About {first_name}'s Work"
+        self.section_rows[0][1].delete(0, tk.END)
+        self.section_rows[0][1].insert(0, first_title)
+        self.section_rows[1][1].delete(0, tk.END)
+        self.section_rows[1][1].insert(0, "Verification Review")
+        review_content = self.section_rows[1][2]
+        review_content.config(state="normal")
+        review_content.delete("1.0", tk.END)
+        review_content.insert("1.0", STANDARD_REVIEW_CONTENT)
+        review_content.config(state="disabled", bg="#eeeae3", fg=PALETTE["muted"])
 
     def add_social_row(self, value=None):
         value = value or {"name": "", "url": ""}
@@ -545,6 +563,7 @@ class App(tk.Tk):
         self.gallery_label.config(text=f"{len(self.gallery_paths)} gallery photos selected")
 
     def read_form(self):
+        self.ensure_standard_sections()
         sections = [{"title": title.get().strip(), "content": content.get("1.0", tk.END).strip()} for _, title, content in self.section_rows]
         links = [{"name": name.get().strip(), "url": url.get().strip()} for _, name, url in self.social_rows]
         if len(sections) < 2:
