@@ -34,6 +34,7 @@ function App() {
         <Route path="/tattoos" element={<Home />} />
         <Route path="/music" element={<Home />} />
         <Route path="/writing" element={<Home />} />
+        <Route path="/videos" element={<Home />} />
         <Route path="/art" element={<Home />} />
         <Route path="/map" element={<MapPage />} />
         <Route path="/process" element={<Navigate to="/process/tattoos" replace />} />
