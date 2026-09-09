@@ -34,6 +34,32 @@ const processBySection = {
     secondImageAlt: "Cover of the first edition of Maple Leaf Rag",
     secondImageCaption: "The published score: a work made to be played, remembered, and passed on.",
   },
+  videos: {
+    title: "Varda Verification",
+    intro:
+      "A production-aware review for filmmakers, editors, and video creators whose work is shaped by choices in time, image, and sound.",
+    work:
+      "Short films, documentaries, music videos, reels, branded films, animation, and online video work.",
+    storyTitle: "The cut carries the maker.",
+    story:
+      "A video is more than its final export. It carries the decisions behind the framing, the rhythm of the edit, the sound, and the way real moments are arranged into a point of view.",
+    figure: "Agnès Varda",
+    division: "Mankind Minds / Videos division",
+    lede: "A production-led standard inspired by a filmmaker who made observation, collaboration, and editing part of the meaning of a work.",
+    historyEyebrow: "Why Varda?",
+    historyTitle: "A point of view in motion.",
+    history:
+      "Agnès Varda worked across documentary, fiction, photography, and installation. Her films show how a strong visual voice can grow from attention to people, places, process, and the honest texture of lived experience.",
+    principleEyebrow: "The Varda principle",
+    sourceUrl: "https://www.britannica.com/biography/Agnes-Varda",
+    sourceLabel: "Encyclopaedia Britannica",
+    image: "https://images.unsplash.com/photo-1485846234645-a62644f84728?auto=format&fit=crop&w=1200&q=80",
+    imageAlt: "A cinema screen showing a film scene",
+    imageCaption: "A finished frame is also a record of the choices behind it.",
+    secondImage: "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=1200&q=80",
+    secondImageAlt: "A camera ready to record",
+    secondImageCaption: "The camera is one part of a larger human production process.",
+  },
   writing: {
     title: "Ellison Verification",
     intro:
@@ -264,8 +290,8 @@ function Process() {
               <a href={process.sourceUrl} target="_blank" rel="noreferrer">
                 {process.sourceLabel}
               </a>{" "}
-              and image credits are linked through the public-domain source
-              records where available.
+              and image credits are linked through the source records where
+              available.
             </p>
           </div>
         </section>

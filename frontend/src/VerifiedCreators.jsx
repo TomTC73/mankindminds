@@ -14,6 +14,10 @@ const categoryGroups = {
     label: "Writing",
     matches: ["writing", "writer", "author", "poet", "journalist"],
   },
+  videos: {
+    label: "Videos",
+    matches: ["video", "videos", "filmmaker", "videographer", "editor", "director"],
+  },
   art: {
     label: "Art",
     matches: ["art", "artist", "illustrator", "photographer", "designer"],
