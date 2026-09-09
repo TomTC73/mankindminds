@@ -133,7 +133,7 @@ function PrivacyPolicy() {
           <p>
             Mankind Minds
             <br />
-            Email: privacy@mankindminds.com
+            Email: admin@mankindminds.com
           </p>
         </div>
       </section>
