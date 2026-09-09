@@ -721,6 +721,7 @@ export default function MapPage({ embedded = false }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [selectedStudio, setSelectedStudio] = useState(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const activeLocations = activeCity === "London" ? LONDON_LOCATIONS : NORWICH_LOCATIONS;
   const filteredShops = activeLocations.filter((shop) => {
     const query = searchTerm.toLowerCase().trim();
@@ -730,6 +731,29 @@ export default function MapPage({ embedded = false }) {
       shop.refCode.toLowerCase().includes(query)
     );
   });
+
+  useEffect(() => {
+    const syncFullscreenState = () => {
+      setIsFullscreen(
+        document.fullscreenElement === containerRef.current ||
+        document.webkitFullscreenElement === containerRef.current
+      );
+    };
+    const exitFallbackFullscreen = (event) => {
+      if (event.key === "Escape" && !document.fullscreenElement && !document.webkitFullscreenElement) {
+        setIsFullscreen(false);
+      }
+    };
+
+    document.addEventListener("fullscreenchange", syncFullscreenState);
+    document.addEventListener("webkitfullscreenchange", syncFullscreenState);
+    document.addEventListener("keydown", exitFallbackFullscreen);
+    return () => {
+      document.removeEventListener("fullscreenchange", syncFullscreenState);
+      document.removeEventListener("webkitfullscreenchange", syncFullscreenState);
+      document.removeEventListener("keydown", exitFallbackFullscreen);
+    };
+  }, []);
 
   const handleCityChange = (city) => {
     setActiveCity(city);
@@ -749,6 +773,32 @@ export default function MapPage({ embedded = false }) {
     setSearchTerm("");
     setIsDropdownOpen(false);
   };
+
+  const handleFullscreen = () => {
+    const mapShell = containerRef.current;
+    if (!mapShell) return;
+
+    const fullscreenElement = document.fullscreenElement || document.webkitFullscreenElement;
+    if (fullscreenElement === mapShell) {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      } else if (document.webkitExitFullscreen) {
+        document.webkitExitFullscreen();
+      }
+      setIsFullscreen(false);
+    } else if (isFullscreen) {
+      setIsFullscreen(false);
+    } else if (mapShell.requestFullscreen) {
+      setIsFullscreen(true);
+      mapShell.requestFullscreen().catch(() => setIsFullscreen(true));
+    } else if (mapShell.webkitRequestFullscreen) {
+      setIsFullscreen(true);
+      mapShell.webkitRequestFullscreen();
+    } else {
+      setIsFullscreen(true);
+    }
+  };
+
     const handleVerifyArtist = (artistName, shopName) => {
       window.open("https://www.mankindminds.com/apply", "_blank", "noopener,noreferrer");
     };
@@ -780,7 +830,7 @@ export default function MapPage({ embedded = false }) {
         {/* Map Container */}
         <div
           ref={containerRef}
-          className="studio-map-shell"
+          className={`studio-map-shell${isFullscreen ? " map-shell-fullscreen-fallback" : ""}`}
           style={{
             position: "relative",
             width: "100%",
@@ -946,6 +996,22 @@ export default function MapPage({ embedded = false }) {
               </Marker>
             ))}
           </MapContainer>
+
+          <button
+            type="button"
+            className="map-fullscreen-button"
+            onClick={handleFullscreen}
+            aria-label={isFullscreen ? "Exit fullscreen" : "Open map fullscreen"}
+            title={isFullscreen ? "Exit fullscreen" : "Open map fullscreen"}
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              {isFullscreen ? (
+                <path d="M9 3v3H6M15 3v3h3M9 21v-3H6M15 21v-3h3" />
+              ) : (
+                <path d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5" />
+              )}
+            </svg>
+          </button>
 
           {selectedStudio && (
             <section className="studio-detail-panel" aria-label={`${selectedStudio.name} details`}>
