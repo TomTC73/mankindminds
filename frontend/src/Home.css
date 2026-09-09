@@ -10,7 +10,7 @@ body {
 =========================== */
 
 .home-page {
-  background-color: #ffffff;
+  background-color: #f5f1e9;
   color: #111111;
   background-position: right bottom;
   background-repeat: no-repeat;
@@ -85,11 +85,12 @@ body {
 }
 
 .home-page .hero-box {
-  background: #ffffff;
+  background: rgba(251, 250, 247, 0.9);
   box-shadow: none;
 }
 
 .hero-box h2 {
+  font-family: Georgia, "Times New Roman", serif;
   font-size: 44px;
   font-weight: 300;
   margin: 0;
@@ -98,7 +99,8 @@ body {
 
 .hero-box p {
   margin: 24px auto 32px;
-  font-size: 18px;
+  font-size: 17px;
+  color: #4d4a45;
   line-height: 1.6;
   max-width: 620px;
 }
