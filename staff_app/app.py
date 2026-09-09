@@ -103,15 +103,6 @@ class GitHubClient:
         encoded = urllib.parse.quote(path, safe="/")
         return self.request("PUT", f"/repos/{OWNER}/{REPO}/contents/{encoded}", payload)
 
-    def pull_request(self, title, body, branch, base):
-        return self.request("POST", f"/repos/{OWNER}/{REPO}/pulls", {
-            "title": title,
-            "body": body,
-            "head": branch,
-            "base": base,
-        })
-
-
 def request_json(url, payload):
     request = urllib.request.Request(url, data=urllib.parse.urlencode(payload).encode(), method="POST")
     request.add_header("Accept", "application/json")
@@ -252,7 +243,7 @@ class App(tk.Tk):
         ttk.Button(footer, text="Load draft", command=self.load_draft).pack(side="right", padx=(8, 0))
         ttk.Button(footer, text="Save draft", style="Outline.TButton", command=self.save_draft).pack(side="right", padx=(8, 0))
         ttk.Button(footer, text="Refresh", command=self.load_users).pack(side="right", padx=(8, 0))
-        self.publish_button = ttk.Button(footer, text="Publish changes as GitHub PR", style="Accent.TButton", command=self.publish)
+        self.publish_button = ttk.Button(footer, text="Publish changes to website", style="Accent.TButton", command=self.publish)
         self.publish_button.pack(side="right")
 
     def build_form(self):
@@ -623,43 +614,60 @@ class App(tk.Tk):
             messagebox.showerror("Check the form", str(error))
             return
         self.publish_button.config(state="disabled", text="Publishing...")
-        self.set_status("Creating an attributed GitHub branch and pull request...", PALETTE["accent"])
+        self.set_status("Publishing directly to the live backend repository...", PALETTE["accent"])
         def work():
             try:
                 repo = self.client.repository()
                 base = repo["default_branch"]
-                branch = f"staff/{creator['slug']}-{int(time.time())}"
-                self.client.create_branch(branch, self.client.branch_sha(base))
                 if self.photo_path:
                     extension = os.path.splitext(self.photo_path)[1].lower() or ".jpg"
                     filename = creator["slug"] + extension
                     with open(self.photo_path, "rb") as photo:
-                        self.client.put_file(f"{ASSET_PATH}/{filename}", photo.read(), branch, f"Add profile photo for {creator['name']}")
+                        self.client.put_file(
+                            f"{ASSET_PATH}/{filename}",
+                            photo.read(),
+                            base,
+                            f"Add profile photo for {creator['name']}",
+                        )
                     creator["imageUrl"] = f"/assets/{filename}"
                 for index, path in enumerate(self.gallery_paths, start=1):
                     extension = os.path.splitext(path)[1].lower() or ".jpg"
                     filename = f"{creator['slug']}-gallery-{index}{extension}"
                     with open(path, "rb") as photo:
-                        self.client.put_file(f"{ASSET_PATH}/{filename}", photo.read(), branch, f"Add gallery photo for {creator['name']}")
+                        self.client.put_file(
+                            f"{ASSET_PATH}/{filename}",
+                            photo.read(),
+                            base,
+                            f"Add gallery photo for {creator['name']}",
+                        )
                     creator["gallery"].append(f"/assets/{filename}")
                 data_file = self.client.file(DATA_PATH, base)
                 creators = json.loads(base64.b64decode(data_file["content"]).decode("utf-8"))
                 creators = [item for item in creators if item.get("slug") != creator["slug"]]
                 creators.append(creator)
-                self.client.put_file(DATA_PATH, json.dumps(creators, indent=2, ensure_ascii=False).encode("utf-8"), branch, f"Update creator profile: {creator['name']}", data_file["sha"])
-                pr = self.client.pull_request(f"Update creator profile: {creator['name']}", "Submitted through the Mankind Minds staff manager. The GitHub account authoring this pull request identifies the staff member.", branch, base)
-                self.after(0, lambda: self.publish_complete(pr["html_url"]))
+                self.client.put_file(
+                    DATA_PATH,
+                    json.dumps(creators, indent=2, ensure_ascii=False).encode("utf-8"),
+                    base,
+                    f"Update creator profile: {creator['name']}",
+                    data_file["sha"],
+                )
+                self.after(0, self.publish_complete)
             except Exception as error:
                 self.after(0, lambda: self.publish_failed(str(error)))
         threading.Thread(target=work, daemon=True).start()
 
-    def publish_complete(self, url):
-        self.publish_button.config(state="normal", text="Publish changes as GitHub PR")
-        self.set_status("Published successfully. Pull request is ready for review.", "#46705b")
-        messagebox.showinfo("Published for review", url)
+    def publish_complete(self):
+        self.publish_button.config(state="normal", text="Publish changes to website")
+        self.set_status("Published directly to GitHub. The backend deployment will update the site.", "#46705b")
+        messagebox.showinfo(
+            "Published successfully",
+            "The creator profile was committed directly to the backend repository.\n\n"
+            "The site will update after the backend deployment completes.",
+        )
 
     def publish_failed(self, error):
-        self.publish_button.config(state="normal", text="Publish changes as GitHub PR")
+        self.publish_button.config(state="normal", text="Publish changes to website")
         self.set_status("Publishing failed. No changes were lost.", PALETTE["accent"])
         messagebox.showerror("Publish failed", error)
 

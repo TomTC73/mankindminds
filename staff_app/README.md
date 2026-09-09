@@ -2,7 +2,7 @@
 
 This desktop app lets staff sign in with their individual GitHub account, view
 creator records, add or edit profiles, attach profile/gallery photos, and
-publish a reviewable pull request to `TomTC73/MankindMindsBackend`.
+publish directly to the default branch of `TomTC73/MankindMindsBackend`.
 
 ## Local use
 
@@ -19,7 +19,7 @@ python app.py
 ```
 
 The app never asks staff for a token. GitHub identifies the staff member and
-attributes the branch, commits, and pull request to that account.
+attributes each direct commit to that account.
 
 ## Building an `.exe`
 
@@ -33,6 +33,6 @@ configured in the environment of the staff computers before launching it.
 
 ## Publishing
 
-Each publish creates a branch and pull request. Merge the pull request only
-after checking the content and photos. The backend Cloud Build deployment then
-deploys the versioned creator JSON and assets.
+Each publish commits directly to the backend repository's default branch. The
+backend Cloud Build deployment then deploys the versioned creator JSON and
+assets.
