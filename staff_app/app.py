@@ -105,13 +105,15 @@ def request_json(url, payload):
         return json.loads(response.read())
 
 
-def login_device():
+def login_device(on_device_code=None):
     if not CLIENT_ID:
         raise GitHubError("No GitHub OAuth client ID is configured.")
     device = request_json("https://github.com/login/device/code", {
         "client_id": CLIENT_ID,
         "scope": "repo",
     })
+    if on_device_code:
+        on_device_code(device["user_code"])
     webbrowser.open(device["verification_uri"])
     interval = int(device.get("interval", 5))
     while True:
@@ -335,8 +337,15 @@ class App(tk.Tk):
         self.set_status("Opening GitHub sign-in in your browser...", PALETTE["accent"])
         def work():
             try:
-                token, code = login_device()
-                self.after(0, lambda: self.set_status(f"GitHub opened. Enter code {code} if prompted, then waiting for approval...", PALETTE["accent"]))
+                token, _code = login_device(
+                    lambda code: self.after(
+                        0,
+                        lambda: self.set_status(
+                            f"GitHub opened. Enter device code {code}, then approve access.",
+                            PALETTE["accent"],
+                        ),
+                    )
+                )
                 client = GitHubClient(token)
                 user = client.current_user()
                 self.client = client
