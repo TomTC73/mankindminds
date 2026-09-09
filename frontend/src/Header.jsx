@@ -32,6 +32,7 @@ function Header() {
     (section) => section.path === selectedSection,
   ).label;
   const isTattooSection = selectedSection === "/tattoos";
+  const certificatesPath = `/certificates?category=${selectedLabel.toLowerCase()}`;
 
   useEffect(() => {
     if (sectionFromPath) {
@@ -107,7 +108,7 @@ function Header() {
 
       <nav className="nav">
         <Link to={`/process${selectedSection}`}>Process</Link>
-        <Link to={isTattooSection ? "/map" : "/certificates"}>
+        <Link to={isTattooSection ? "/map" : certificatesPath}>
           {isTattooSection ? "Map" : "Certificates"}
         </Link>
         <Link
