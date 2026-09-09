@@ -202,13 +202,76 @@
   width: min(280px, 100%) !important;
 }
 
+.map-fullscreen-button {
+  position: absolute;
+  z-index: 1100;
+  right: 14px;
+  bottom: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #0f172a;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.18);
+}
+
+.map-fullscreen-button svg {
+  width: 21px;
+  height: 21px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+}
+
+.map-fullscreen-button:hover {
+  background: #f8fafc;
+}
+
+.studio-map-shell:fullscreen {
+  width: 100vw !important;
+  height: 100vh !important;
+  max-width: none;
+  border: 0;
+  border-radius: 0;
+  margin: 0;
+}
+
+.studio-map-shell:-webkit-full-screen {
+  width: 100vw !important;
+  height: 100vh !important;
+  max-width: none;
+  border: 0;
+  border-radius: 0;
+  margin: 0;
+}
+
+.studio-map-shell.map-shell-fullscreen-fallback {
+  position: fixed !important;
+  z-index: 2000;
+  inset: 0;
+  width: 100vw !important;
+  height: 100vh !important;
+  max-width: none;
+  border: 0;
+  border-radius: 0;
+  margin: 0;
+}
+
 @media (max-width: 640px) {
   .map-explorer {
     padding: 32px 12px !important;
   }
 
   .studio-map-shell {
-    height: 460px !important;
+    height: 520px !important;
     margin-bottom: 32px !important;
   }
 
@@ -256,7 +319,7 @@
 
 @media (max-width: 420px) {
   .studio-map-shell {
-    height: 420px !important;
+    height: 480px !important;
   }
 
   .map-city-picker button {

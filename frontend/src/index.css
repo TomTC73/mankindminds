@@ -127,6 +127,37 @@ a {
   gap: 16px;
 }
 
+.certificate-category-tabs {
+  max-width: 900px;
+  margin: 0 auto 24px;
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.certificate-category-tab {
+  border: 1px solid #111;
+  padding: 10px 18px;
+  color: #111;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.certificate-category-tab:hover,
+.certificate-category-tab.is-active {
+  background: #111;
+  color: #fff;
+}
+
+.certificate-empty-state {
+  max-width: 900px;
+  margin: 0 auto;
+  border: 1px solid #111;
+  padding: 28px;
+  text-align: center;
+}
+
 .creator-tab {
   border: 1px solid black;
   padding: 20px;
@@ -169,6 +200,10 @@ a {
 .creator-category {
   font-size: 15px;
   margin: 0 0 8px;
+}
+
+.creator-category span {
+  color: #555;
 }
 
 .creator-info p {

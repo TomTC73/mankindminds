@@ -38,7 +38,7 @@ function Home() {
                   <button className="button secondary-button">Apply</button>
                 </Link>
               ) : (
-                <Link to="/certificates">
+                <Link to={`/certificates?category=${pathname.slice(1)}`}>
                   <button className="button secondary-button">View Creators</button>
                 </Link>
               )}
