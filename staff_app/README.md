@@ -8,7 +8,10 @@ publish a reviewable pull request to `TomTC73/MankindMindsBackend`.
 
 Install Python 3.11+ and create a GitHub OAuth App with **Device Flow** enabled.
 The distributed app includes the public OAuth client ID, so staff can normally
-launch it by double-clicking. For development, you may override it with:
+launch it by double-clicking. The app shows a clear sign-in and loading status,
+refreshes creator records automatically, and provides guided fields for profile
+sections and social links instead of requiring JSON editing. For development,
+you may override the client ID with:
 
 ```powershell
 $env:MM_GITHUB_CLIENT_ID = "your-public-github-client-id"
