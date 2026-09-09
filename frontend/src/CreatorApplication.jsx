@@ -3,12 +3,13 @@ import Header from "./Header";
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 
-const categories = ["Tattoos", "Music", "Writing", "Art"];
+const categories = ["Tattoos", "Music", "Writing", "Videos", "Art"];
 
 const categoryFromSection = {
   "/tattoos": "Tattoos",
   "/music": "Music",
   "/writing": "Writing",
+  "/videos": "Videos",
   "/art": "Art",
 };
 
