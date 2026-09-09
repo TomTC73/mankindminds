@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import Header from "./Header";
 import Footer from "./Footer";
-import { API_URL, resolveCreatorImageUrl } from "./apiConfig";
+import { API_URL, resolveCreatorImageUrl, resolveSafeExternalUrl } from "./apiConfig";
 import "./index.css";
 
 function CreatorProfile() {
@@ -12,7 +12,7 @@ function CreatorProfile() {
   const [error, setError] = useState(false);
 
   useEffect(() => {
-    fetch(`${API_URL}/creators/${slug}`)
+    fetch(`${API_URL}/creators/${encodeURIComponent(slug)}`)
       .then((res) => {
         if (!res.ok) throw new Error("Creator not found");
         return res.json();
@@ -83,11 +83,16 @@ function CreatorProfile() {
         <section className="section" id="socials">
           <h3>Social Media & Links</h3>
           <div className="social-links">
-            {creator.socialLinks.map((link, index) => (
-              <a key={index} href={link.url} target="_blank" rel="noreferrer" className="social-link">
-                {link.name}
-              </a>
-            ))}
+            {creator.socialLinks.map((link, index) => {
+              const safeUrl = resolveSafeExternalUrl(link.url);
+              if (!safeUrl) return null;
+
+              return (
+                <a key={index} href={safeUrl} target="_blank" rel="noopener noreferrer" className="social-link">
+                  {link.name}
+                </a>
+              );
+            })}
           </div>
         </section>
       )}

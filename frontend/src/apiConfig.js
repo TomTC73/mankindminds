@@ -11,3 +11,14 @@ export function resolveCreatorImageUrl(imageUrl) {
   }
   return imageUrl;
 }
+
+export function resolveSafeExternalUrl(value) {
+  if (!value) return "";
+
+  try {
+    const url = new URL(value);
+    return ["http:", "https:", "mailto:"].includes(url.protocol) ? url.href : "";
+  } catch {
+    return "";
+  }
+}
