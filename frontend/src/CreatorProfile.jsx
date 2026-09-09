@@ -79,6 +79,17 @@ function CreatorProfile() {
         </section>
       ))}
 
+      {creator.gallery?.length > 0 && (
+        <section className="section creator-gallery-section">
+          <h3>Selected Work</h3>
+          <div className="creator-gallery">
+            {creator.gallery.map((imageUrl) => (
+              <img key={imageUrl} src={resolveCreatorImageUrl(imageUrl)} alt={`${creator.name} work`} />
+            ))}
+          </div>
+        </section>
+      )}
+
       {creator.socialLinks && creator.socialLinks.length > 0 && (
         <section className="section" id="socials">
           <h3>Social Media & Links</h3>

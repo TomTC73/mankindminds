@@ -290,6 +290,22 @@ a {
   color: white;
 }
 
+.creator-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.creator-gallery img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border: 1px solid var(--line, #d2cbc0);
+}
+
 /* Creator application form */
 
 .application-form {
