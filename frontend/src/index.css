@@ -360,6 +360,13 @@ a {
   line-height: 1.55;
 }
 
+.business-application-note a {
+  color: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 .building-application-fields {
   display: contents;
 }
