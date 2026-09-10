@@ -2,7 +2,8 @@
 
 This desktop app lets staff sign in with their individual GitHub account, view
 creator records, add or edit profiles, attach profile/gallery photos, and
-publish a reviewable pull request to `TomTC73/MankindMindsBackend`.
+manage tattoo shops on the public map. It publishes directly to the default
+branch of `TomTC73/MankindMindsBackend`.
 
 ## Local use
 
@@ -19,7 +20,7 @@ python app.py
 ```
 
 The app never asks staff for a token. GitHub identifies the staff member and
-attributes the branch, commits, and pull request to that account.
+attributes each direct commit to that account.
 
 ## Building an `.exe`
 
@@ -33,6 +34,26 @@ configured in the environment of the staff computers before launching it.
 
 ## Publishing
 
-Each publish creates a branch and pull request. Merge the pull request only
-after checking the content and photos. The backend Cloud Build deployment then
-deploys the versioned creator JSON and assets.
+Each publish commits directly to the backend repository's default branch and
+automatically starts the backend deployment. The app waits for the deployment
+workflow to finish and reports success or failure. The **Deploy latest GitHub
+changes** button can also be used after adding several creators.
+
+The **Tattoo shops** tab lets staff edit existing map entries or add a new
+studio with its city, address, contact details, coordinates, artists, and
+public description. **Publish all shops to GitHub** saves the complete map
+dataset and starts the deployment automatically.
+
+### One-time backend deployment setup
+
+The workflow file must be on the backend repository's default branch. In
+`TomTC73/MankindMindsBackend`, add a repository secret named
+`GCP_SERVICE_ACCOUNT_KEY`. Its value must be the JSON key for a Google Cloud
+service account with permission to submit Cloud Builds and deploy the
+`mankind-minds-api` Cloud Run service. The repository's
+`.github/workflows/deploy-cloud-run.yml` workflow then accepts deployment
+requests from the app.
+
+After this one-time setup, staff do not need Google Cloud access or terminal
+commands. The workflow also supports **Actions > Deploy backend to Cloud Run >
+Run workflow** as a manual fallback.
