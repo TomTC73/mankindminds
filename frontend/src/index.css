@@ -318,6 +318,35 @@ a {
   gap: 20px;
 }
 
+.application-type-tabs {
+  display: flex;
+  gap: 8px;
+  border-bottom: 1px solid #d2cbc0;
+  padding-bottom: 12px;
+}
+
+.application-type-tabs button {
+  border: 1px solid #111;
+  background: #fff;
+  color: #111;
+  padding: 10px 14px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.application-type-tabs button.active {
+  background: #111;
+  color: #fff;
+}
+
+.building-application-fields {
+  display: contents;
+}
+
+.individual-only {
+  display: none !important;
+}
+
 .application-form label {
   display: flex;
   flex-direction: column;

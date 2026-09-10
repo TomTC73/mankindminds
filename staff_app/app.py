@@ -20,8 +20,11 @@ from tkinter import filedialog, messagebox, ttk
 OWNER = "TomTC73"
 REPO = "MankindMindsBackend"
 DATA_PATH = "backend/src/main/resources/data/creators.json"
+STUDIO_DATA_PATH = "backend/src/main/resources/data/studios.json"
 ASSET_PATH = "backend/src/main/resources/static/assets"
 API = "https://api.github.com"
+DEPLOYMENT_EVENT = "deploy-backend"
+DEPLOYMENT_WORKFLOW = ".github/workflows/deploy-cloud-run.yml"
 CLIENT_ID = os.environ.get("MM_GITHUB_CLIENT_ID", "Ov23liZIMcO7043zppb9")
 REFRESH_MS = 60_000
 PALETTE = {
@@ -103,6 +106,23 @@ class GitHubClient:
         encoded = urllib.parse.quote(path, safe="/")
         return self.request("PUT", f"/repos/{OWNER}/{REPO}/contents/{encoded}", payload)
 
+    def trigger_deployment(self):
+        return self.request("POST", f"/repos/{OWNER}/{REPO}/dispatches", {
+            "event_type": DEPLOYMENT_EVENT,
+        })
+
+    def deployment_workflow(self, ref):
+        return self.file(DEPLOYMENT_WORKFLOW, ref)
+
+    def deployment_runs(self):
+        return self.request(
+            "GET",
+            f"/repos/{OWNER}/{REPO}/actions/workflows/deploy-cloud-run.yml/runs?per_page=10",
+        )
+
+    def deployment_run(self, run_id):
+        return self.request("GET", f"/repos/{OWNER}/{REPO}/actions/runs/{run_id}")
+
 def request_json(url, payload):
     request = urllib.request.Request(url, data=urllib.parse.urlencode(payload).encode(), method="POST")
     request.add_header("Accept", "application/json")
@@ -148,6 +168,9 @@ class App(tk.Tk):
         self.selected = None
         self.photo_path = None
         self.gallery_paths = []
+        self.studios = []
+        self.selected_studio = None
+        self.studio_fields = {}
         self.section_rows = []
         self.social_rows = []
         self.build_styles()
@@ -186,8 +209,10 @@ class App(tk.Tk):
         self.sign_in_button = ttk.Button(toolbar, text="Sign in with GitHub", style="Accent.TButton", command=self.sign_in)
         self.sign_in_button.pack(side="left")
 
-        main = ttk.Panedwindow(self, orient="horizontal")
-        main.pack(fill="both", expand=True, padx=22, pady=(0, 16))
+        tabs = ttk.Notebook(self)
+        tabs.pack(fill="both", expand=True, padx=22, pady=(0, 16))
+        main = ttk.Panedwindow(tabs, orient="horizontal")
+        tabs.add(main, text="Creators")
         left = ttk.Frame(main, style="Panel.TFrame", padding=16)
         right = ttk.Frame(main, style="Panel.TFrame", padding=20)
         preview = ttk.Frame(main, style="Panel.TFrame", padding=16)
@@ -235,6 +260,9 @@ class App(tk.Tk):
         self.preview_text.tag_configure("heading", font=("Georgia", 14), spacing1=12, spacing3=4)
         self.preview_text.tag_configure("label", foreground=PALETTE["accent"], font=("Segoe UI Semibold", 9))
         self.update_preview()
+        shops_tab = ttk.Frame(tabs, style="Panel.TFrame", padding=20)
+        tabs.add(shops_tab, text="Tattoo shops")
+        self.build_studio_editor(shops_tab)
 
         footer = ttk.Frame(self, padding=(22, 0, 22, 14))
         footer.pack(fill="x")
@@ -243,6 +271,13 @@ class App(tk.Tk):
         ttk.Button(footer, text="Load draft", command=self.load_draft).pack(side="right", padx=(8, 0))
         ttk.Button(footer, text="Save draft", style="Outline.TButton", command=self.save_draft).pack(side="right", padx=(8, 0))
         ttk.Button(footer, text="Refresh", command=self.load_users).pack(side="right", padx=(8, 0))
+        self.deploy_button = ttk.Button(
+            footer,
+            text="Deploy latest GitHub changes",
+            style="Outline.TButton",
+            command=self.deploy_latest,
+        )
+        self.deploy_button.pack(side="right", padx=(8, 0))
         self.publish_button = ttk.Button(footer, text="Publish changes to website", style="Accent.TButton", command=self.publish)
         self.publish_button.pack(side="right")
 
@@ -452,6 +487,7 @@ class App(tk.Tk):
         self.sign_in_button.config(state="normal", text="Signed in")
         self.set_status("Sign-in successful. Loading creator records...", PALETTE["accent"])
         self.load_users()
+        self.load_studios()
 
     def sign_in_failed(self, error):
         self.sign_in_button.config(state="normal", text="Sign in with GitHub")
@@ -461,6 +497,7 @@ class App(tk.Tk):
     def auto_refresh(self):
         if self.client:
             self.load_users(silent=True)
+            self.load_studios(silent=True)
         self.after(REFRESH_MS, self.auto_refresh)
 
     def load_users(self, silent=False):
@@ -479,6 +516,115 @@ class App(tk.Tk):
             except Exception as error:
                 self.after(0, lambda: messagebox.showerror("Could not load users", str(error)))
         threading.Thread(target=work, daemon=True).start()
+
+    def build_studio_editor(self, parent):
+        parent.columnconfigure(1, weight=1)
+        parent.rowconfigure(1, weight=1)
+        ttk.Label(parent, text="Tattoo shops on the public map", style="Section.TLabel").grid(row=0, column=0, columnspan=2, sticky="w")
+        self.studio_list = ttk.Treeview(parent, columns=("city", "postcode"), show="tree headings", selectmode="browse")
+        self.studio_list.heading("#0", text="Studio")
+        self.studio_list.heading("city", text="City")
+        self.studio_list.heading("postcode", text="Postcode")
+        self.studio_list.grid(row=1, column=0, sticky="nsew", padx=(0, 18), pady=(12, 0))
+        self.studio_list.bind("<<TreeviewSelect>>", self.select_studio)
+        editor = ttk.Frame(parent, style="Panel.TFrame")
+        editor.grid(row=1, column=1, sticky="nsew", pady=(12, 0))
+        editor.columnconfigure(1, weight=1)
+        for row, (key, label) in enumerate((
+            ("name", "Studio name"), ("city", "City"), ("hubTitle", "Building / hub"),
+            ("postcode", "Postcode"), ("address", "Address"), ("phone", "Phone"),
+            ("email", "Email"), ("website", "Website"), ("description", "Description"), ("lat", "Latitude"),
+            ("lng", "Longitude"), ("artists", "Artists (comma-separated)"),
+        )):
+            ttk.Label(editor, text=label).grid(row=row, column=0, sticky="w", padx=(0, 10), pady=5)
+            entry = ttk.Entry(editor)
+            entry.grid(row=row, column=1, sticky="ew", pady=5)
+            self.studio_fields[key] = entry
+        image_row = 13
+        ttk.Label(editor, text="Image path").grid(row=image_row, column=0, sticky="w", padx=(0, 10), pady=5)
+        self.studio_fields["image"] = ttk.Entry(editor)
+        self.studio_fields["image"].grid(row=image_row, column=1, sticky="ew", pady=5)
+        ttk.Button(editor, text="+ New shop", command=self.new_studio).grid(row=image_row + 1, column=0, pady=16, sticky="w")
+        ttk.Button(editor, text="Save shop locally", command=self.save_studio).grid(row=image_row + 1, column=1, pady=16, sticky="w")
+        ttk.Button(editor, text="Publish all shops to GitHub", style="Accent.TButton", command=self.publish_studios).grid(row=image_row + 2, column=0, columnspan=2, sticky="w")
+
+    def load_studios(self, silent=False):
+        if not self.client:
+            return
+        def work():
+            try:
+                branch = self.client.repository()["default_branch"]
+                data_file = self.client.file(STUDIO_DATA_PATH, branch)
+                self.studios = json.loads(base64.b64decode(data_file["content"]).decode("utf-8"))
+                self.studio_file_sha = data_file["sha"]
+                self.after(0, self.refresh_studio_list)
+            except Exception as error:
+                if not silent:
+                    self.after(0, lambda: messagebox.showerror("Could not load tattoo shops", str(error)))
+        threading.Thread(target=work, daemon=True).start()
+
+    def refresh_studio_list(self):
+        self.studio_list.delete(*self.studio_list.get_children())
+        for index, studio in enumerate(self.studios):
+            self.studio_list.insert("", "end", iid=str(index), text=studio.get("name", ""), values=(studio.get("city", ""), studio.get("postcode", "")))
+
+    def select_studio(self, _event=None):
+        selected = self.studio_list.selection()
+        if selected:
+            self.selected_studio = self.studios[int(selected[0])]
+            self.fill_studio_form(self.selected_studio)
+
+    def fill_studio_form(self, studio):
+        for key, field in self.studio_fields.items():
+            value = studio.get(key, "")
+            if key == "artists":
+                value = ", ".join(studio.get("artists", []))
+            field.delete(0, tk.END)
+            field.insert(0, str(value))
+
+    def new_studio(self):
+        self.selected_studio = {"id": max([studio.get("id", 0) for studio in self.studios] or [0]) + 1, "refCode": ""}
+        self.fill_studio_form(self.selected_studio)
+
+    def save_studio(self):
+        if not self.selected_studio:
+            self.new_studio()
+        studio = dict(self.selected_studio)
+        for key, field in self.studio_fields.items():
+            studio[key] = field.get().strip()
+        studio["lat"] = float(studio["lat"])
+        studio["lng"] = float(studio["lng"])
+        studio["artists"] = [artist.strip() for artist in studio["artists"].split(",") if artist.strip()]
+        if not studio.get("refCode"):
+            studio["refCode"] = f"MM-{studio['id']:03d}"
+        self.studios = [item for item in self.studios if item.get("id") != studio["id"]] + [studio]
+        self.studios.sort(key=lambda item: item.get("name", "").lower())
+        self.selected_studio = studio
+        self.refresh_studio_list()
+        self.set_status("Shop saved locally. Publish all shops to make it live.", "#46705b")
+
+    def publish_studios(self):
+        if not self.client:
+            messagebox.showerror("Not signed in", "Sign in with GitHub first.")
+            return
+        try:
+            self.save_studio()
+        except (ValueError, TypeError, KeyError) as error:
+            messagebox.showerror("Shop not saved", f"Check the shop fields: {error}")
+            return
+        def work():
+            try:
+                branch = self.client.repository()["default_branch"]
+                data_file = self.client.file(STUDIO_DATA_PATH, branch)
+                self.client.put_file(STUDIO_DATA_PATH, json.dumps(self.studios, indent=2).encode(), branch, "Update tattoo shop map", data_file["sha"])
+                self.after(0, self.studios_published)
+            except Exception as error:
+                self.after(0, lambda: messagebox.showerror("Could not publish tattoo shops", str(error)))
+        threading.Thread(target=work, daemon=True).start()
+
+    def studios_published(self):
+        self.set_status("Tattoo shops published to GitHub. Starting deployment...", "#46705b")
+        self.deploy_latest(show_success=False)
 
     def refresh_list(self, silent=False):
         query = self.search.get().lower().strip()
@@ -658,12 +804,89 @@ class App(tk.Tk):
         threading.Thread(target=work, daemon=True).start()
 
     def publish_complete(self):
+        self.publish_button.config(state="disabled", text="Deploying...")
+        self.set_status("Published to GitHub. Starting the backend deployment...", "#46705b")
+        self.deploy_latest(show_success=False)
+
+    def deploy_latest(self, show_success=True):
+        if not self.client:
+            messagebox.showerror("Not signed in", "Sign in with GitHub first.")
+            return
+        self.deploy_button.config(state="disabled", text="Starting deployment...")
+        self.set_status("Starting a backend deployment from the latest GitHub changes...", PALETTE["accent"])
+
+        def work():
+            try:
+                repository = self.client.repository()
+                try:
+                    self.client.deployment_workflow(repository["default_branch"])
+                except GitHubError as error:
+                    raise GitHubError(
+                        "The backend deployment workflow is not installed on the repository's "
+                        "default branch. Ask an administrator to add "
+                        ".github/workflows/deploy-cloud-run.yml to backend main."
+                    ) from error
+                self.client.trigger_deployment()
+                started_at = time.monotonic()
+                run = None
+                while time.monotonic() - started_at < 45:
+                    runs = self.client.deployment_runs().get("workflow_runs", [])
+                    candidates = [
+                        item for item in runs
+                        if item.get("event") == "repository_dispatch"
+                        and item.get("created_at", "") >= time.strftime(
+                            "%Y-%m-%dT%H:%M:%SZ", time.gmtime(time.time() - 50)
+                        )
+                    ]
+                    if candidates:
+                        run = candidates[0]
+                        break
+                    time.sleep(4)
+                if not run:
+                    raise GitHubError(
+                        "GitHub accepted the request but did not start the deployment workflow."
+                    )
+                self.after(0, lambda: self.deployment_running(show_success))
+                while time.monotonic() - started_at < 900:
+                    current = self.client.deployment_run(run["id"])
+                    if current.get("status") == "completed":
+                        if current.get("conclusion") != "success":
+                            raise GitHubError(
+                                "The deployment workflow failed. Open GitHub Actions for its logs."
+                            )
+                        self.after(0, self.deployment_complete)
+                        return
+                    time.sleep(8)
+                raise GitHubError("The deployment is still running after 15 minutes.")
+            except GitHubError as error:
+                self.after(0, lambda: self.deployment_failed(str(error)))
+
+        threading.Thread(target=work, daemon=True).start()
+
+    def deployment_started(self, show_success):
+        self.deployment_running(show_success)
+
+    def deployment_running(self, show_success):
+        self.deploy_button.config(state="disabled", text="Deploying...")
+        self.set_status("Backend deployment is running. Please wait...", PALETTE["accent"])
+
+    def deployment_complete(self):
         self.publish_button.config(state="normal", text="Publish changes to website")
-        self.set_status("Published directly to GitHub. The backend deployment will update the site.", "#46705b")
+        self.deploy_button.config(state="normal", text="Deploy latest GitHub changes")
+        self.set_status("Deployment completed. The latest changes are live.", "#46705b")
         messagebox.showinfo(
-            "Published successfully",
-            "The creator profile was committed directly to the backend repository.\n\n"
-            "The site will update after the backend deployment completes.",
+            "Deployment complete",
+            "The latest GitHub changes were deployed successfully to the website.",
+        )
+
+    def deployment_failed(self, error):
+        self.publish_button.config(state="normal", text="Publish changes to website")
+        self.deploy_button.config(state="normal", text="Deploy latest GitHub changes")
+        self.set_status("GitHub updated, but deployment did not complete.", PALETTE["accent"])
+        messagebox.showerror(
+            "Deployment did not complete",
+            "The GitHub changes are safe, but the backend deployment did not complete.\n\n"
+            + error,
         )
 
     def publish_failed(self, error):

@@ -5,6 +5,7 @@ import "leaflet/dist/leaflet.css";
 import "./MapPage.css";
 
 import Header from "./Header";
+import { API_URL } from "./apiConfig";
 
 const logoIcon = "/favicon.png";
 
@@ -722,7 +723,11 @@ export default function MapPage({ embedded = false }) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [selectedStudio, setSelectedStudio] = useState(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const activeLocations = activeCity === "London" ? LONDON_LOCATIONS : NORWICH_LOCATIONS;
+  const [studioLocations, setStudioLocations] = useState([
+    ...LONDON_LOCATIONS.map((studio) => ({ ...studio, city: "London" })),
+    ...NORWICH_LOCATIONS.map((studio) => ({ ...studio, city: "Norwich" })),
+  ]);
+  const activeLocations = studioLocations.filter((studio) => studio.city === activeCity);
   const filteredShops = activeLocations.filter((shop) => {
     const query = searchTerm.toLowerCase().trim();
     if (!query) return false;
@@ -731,6 +736,26 @@ export default function MapPage({ embedded = false }) {
       shop.refCode.toLowerCase().includes(query)
     );
   });
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch(`${API_URL}/studios`)
+      .then((response) => {
+        if (!response.ok) throw new Error(`Studio request failed: ${response.status}`);
+        return response.json();
+      })
+      .then((studios) => {
+        if (!cancelled && Array.isArray(studios) && studios.length > 0) {
+          setStudioLocations(studios);
+        }
+      })
+      .catch(() => {
+        // Keep the bundled records available while the API is unavailable.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     const syncFullscreenState = () => {
@@ -1041,6 +1066,14 @@ export default function MapPage({ embedded = false }) {
                       <p style={{ margin: "0 0 2px 0", fontSize: "12px", color: "#64748b", fontWeight: "500" }}>
                         {selectedStudio.hubTitle} | {selectedStudio.postcode}
                       </p>
+                      {(selectedStudio.address || selectedStudio.phone || selectedStudio.email || selectedStudio.website) && (
+                        <p style={{ margin: "0 0 8px 0", fontSize: "11px", lineHeight: "1.45", color: "#475569" }}>
+                          {selectedStudio.address && <>{selectedStudio.address}<br /></>}
+                          {selectedStudio.phone && <>{selectedStudio.phone}<br /></>}
+                          {selectedStudio.email && <>{selectedStudio.email}<br /></>}
+                          {selectedStudio.website && <a href={selectedStudio.website} target="_blank" rel="noreferrer">{selectedStudio.website}</a>}
+                        </p>
+                      )}
                       <p style={{ margin: "0 0 8px 0", fontSize: "11px", color: "#0284c7", fontWeight: "600" }}>
                         Ref Code: {selectedStudio.refCode}
                       </p>
@@ -1084,7 +1117,7 @@ export default function MapPage({ embedded = false }) {
                             paddingRight: "4px",
                           }}
                         >
-                          {selectedStudio.artists.map((artist, idx) => (
+                          {(selectedStudio.artists || []).map((artist, idx) => (
                             <div
                               key={idx}
                               style={{
