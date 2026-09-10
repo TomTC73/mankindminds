@@ -22,6 +22,10 @@ const NORWICH_BOUNDS = [
   [52.45, 1.05],
   [52.80, 1.55],
 ];
+const ALL_BOUNDS = [
+  [49.8, -5.8],
+  [55.8, 1.8],
+];
 
 const generateRefCode = () => {
   const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -680,6 +684,12 @@ function MapController({ activeCity }) {
   const map = useMap();
 
   useEffect(() => {
+    if (activeCity === "All") {
+      map.setMaxBounds(ALL_BOUNDS);
+      map.fitBounds(ALL_BOUNDS, { padding: [20, 20], animate: true, duration: 1.2 });
+      return undefined;
+    }
+
     const targetCenter = activeCity === "London" ? LONDON_CENTER : NORWICH_CENTER;
     const targetBounds = activeCity === "London" ? LONDON_BOUNDS : NORWICH_BOUNDS;
 
@@ -727,7 +737,9 @@ export default function MapPage({ embedded = false }) {
     ...LONDON_LOCATIONS.map((studio) => ({ ...studio, city: "London" })),
     ...NORWICH_LOCATIONS.map((studio) => ({ ...studio, city: "Norwich" })),
   ]);
-  const activeLocations = studioLocations.filter((studio) => studio.city === activeCity);
+  const activeLocations = activeCity === "All"
+    ? studioLocations
+    : studioLocations.filter((studio) => studio.city === activeCity);
   const filteredShops = activeLocations.filter((shop) => {
     const query = searchTerm.toLowerCase().trim();
     if (!query) return false;
@@ -885,6 +897,22 @@ export default function MapPage({ embedded = false }) {
               border: "1px solid #cbd5e1",
             }}
           >
+            <button
+              onClick={() => handleCityChange("All")}
+              style={{
+                padding: "8px 16px",
+                fontSize: "13px",
+                fontWeight: "600",
+                borderRadius: "6px",
+                border: "none",
+                cursor: "pointer",
+                backgroundColor: activeCity === "All" ? "#0f172a" : "transparent",
+                color: activeCity === "All" ? "#ffffff" : "#475569",
+                transition: "all 0.2s ease",
+              }}
+            >
+              All
+            </button>
             <button
               onClick={() => handleCityChange("London")}
               style={{
