@@ -18,13 +18,9 @@ function CreatorApplication() {
   const [selectedPlatform, setSelectedPlatform] = useState("Instagram");
   const [platformHandle, setPlatformHandle] = useState("");
   const [applicationType, setApplicationType] = useState("individual");
-  const [buildingName, setBuildingName] = useState("");
-  const [buildingContact, setBuildingContact] = useState("");
-  const [buildingEmail, setBuildingEmail] = useState("");
-  const [buildingPhone, setBuildingPhone] = useState("");
-  const [buildingAddress, setBuildingAddress] = useState("");
-  const [buildingPostcode, setBuildingPostcode] = useState("");
-  const [buildingWebsite, setBuildingWebsite] = useState("");
+  const [businessName, setBusinessName] = useState("");
+  const [businessContact, setBusinessContact] = useState("");
+  const [businessEmail, setBusinessEmail] = useState("");
   const [selectedCategory, setSelectedCategory] = useState(() => {
     const requestedCategory = new URLSearchParams(location.search).get("category");
     const matchingCategory = categories.find(
@@ -41,15 +37,13 @@ function CreatorApplication() {
   const handleSubmit = (e) => {
     if (
       selectedCategory === "Tattoos" &&
-      applicationType === "building" &&
-      (!buildingName.trim() ||
-        !buildingContact.trim() ||
-        !buildingEmail.trim() ||
-        !buildingAddress.trim() ||
-        !buildingPostcode.trim())
+      applicationType === "business" &&
+      (!businessContact.trim() ||
+        !businessName.trim() ||
+        !businessEmail.trim())
     ) {
       e.preventDefault();
-      alert("Please complete the building name, contact details, and address.");
+      alert("Please complete your name, business name, and email address.");
     } else if (applicationType === "individual" && !platformHandle.trim()) {
       e.preventDefault();
       alert("Please provide a social media or portfolio link/username.");
@@ -126,52 +120,36 @@ function CreatorApplication() {
               </button>
               <button
                 type="button"
-                className={applicationType === "building" ? "active" : ""}
-                onClick={() => setApplicationType("building")}
+                className={applicationType === "business" ? "active" : ""}
+                onClick={() => setApplicationType("business")}
               >
-                Register a building
+                Apply as a business
               </button>
             </div>
           )}
 
-          {selectedCategory === "Tattoos" && applicationType === "building" && (
+          {selectedCategory === "Tattoos" && applicationType === "business" && (
             <div className="building-application-fields">
               <label>
-                <span>Building / Studio Name <span className="required">*</span></span>
-                <input name="building_name" value={buildingName} onChange={(event) => setBuildingName(event.target.value)} required />
+                <span>Your Name <span className="required">*</span></span>
+                <input name="business_contact_name" value={businessContact} onChange={(event) => setBusinessContact(event.target.value)} required />
               </label>
               <label>
-                <span>Primary Contact Name <span className="required">*</span></span>
-                <input name="building_contact" value={buildingContact} onChange={(event) => setBuildingContact(event.target.value)} required />
+                <span>Your Business <span className="required">*</span></span>
+                <input name="business_name" value={businessName} onChange={(event) => setBusinessName(event.target.value)} required />
               </label>
               <label>
-                <span>Contact Email <span className="required">*</span></span>
-                <input type="email" name="building_email" value={buildingEmail} onChange={(event) => setBuildingEmail(event.target.value)} required />
+                <span>Your Email <span className="required">*</span></span>
+                <input type="email" name="business_email" value={businessEmail} onChange={(event) => setBusinessEmail(event.target.value)} required />
               </label>
-              <label>
-                <span>Contact Phone</span>
-                <input name="building_phone" value={buildingPhone} onChange={(event) => setBuildingPhone(event.target.value)} />
-              </label>
-              <label>
-                <span>Full Address <span className="required">*</span></span>
-                <textarea name="building_address" value={buildingAddress} onChange={(event) => setBuildingAddress(event.target.value)} required />
-              </label>
-              <label>
-                <span>Postcode <span className="required">*</span></span>
-                <input name="building_postcode" value={buildingPostcode} onChange={(event) => setBuildingPostcode(event.target.value)} required />
-              </label>
-              <label>
-                <span>Website</span>
-                <input name="building_website" value={buildingWebsite} onChange={(event) => setBuildingWebsite(event.target.value)} />
-              </label>
-              <label>
-                <span>About the building</span>
-                <textarea name="building_description" placeholder="Tell us about the studio and the artists working there." />
-              </label>
+              <p className="business-application-note">
+                For further queries, email mankindminds.com or call 07305438010
+                to speak with Dan, Head of Onboarding.
+              </p>
             </div>
           )}
 
-          <label className={applicationType === "building" ? "individual-only" : ""}>
+          <label className={applicationType === "business" ? "individual-only" : ""}>
             <span>
               Creator Name <span className="required">*</span>
             </span>
@@ -180,11 +158,11 @@ function CreatorApplication() {
               type="text"
               name="creator_name"
               placeholder="Your name or creator name"
-              required
+              required={applicationType === "individual"}
             />
           </label>
 
-          <label className={applicationType === "building" ? "individual-only" : ""}>
+          <label className={applicationType === "business" ? "individual-only" : ""}>
             <span>
               Email Address <span className="required">*</span>
             </span>
@@ -197,7 +175,7 @@ function CreatorApplication() {
             />
           </label>
 
-          <label className={applicationType === "building" ? "individual-only" : ""}>
+          <label className={applicationType === "business" ? "individual-only" : ""}>
             <span>
               Creator Category <span className="required">*</span>
             </span>
@@ -221,7 +199,7 @@ function CreatorApplication() {
           </label>
 
           {/* Mobile-friendly flexible layout container */}
-          <label className={applicationType === "building" ? "individual-only" : ""}>
+          <label className={applicationType === "business" ? "individual-only" : ""}>
             <span>
               Primary Social Media / Portfolio <span className="required">*</span>
             </span>
@@ -269,7 +247,7 @@ function CreatorApplication() {
             </div>
           </label>
 
-          <label className={`checkbox-label ${applicationType === "building" ? "individual-only" : ""}`}>
+          <label className="checkbox-label">
             <input
               type="checkbox"
               name="terms_agreement"
@@ -286,7 +264,7 @@ function CreatorApplication() {
             </span>
           </label>
 
-          <label className={`checkbox-label ${applicationType === "building" ? "individual-only" : ""}`}>
+          <label className="checkbox-label">
             <input
               type="checkbox"
               name="ai_free_confirmation"
