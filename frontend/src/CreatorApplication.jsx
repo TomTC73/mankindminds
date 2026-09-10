@@ -144,7 +144,7 @@ function CreatorApplication() {
               </label>
               <p className="business-application-note">
                 For further queries, email{" "}
-                <a href="mailto:mankindminds.com">mankindminds.com</a> or call{" "}
+                <a href="mailto:admin@mankindminds.com">admin@mankindminds.com</a> or call{" "}
                 <a href="tel:07305438010">07305438010</a> to speak with Dan,
                 Head of Onboarding.
               </p>
