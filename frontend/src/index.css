@@ -323,6 +323,7 @@ a {
   gap: 8px;
   border-bottom: 1px solid #d2cbc0;
   padding-bottom: 12px;
+  margin-bottom: 4px;
 }
 
 .application-type-tabs button {
@@ -337,6 +338,26 @@ a {
 .application-type-tabs button.active {
   background: #111;
   color: #fff;
+}
+
+.business-application {
+  background: #fbfaf7;
+  border-color: #c8c0b5;
+  box-shadow: 0 12px 28px rgba(32, 32, 30, 0.08);
+}
+
+.business-application .building-application-fields {
+  gap: 18px;
+}
+
+.business-application-note {
+  margin: 2px 0 0;
+  padding: 12px 14px;
+  border-left: 3px solid #984132;
+  background: #f0ebe4;
+  color: #6c6861;
+  font-size: 13px;
+  line-height: 1.55;
 }
 
 .building-application-fields {

@@ -22,6 +22,7 @@ REPO = "MankindMindsBackend"
 DATA_PATH = "backend/src/main/resources/data/creators.json"
 STUDIO_DATA_PATH = "backend/src/main/resources/data/studios.json"
 ASSET_PATH = "backend/src/main/resources/static/assets"
+STUDIO_ASSET_PATH = ASSET_PATH + "/studios"
 API = "https://api.github.com"
 DEPLOYMENT_EVENT = "deploy-backend"
 DEPLOYMENT_WORKFLOW = ".github/workflows/deploy-cloud-run.yml"
@@ -106,6 +107,14 @@ class GitHubClient:
         encoded = urllib.parse.quote(path, safe="/")
         return self.request("PUT", f"/repos/{OWNER}/{REPO}/contents/{encoded}", payload)
 
+    def delete_file(self, path, branch, message, sha):
+        encoded = urllib.parse.quote(path, safe="/")
+        return self.request("DELETE", f"/repos/{OWNER}/{REPO}/contents/{encoded}", {
+            "message": message,
+            "branch": branch,
+            "sha": sha,
+        })
+
     def trigger_deployment(self):
         return self.request("POST", f"/repos/{OWNER}/{REPO}/dispatches", {
             "event_type": DEPLOYMENT_EVENT,
@@ -171,6 +180,7 @@ class App(tk.Tk):
         self.studios = []
         self.selected_studio = None
         self.studio_fields = {}
+        self.studio_photo_path = None
         self.section_rows = []
         self.social_rows = []
         self.build_styles()
@@ -238,6 +248,7 @@ class App(tk.Tk):
         self.user_list.pack(fill="both", expand=True)
         self.user_list.bind("<<TreeviewSelect>>", self.select_user)
         ttk.Button(left, text="+  New creator", style="Outline.TButton", command=self.new_user).pack(fill="x", pady=(12, 0))
+        ttk.Button(left, text="Remove selected creator", command=self.remove_selected_creator).pack(fill="x", pady=(8, 0))
 
         self.canvas = tk.Canvas(right, background=PALETTE["panel"], highlightthickness=0)
         scrollbar = ttk.Scrollbar(right, orient="vertical", command=self.canvas.yview)
@@ -482,6 +493,10 @@ class App(tk.Tk):
                 self.after(0, lambda: self.sign_in_failed(str(error)))
         threading.Thread(target=work, daemon=True).start()
 
+    def creators_published(self):
+        self.set_status("Creator removed from GitHub. Starting deployment...", "#46705b")
+        self.deploy_latest(show_success=False)
+
     def sign_in_complete(self, login):
         self.user_label.config(text=f"Signed in as {login}")
         self.sign_in_button.config(state="normal", text="Signed in")
@@ -518,7 +533,8 @@ class App(tk.Tk):
         threading.Thread(target=work, daemon=True).start()
 
     def build_studio_editor(self, parent):
-        parent.columnconfigure(1, weight=1)
+        parent.columnconfigure(1, weight=2)
+        parent.columnconfigure(2, weight=1)
         parent.rowconfigure(1, weight=1)
         ttk.Label(parent, text="Tattoo shops on the public map", style="Section.TLabel").grid(row=0, column=0, columnspan=2, sticky="w")
         self.studio_list = ttk.Treeview(parent, columns=("city", "postcode"), show="tree headings", selectmode="browse")
@@ -539,14 +555,25 @@ class App(tk.Tk):
             ttk.Label(editor, text=label).grid(row=row, column=0, sticky="w", padx=(0, 10), pady=5)
             entry = ttk.Entry(editor)
             entry.grid(row=row, column=1, sticky="ew", pady=5)
+            entry.bind("<KeyRelease>", lambda _event: self.update_studio_preview())
             self.studio_fields[key] = entry
         image_row = 13
         ttk.Label(editor, text="Image path").grid(row=image_row, column=0, sticky="w", padx=(0, 10), pady=5)
         self.studio_fields["image"] = ttk.Entry(editor)
         self.studio_fields["image"].grid(row=image_row, column=1, sticky="ew", pady=5)
-        ttk.Button(editor, text="+ New shop", command=self.new_studio).grid(row=image_row + 1, column=0, pady=16, sticky="w")
-        ttk.Button(editor, text="Save shop locally", command=self.save_studio).grid(row=image_row + 1, column=1, pady=16, sticky="w")
-        ttk.Button(editor, text="Publish all shops to GitHub", style="Accent.TButton", command=self.publish_studios).grid(row=image_row + 2, column=0, columnspan=2, sticky="w")
+        self.studio_fields["image"].bind("<KeyRelease>", lambda _event: self.update_studio_preview())
+        ttk.Button(editor, text="Choose shop photo", command=self.choose_studio_photo).grid(row=image_row + 1, column=0, pady=8, sticky="w")
+        self.studio_photo_label = ttk.Label(editor, text="No new photo selected", style="Muted.TLabel")
+        self.studio_photo_label.grid(row=image_row + 1, column=1, sticky="w")
+        ttk.Button(editor, text="+ New shop", command=self.new_studio).grid(row=image_row + 2, column=0, pady=8, sticky="w")
+        ttk.Button(editor, text="Save shop locally", command=self.save_studio).grid(row=image_row + 2, column=1, pady=8, sticky="w")
+        ttk.Button(editor, text="Remove selected shop", command=self.remove_selected_studio).grid(row=image_row + 3, column=0, pady=8, sticky="w")
+        ttk.Button(editor, text="Publish all shops to GitHub", style="Accent.TButton", command=self.publish_studios).grid(row=image_row + 4, column=0, columnspan=2, sticky="w")
+        preview = ttk.Frame(parent, style="Panel.TFrame", padding=16)
+        preview.grid(row=1, column=2, sticky="nsew", padx=(18, 0), pady=(12, 0))
+        ttk.Label(preview, text="Map card preview", style="Section.TLabel").pack(anchor="w")
+        self.studio_preview = tk.Text(preview, wrap="word", state="disabled", height=20, width=32, bg="#ffffff", fg=PALETTE["ink"], padx=12, pady=12)
+        self.studio_preview.pack(fill="both", expand=True, pady=(10, 0))
 
     def load_studios(self, silent=False):
         if not self.client:
@@ -581,10 +608,14 @@ class App(tk.Tk):
                 value = ", ".join(studio.get("artists", []))
             field.delete(0, tk.END)
             field.insert(0, str(value))
+        self.studio_photo_path = None
+        self.studio_photo_label.config(text=f"Current photo: {studio.get('image', 'none')}")
+        self.update_studio_preview()
 
     def new_studio(self):
         self.selected_studio = {"id": max([studio.get("id", 0) for studio in self.studios] or [0]) + 1, "refCode": ""}
         self.fill_studio_form(self.selected_studio)
+        self.studio_photo_label.config(text="Choose a photo before publishing (optional).")
 
     def save_studio(self):
         if not self.selected_studio:
@@ -601,22 +632,110 @@ class App(tk.Tk):
         self.studios.sort(key=lambda item: item.get("name", "").lower())
         self.selected_studio = studio
         self.refresh_studio_list()
+        self.update_studio_preview()
         self.set_status("Shop saved locally. Publish all shops to make it live.", "#46705b")
 
-    def publish_studios(self):
-        if not self.client:
-            messagebox.showerror("Not signed in", "Sign in with GitHub first.")
+    def choose_studio_photo(self):
+        self.studio_photo_path = filedialog.askopenfilename(filetypes=[("Images", "*.jpg *.jpeg *.png *.webp")])
+        if self.studio_photo_path:
+            self.studio_photo_label.config(text=os.path.basename(self.studio_photo_path))
+
+    def update_studio_preview(self):
+        if not hasattr(self, "studio_preview"):
             return
-        try:
-            self.save_studio()
-        except (ValueError, TypeError, KeyError) as error:
-            messagebox.showerror("Shop not saved", f"Check the shop fields: {error}")
+        studio = dict(self.selected_studio or {})
+        for key, field in self.studio_fields.items():
+            studio[key] = field.get().strip()
+        artists = [artist.strip() for artist in studio.get("artists", "").split(",") if artist.strip()]
+        text = (
+            f"{studio.get('name', 'Studio name')}\n"
+            f"{studio.get('hubTitle', 'Building / hub')} · {studio.get('city', 'City')}\n"
+            f"{studio.get('address', '')} {studio.get('postcode', '')}\n\n"
+            f"{studio.get('description', 'Description')}\n\n"
+            f"Rating: {studio.get('starRating', '—')} / 5\n"
+            f"Artists: {', '.join(artists) if isinstance(artists, list) else artists}\n"
+            f"Photo: {studio.get('image', 'none')}"
+        )
+        self.studio_preview.config(state="normal")
+        self.studio_preview.delete("1.0", tk.END)
+        self.studio_preview.insert("1.0", text)
+        self.studio_preview.config(state="disabled")
+
+    def remove_selected_creator(self):
+        if not self.selected:
+            messagebox.showinfo("No creator selected", "Select a creator before removing it.")
+            return
+        if messagebox.askyesno("Remove creator", f"Remove {self.selected.get('name', 'this creator')} from the site?"):
+            creator = self.selected
+            self.creators = [item for item in self.creators if item.get("slug") != creator.get("slug")]
+            self.selected = None
+            self.refresh_list()
+            self.publish_creators_data()
+
+    def publish_creators_data(self):
+        if not self.client:
             return
         def work():
             try:
                 branch = self.client.repository()["default_branch"]
+                data_file = self.client.file(DATA_PATH, branch)
+                for image_url in [self.selected.get("imageUrl", "")] + self.selected.get("gallery", []):
+                    self.delete_asset_if_present(image_url, branch, f"Remove assets for {self.selected.get('name', 'creator')}")
+                self.client.put_file(DATA_PATH, json.dumps(self.creators, indent=2, ensure_ascii=False).encode(), branch, "Remove creator profile", data_file["sha"])
+                self.after(0, self.creators_published)
+            except Exception as error:
+                self.after(0, lambda: messagebox.showerror("Could not remove creator", str(error)))
+        threading.Thread(target=work, daemon=True).start()
+
+    def remove_selected_studio(self):
+        if not self.selected_studio:
+            messagebox.showinfo("No shop selected", "Select a shop before removing it.")
+            return
+        if messagebox.askyesno("Remove tattoo shop", f"Remove {self.selected_studio.get('name', 'this shop')} from the map?"):
+            self.removed_studio = self.selected_studio
+            self.studios = [item for item in self.studios if item.get("id") != self.selected_studio.get("id")]
+            self.selected_studio = None
+            self.refresh_studio_list()
+            self.publish_studios(save_current=False)
+
+    def delete_asset_if_present(self, image_url, branch, message):
+        if not image_url:
+            return
+        asset_path = image_url.lstrip("/")
+        try:
+            asset_file = self.client.file(asset_path, branch)
+            self.client.delete_file(asset_path, branch, message, asset_file["sha"])
+        except GitHubError as error:
+            if "404" not in str(error):
+                raise
+
+    def publish_studios(self, save_current=True):
+        if not self.client:
+            messagebox.showerror("Not signed in", "Sign in with GitHub first.")
+            return
+        if save_current:
+            try:
+                self.save_studio()
+            except (ValueError, TypeError, KeyError) as error:
+                messagebox.showerror("Shop not saved", f"Check the shop fields: {error}")
+                return
+        def work():
+            try:
+                branch = self.client.repository()["default_branch"]
                 data_file = self.client.file(STUDIO_DATA_PATH, branch)
+                studio = self.selected_studio
+                removed_studio = getattr(self, "removed_studio", None)
+                if not save_current and removed_studio:
+                    self.delete_asset_if_present(removed_studio.get("image", ""), branch, f"Remove tattoo shop assets for {removed_studio.get('name', 'shop')}")
+                if self.studio_photo_path and studio:
+                    extension = os.path.splitext(self.studio_photo_path)[1].lower() or ".jpg"
+                    filename = f"{studio['refCode'].lower()}{extension}"
+                    with open(self.studio_photo_path, "rb") as photo:
+                        self.client.put_file(f"{STUDIO_ASSET_PATH}/{filename}", photo.read(), branch, f"Add tattoo shop photo for {studio['name']}")
+                    studio["image"] = f"/assets/studios/{filename}"
                 self.client.put_file(STUDIO_DATA_PATH, json.dumps(self.studios, indent=2).encode(), branch, "Update tattoo shop map", data_file["sha"])
+                self.studio_photo_path = None
+                self.removed_studio = None
                 self.after(0, self.studios_published)
             except Exception as error:
                 self.after(0, lambda: messagebox.showerror("Could not publish tattoo shops", str(error)))
