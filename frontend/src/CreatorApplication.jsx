@@ -143,8 +143,10 @@ function CreatorApplication() {
                 <input type="email" name="business_email" value={businessEmail} onChange={(event) => setBusinessEmail(event.target.value)} required />
               </label>
               <p className="business-application-note">
-                For further queries, email mankindminds.com or call 07305438010
-                to speak with Dan, Head of Onboarding.
+                For further queries, email{" "}
+                <a href="mailto:mankindminds.com">mankindminds.com</a> or call{" "}
+                <a href="tel:07305438010">07305438010</a> to speak with Dan,
+                Head of Onboarding.
               </p>
             </div>
           )}
