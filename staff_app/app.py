@@ -21,6 +21,7 @@ OWNER = "TomTC73"
 REPO = "MankindMindsBackend"
 DATA_PATH = "backend/src/main/resources/data/creators.json"
 STUDIO_DATA_PATH = "backend/src/main/resources/data/studios.json"
+TICKET_DATA_PATH = "backend/staff/tickets.json"
 ASSET_PATH = "backend/src/main/resources/static/assets"
 STUDIO_ASSET_PATH = ASSET_PATH + "/studios"
 API = "https://api.github.com"
@@ -181,6 +182,9 @@ class App(tk.Tk):
         self.selected_studio = None
         self.studio_fields = {}
         self.studio_photo_path = None
+        self.current_login = ""
+        self.tickets = []
+        self.ticket_file_sha = None
         self.section_rows = []
         self.social_rows = []
         self.build_styles()
@@ -274,9 +278,12 @@ class App(tk.Tk):
         shops_tab = ttk.Frame(tabs, style="Panel.TFrame", padding=20)
         tabs.add(shops_tab, text="Tattoo shops")
         self.build_studio_editor(shops_tab)
+        tickets_tab = ttk.Frame(tabs, style="Panel.TFrame", padding=20)
+        tabs.add(tickets_tab, text="To Do List")
+        self.build_ticket_editor(tickets_tab)
 
-        footer = ttk.Frame(self, padding=(22, 0, 22, 14))
-        footer.pack(fill="x")
+        footer = ttk.Frame(self, padding=(22, 10, 22, 18))
+        footer.pack(fill="x", pady=(0, 4))
         self.status = ttk.Label(footer, text="Sign in to load creator records.", style="Status.TLabel")
         self.status.pack(side="left")
         ttk.Button(footer, text="Load draft", command=self.load_draft).pack(side="right", padx=(8, 0))
@@ -498,11 +505,13 @@ class App(tk.Tk):
         self.deploy_latest(show_success=False)
 
     def sign_in_complete(self, login):
+        self.current_login = login
         self.user_label.config(text=f"Signed in as {login}")
         self.sign_in_button.config(state="normal", text="Signed in")
         self.set_status("Sign-in successful. Loading creator records...", PALETTE["accent"])
         self.load_users()
         self.load_studios()
+        self.load_tickets()
 
     def sign_in_failed(self, error):
         self.sign_in_button.config(state="normal", text="Sign in with GitHub")
@@ -513,6 +522,7 @@ class App(tk.Tk):
         if self.client:
             self.load_users(silent=True)
             self.load_studios(silent=True)
+            self.load_tickets(silent=True)
         self.after(REFRESH_MS, self.auto_refresh)
 
     def load_users(self, silent=False):
@@ -744,6 +754,145 @@ class App(tk.Tk):
     def studios_published(self):
         self.set_status("Tattoo shops published to GitHub. Starting deployment...", "#46705b")
         self.deploy_latest(show_success=False)
+
+    def build_ticket_editor(self, parent):
+        parent.columnconfigure(1, weight=1)
+        parent.rowconfigure(1, weight=1)
+        ttk.Label(parent, text="Shared staff tickets", style="Section.TLabel").grid(row=0, column=0, columnspan=2, sticky="w")
+        ttk.Label(parent, text="Create work items, track priority, and resolve them with staff attribution.", style="Muted.TLabel").grid(row=0, column=1, sticky="e")
+        self.ticket_list = ttk.Treeview(parent, columns=("priority", "status", "created"), show="tree headings", selectmode="browse")
+        self.ticket_list.heading("#0", text="Ticket")
+        self.ticket_list.heading("priority", text="Priority")
+        self.ticket_list.heading("status", text="Status")
+        self.ticket_list.heading("created", text="Created by")
+        self.ticket_list.column("#0", width=260)
+        self.ticket_list.grid(row=1, column=0, sticky="nsew", padx=(0, 18), pady=(12, 0))
+        self.ticket_list.bind("<<TreeviewSelect>>", self.select_ticket)
+        editor = ttk.Frame(parent, style="Panel.TFrame")
+        editor.grid(row=1, column=1, sticky="nsew", pady=(12, 0))
+        editor.columnconfigure(1, weight=1)
+        ttk.Label(editor, text="Title").grid(row=0, column=0, sticky="w", padx=(0, 10), pady=5)
+        self.ticket_title = ttk.Entry(editor)
+        self.ticket_title.grid(row=0, column=1, sticky="ew", pady=5)
+        ttk.Label(editor, text="Description").grid(row=1, column=0, sticky="nw", padx=(0, 10), pady=5)
+        self.ticket_description = tk.Text(editor, height=7, wrap="word", bg="#ffffff", fg=PALETTE["ink"], relief="solid", borderwidth=1)
+        self.ticket_description.grid(row=1, column=1, sticky="ew", pady=5)
+        ttk.Label(editor, text="Priority").grid(row=2, column=0, sticky="w", padx=(0, 10), pady=5)
+        self.ticket_priority = ttk.Combobox(editor, values=("Low", "Medium", "High", "Urgent"), state="readonly")
+        self.ticket_priority.set("Medium")
+        self.ticket_priority.grid(row=2, column=1, sticky="w", pady=5)
+        self.ticket_meta = ttk.Label(editor, text="Select a ticket or create a new one.", style="Muted.TLabel")
+        self.ticket_meta.grid(row=3, column=0, columnspan=2, sticky="w", pady=(10, 5))
+        actions = ttk.Frame(editor, style="Panel.TFrame")
+        actions.grid(row=4, column=0, columnspan=2, sticky="w", pady=12)
+        ttk.Button(actions, text="+ New ticket", command=self.new_ticket).pack(side="left", padx=(0, 8))
+        ttk.Button(actions, text="Save ticket", style="Accent.TButton", command=self.save_ticket).pack(side="left", padx=(0, 8))
+        ttk.Button(actions, text="Resolve selected", command=self.resolve_ticket).pack(side="left")
+
+    def load_tickets(self, silent=False):
+        if not self.client:
+            return
+        def work():
+            try:
+                branch = self.client.repository()["default_branch"]
+                try:
+                    data_file = self.client.file(TICKET_DATA_PATH, branch)
+                    self.ticket_file_sha = data_file["sha"]
+                    self.tickets = json.loads(base64.b64decode(data_file["content"]).decode("utf-8"))
+                except GitHubError as error:
+                    if "404" not in str(error):
+                        raise
+                    self.tickets = []
+                    self.ticket_file_sha = None
+                self.after(0, self.refresh_ticket_list)
+            except Exception as error:
+                if not silent:
+                    self.after(0, lambda: messagebox.showerror("Could not load tickets", str(error)))
+        threading.Thread(target=work, daemon=True).start()
+
+    def refresh_ticket_list(self):
+        self.ticket_list.delete(*self.ticket_list.get_children())
+        for index, ticket in enumerate(self.tickets):
+            self.ticket_list.insert(
+                "", "end", iid=str(index), text=ticket.get("title", "Untitled"),
+                values=(ticket.get("priority", "Medium"), ticket.get("status", "Open"), ticket.get("createdBy", "")),
+            )
+
+    def select_ticket(self, _event=None):
+        selected = self.ticket_list.selection()
+        if selected:
+            self.selected_ticket = self.tickets[int(selected[0])]
+            self.ticket_title.delete(0, tk.END)
+            self.ticket_title.insert(0, self.selected_ticket.get("title", ""))
+            self.ticket_description.delete("1.0", tk.END)
+            self.ticket_description.insert("1.0", self.selected_ticket.get("description", ""))
+            self.ticket_priority.set(self.selected_ticket.get("priority", "Medium"))
+            resolved = self.selected_ticket.get("resolvedBy")
+            self.ticket_meta.config(text=f"Created by {self.selected_ticket.get('createdBy', 'unknown')}"
+                + (f" · Resolved by {resolved}" if resolved else " · Open"))
+
+    def new_ticket(self):
+        self.selected_ticket = None
+        self.ticket_title.delete(0, tk.END)
+        self.ticket_description.delete("1.0", tk.END)
+        self.ticket_priority.set("Medium")
+        self.ticket_meta.config(text=f"New ticket will be created by {self.current_login or 'current staff member'}.")
+
+    def save_ticket(self):
+        title = self.ticket_title.get().strip()
+        description = self.ticket_description.get("1.0", tk.END).strip()
+        if not title or not description:
+            messagebox.showerror("Ticket incomplete", "Add a title and description first.")
+            return
+        ticket = dict(self.selected_ticket or {
+            "id": f"ticket-{int(time.time())}",
+            "createdAt": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            "createdBy": self.current_login or "staff",
+            "status": "Open",
+        })
+        ticket.update({"title": title, "description": description, "priority": self.ticket_priority.get() or "Medium"})
+        if ticket["status"] == "Resolved":
+            ticket["status"] = "Open"
+            ticket.pop("resolvedBy", None)
+            ticket.pop("resolvedAt", None)
+        self.tickets = [item for item in self.tickets if item.get("id") != ticket["id"]] + [ticket]
+        self.selected_ticket = ticket
+        self.publish_tickets("Save staff ticket")
+
+    def resolve_ticket(self):
+        if not getattr(self, "selected_ticket", None):
+            messagebox.showinfo("No ticket selected", "Select a ticket before resolving it.")
+            return
+        self.selected_ticket["status"] = "Resolved"
+        self.selected_ticket["resolvedBy"] = self.current_login or "staff"
+        self.selected_ticket["resolvedAt"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+        self.publish_tickets("Resolve staff ticket")
+
+    def publish_tickets(self, message):
+        def work():
+            try:
+                branch = self.client.repository()["default_branch"]
+                data_file = None
+                try:
+                    data_file = self.client.file(TICKET_DATA_PATH, branch)
+                except GitHubError as error:
+                    if "404" not in str(error):
+                        raise
+                self.client.put_file(
+                    TICKET_DATA_PATH,
+                    json.dumps(self.tickets, indent=2).encode("utf-8"),
+                    branch,
+                    message,
+                    data_file["sha"] if data_file else None,
+                )
+                self.after(0, lambda: self.ticket_publish_complete())
+            except Exception as error:
+                self.after(0, lambda: messagebox.showerror("Could not save ticket", str(error)))
+        threading.Thread(target=work, daemon=True).start()
+
+    def ticket_publish_complete(self):
+        self.set_status("Ticket saved to the shared staff list.", "#46705b")
+        self.load_tickets(silent=True)
 
     def refresh_list(self, silent=False):
         query = self.search.get().lower().strip()
