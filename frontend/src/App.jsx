@@ -14,6 +14,7 @@ import CreatorProfile from "./CreatorProfile";
 import CreatorApplication from "./CreatorApplication";
 import PrivacyPolicy from "./PrivacyPolicy";
 import Terms from "./Terms";
+import AnalyticsTracker from "./AnalyticsTracker";
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -29,6 +30,7 @@ function App() {
   return (
     <BrowserRouter>
       <ScrollToTop />
+      <AnalyticsTracker />
       <Routes>
         <Route path="/" element={<Navigate to="/tattoos" replace />} />
         <Route path="/tattoos" element={<Home />} />
