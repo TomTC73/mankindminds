@@ -12,128 +12,148 @@ function PrivacyPolicy() {
           <h3>Privacy Policy</h3>
 
           <p>
-            Last updated: July 2026
+            Last updated: September 2026
           </p>
 
           <h4>1. Introduction</h4>
           <p>
-            Mankind Minds respects your privacy and is committed to protecting
-            your personal information. This Privacy Policy explains how we
-            collect, use, store, and protect information submitted through our
-            website and verification services.
+            Mankind Minds respects your privacy. This policy explains what
+            information is collected when you use this website, why it is
+            collected, and how it is handled. It applies to the public Mankind
+            Minds website, creator applications, and the tattoo studio map.
           </p>
 
-          <h4>2. Information We Collect</h4>
+          <h4>2. Information You Submit</h4>
           <p>
-            When you submit a verification application, we may collect:
-          </p>
-
-          <p>
-            • Your name or creator name
-            <br />
-            • Email address
-            <br />
-            • Creator category
-            <br />
-            • Website and social media links
-            <br />
-            • Portfolio and examples of creative work
-            <br />
-            • Information you provide about your creative process
-            <br />
-            • Verification declarations and application information
-          </p>
-
-          <h4>3. How We Use Your Information</h4>
-          <p>
-            We use submitted information to:
+            If you apply to become verified, the application form may collect
+            your name or creator name, email address, category, social media or
+            portfolio link, information about your creative work, and your
+            confirmations that the information and work are your own. Tattoo
+            business applications may also collect your contact name, business
+            name, and business email address.
           </p>
 
           <p>
-            • Review creator verification applications
-            <br />
-            • Analyse submitted work for verification purposes
-            <br />
-            • Communicate with applicants
-            <br />
-            • Issue and manage creator certificates
-            <br />
-            • Maintain verification records
-            <br />
-            • Improve our verification services
+            The form is submitted through Web3Forms, a third-party form
+            delivery provider. The information is sent to that provider and
+            delivered to the Mankind Minds team for review and communication.
+            Please read the provider's own privacy information for details of
+            its processing and retention.
           </p>
 
-          <h4>4. Verification Analysis</h4>
+          <h4>3. Information Collected When You Browse</h4>
           <p>
-            Mankind Minds may analyse submitted information and publicly
-            available content linked by creators during the application
-            process.
+            The website does not require an account and does not intentionally
+            collect payment information, precise location, or government
+            identification. It uses temporary browser session storage to
+            remember the selected website section and to restore a page after
+            navigation. This information remains in your browser session and is
+            not submitted to Mankind Minds.
           </p>
 
           <p>
-            Our analysis provides an assessment based on available evidence at
-            the time of review. We do not guarantee that content has never
-            involved AI tools and cannot provide absolute certainty regarding
-            the origin of creative work.
+            The tattoo map uses map tiles supplied by CARTO, with map data from
+            OpenStreetMap contributors. Your browser may connect to those
+            providers to load the map. The website does not use advertising
+            trackers or an analytics service.
           </p>
 
-          <h4>5. Legal Basis for Processing</h4>
+          <h4>4. Public Website Data</h4>
           <p>
-            We process personal information where necessary to provide our
-            verification service, communicate with applicants, maintain
-            certification records, and operate our business.
-          </p>
-
-          <h4>6. Third-Party Services</h4>
-          <p>
-            We may use trusted third-party providers to help operate our
-            website, process applications, and deliver services.
+            Creator profiles and tattoo studio listings shown on the website
+            may contain names, descriptions, social links, images, locations,
+            contact details, and other information supplied for publication.
+            This information is public and may be copied or indexed by others.
           </p>
 
           <p>
-            These providers may process information only as necessary to provide
-            their services and are expected to maintain appropriate security
-            measures.
+            Public profile and studio information is retrieved from the Mankind
+            Minds backend. We use it to display and maintain the directory,
+            respond to enquiries, and operate the verification service.
           </p>
 
-          <h4>7. Data Storage and Security</h4>
+          <h4>5. How We Use Submitted Information</h4>
           <p>
-            We take reasonable steps to protect submitted information from
-            unauthorised access, alteration, disclosure, or loss.
+            We use application information to review applications, assess
+            submitted work and linked public content, contact applicants,
+            manage verification records, and consider tattoo businesses for
+            inclusion on the map. We do not sell application information.
+          </p>
+
+          <h4>6. Legal Basis</h4>
+          <p>
+            Where UK data protection law applies, we generally rely on steps
+            taken at your request before providing a service, our legitimate
+            interests in operating and protecting the website, and legal
+            obligations. Where appropriate, we may rely on your consent.
           </p>
 
           <p>
-            No online service can guarantee complete security, but we aim to
-            maintain appropriate safeguards for the information we process.
+            We may also review public websites and social profiles that you
+            submit as part of an application. We only use them for the stated
+            review and verification purposes.
           </p>
 
-          <h4>8. Data Retention</h4>
+          <h4>7. Sharing and Service Providers</h4>
           <p>
-            We retain information only for as long as necessary to provide our
-            services, maintain verification records, resolve disputes, and meet
-            legal obligations.
+            Application information is shared with Web3Forms as needed to
+            transmit and deliver the form. Public website data is hosted and
+            delivered through our website and backend hosting providers.
+            Map requests are handled by CARTO and OpenStreetMap-related
+            services. These providers may process technical information such as
+            an IP address as part of delivering their services.
+          </p>
+
+          <p>
+            Providers process information under their own terms and privacy
+            policies. We do not control their independent processing.
+          </p>
+
+          <h4>8. Security and Retention</h4>
+          <p>
+            We take reasonable technical and organisational measures to protect
+            information against unauthorised access, loss, or misuse. No
+            internet service can guarantee complete security.
+          </p>
+
+          <p>
+            We keep application and verification information only for as long
+            as reasonably necessary to review applications, maintain accurate
+            records, handle disputes, and meet legal obligations. Retention by
+            Web3Forms and other providers is governed by their own policies.
+            Public listings may remain online while they are relevant or until
+            they are updated or removed.
           </p>
 
           <h4>9. Your Rights</h4>
           <p>
-            Depending on your location, you may have rights relating to your
-            personal information, including requesting access, correction,
-            deletion, or restriction of processing.
+            Depending on where you live, you may have rights to request access
+            to, correction of, or deletion of your personal information, or to
+            object to or restrict certain processing. You may also have the
+            right to withdraw consent where processing relies on consent.
           </p>
 
           <p>
-            Requests can be made by contacting Mankind Minds.
+            To make a privacy request, contact us using the details below. You
+            may also complain to the Information Commissioner's Office (ICO) or
+            your local data protection authority.
           </p>
 
           <h4>10. Contact</h4>
           <p>
-            For privacy questions, requests, or concerns, please contact:
+            For privacy questions, requests, or concerns, please contact
+            Mankind Minds:
           </p>
 
           <p>
-            Mankind Minds
-            <br />
-            Email: admin@mankindminds.com
+            Email:{" "}
+            <a href="mailto:admin@mankindminds.com">admin@mankindminds.com</a>
+          </p>
+
+          <h4>11. Changes to This Policy</h4>
+          <p>
+            We may update this policy when our services or data practices
+            change. The latest version will be published on this page.
           </p>
         </div>
       </section>
