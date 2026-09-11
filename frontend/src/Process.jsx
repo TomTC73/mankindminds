@@ -148,7 +148,11 @@ function Process() {
               Born in Brighton in 1872, George Burchett-Davis became a
               full-time tattooist around 1900. Known as the “King of
               Tattooists”, he worked in London and drew on influences gathered
-              through worldwide travel.
+              through worldwide travel. He was a great artist and pioneer who
+              helped carry tattooing into the twentieth century. Burchett is
+              our way of carrying that spirit into the twenty-first, when
+              artificial intelligence is having an equally enormous impact on
+              the industry.
             </p>
           </section>
 
@@ -173,9 +177,14 @@ function Process() {
               <p className="eyebrow">The Burchett principle</p>
               <h2>Make the mark mean something.</h2>
               <p>
+                What made Burchett special, and what makes tattooing special, is
+                the creativity and self-expression at its core. True art has
+                soul; it means something to both the artist and the client.
                 Burchett collected references and translated them through his
                 own hand. We look for the decisions, imperfections, and point
-                of view that make a tattooist's work unmistakably theirs.
+                of view that make a tattooist's work unmistakably theirs. In an
+                age of endless AI-generated content, that human quality matters
+                more than ever.
               </p>
               <p className="source-note">
                 Historical references:{" "}
@@ -217,9 +226,12 @@ function Process() {
                 <span>02</span>
                 <h3>Read the artwork</h3>
                 <p>
-                  Our image screening tools look for patterns associated with
-                  synthetic imagery. A reviewer then considers the result
-                  alongside the work and its history.
+                  Our custom Burchett software looks for patterns associated
+                  with synthetic imagery in the submitted art file or drawing.
+                  AI is a powerful tool, and its pattern-recognition
+                  capabilities make it useful here, paradoxically, for
+                  detecting AI imagery. A human reviewer then considers the
+                  result alongside the work and its history.
                 </p>
               </article>
               <article>
@@ -228,7 +240,11 @@ function Process() {
                 <p>
                   A reviewer considers the evidence as a whole. If we find no
                   reason to believe the submitted tattoo work is AI-generated,
-                  we issue Burchett Verification.
+                  we issue Burchett Verification. We use submissions only for
+                  verification, do not sell them or send them to unrelated
+                  third parties, and delete verification materials once the
+                  assessment is complete, subject to legal or public-record
+                  requirements.
                 </p>
               </article>
             </div>
@@ -236,9 +252,14 @@ function Process() {
 
           <section className="tattoo-process-quote">
             <p>
-              A tattoo records a person, a place, and a point in time.
+              A tattoo records a person, a place, and a point in time. Burchett
+              exists to protect the human work behind that mark, and to give
+              artists and clients confidence in what they are choosing.
             </p>
-            <span>A working belief behind Burchett Verification</span>
+            <span>
+              A working belief behind Burchett Verification — with questions,
+              contact us by phone, email, or in person where possible.
+            </span>
           </section>
         </main>
 
