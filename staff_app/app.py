@@ -27,6 +27,14 @@ STUDIO_ASSET_PATH = ASSET_PATH + "/studios"
 API = "https://api.github.com"
 DEPLOYMENT_EVENT = "deploy-backend"
 DEPLOYMENT_WORKFLOW = ".github/workflows/deploy-cloud-run.yml"
+CREATOR_NICHES = ("Tattooist", "Musician", "Writer", "Content Creator", "Artist", "Illustrator", "Photographer")
+LEGACY_NICHE_MAP = {
+    "Tattoos": "Tattooist",
+    "Music": "Musician",
+    "Writing": "Writer",
+    "Videos": "Content Creator",
+    "Art": "Artist",
+}
 CLIENT_ID = os.environ.get("MM_GITHUB_CLIENT_ID", "Ov23liZIMcO7043zppb9")
 REFRESH_MS = 60_000
 PALETTE = {
@@ -187,6 +195,9 @@ class App(tk.Tk):
         self.ticket_file_sha = None
         self.section_rows = []
         self.social_rows = []
+        self.creator_editor_enabled = False
+        self.studio_editor_enabled = False
+        self.ticket_editor_enabled = False
         self.build_styles()
         self.build_ui()
         self.after(REFRESH_MS, self.auto_refresh)
@@ -231,9 +242,12 @@ class App(tk.Tk):
         self.status.grid(row=0, column=0, sticky="w", padx=(0, 16))
         footer_buttons = ttk.Frame(footer)
         footer_buttons.grid(row=0, column=1, sticky="e")
-        ttk.Button(footer_buttons, text="Load draft", style="Footer.TButton", command=self.load_draft).pack(side="left", padx=(8, 0))
-        ttk.Button(footer_buttons, text="Save draft", style="Footer.TButton", command=self.save_draft).pack(side="left", padx=(8, 0))
-        ttk.Button(footer_buttons, text="Refresh", style="Footer.TButton", command=self.load_users).pack(side="left", padx=(8, 0))
+        self.load_draft_button = ttk.Button(footer_buttons, text="Load draft", style="Footer.TButton", command=self.load_draft)
+        self.load_draft_button.pack(side="left", padx=(8, 0))
+        self.save_draft_button = ttk.Button(footer_buttons, text="Save draft", style="Footer.TButton", command=self.save_draft)
+        self.save_draft_button.pack(side="left", padx=(8, 0))
+        self.refresh_button = ttk.Button(footer_buttons, text="Refresh", style="Footer.TButton", command=self.load_users)
+        self.refresh_button.pack(side="left", padx=(8, 0))
         self.deploy_button = ttk.Button(
             footer_buttons,
             text="Deploy latest GitHub changes",
@@ -248,6 +262,9 @@ class App(tk.Tk):
             command=self.publish,
         )
         self.publish_button.pack(side="left", padx=(8, 0))
+        self.refresh_button.config(state="disabled")
+        self.deploy_button.config(state="disabled")
+        self.publish_button.config(state="disabled")
 
         tabs = ttk.Notebook(self)
         tabs.pack(fill="both", expand=True, padx=22, pady=(0, 16))
@@ -277,8 +294,10 @@ class App(tk.Tk):
         self.user_list.column("category", width=95)
         self.user_list.pack(fill="both", expand=True)
         self.user_list.bind("<<TreeviewSelect>>", self.select_user)
-        ttk.Button(left, text="+  New creator", style="Outline.TButton", command=self.new_user).pack(fill="x", pady=(12, 0))
-        ttk.Button(left, text="Remove selected creator", command=self.remove_selected_creator).pack(fill="x", pady=(8, 0))
+        self.new_creator_button = ttk.Button(left, text="+  New creator", style="Outline.TButton", command=self.new_user)
+        self.new_creator_button.pack(fill="x", pady=(12, 0))
+        self.remove_creator_button = ttk.Button(left, text="Remove selected creator", command=self.remove_selected_creator)
+        self.remove_creator_button.pack(fill="x", pady=(8, 0))
 
         self.canvas = tk.Canvas(right, background=PALETTE["panel"], highlightthickness=0)
         scrollbar = ttk.Scrollbar(right, orient="vertical", command=self.canvas.yview)
@@ -290,6 +309,7 @@ class App(tk.Tk):
         scrollbar.pack(side="right", fill="y")
         self.canvas.bind_all("<MouseWheel>", self.scroll_form)
         self.build_form()
+        self.set_creator_editor_enabled(False)
         ttk.Label(preview, text="Live preview", style="Section.TLabel").pack(anchor="w")
         ttk.Label(preview, text="This is how the public profile will read.", style="Muted.TLabel").pack(anchor="w", pady=(2, 10))
         self.preview_text = tk.Text(
@@ -304,15 +324,17 @@ class App(tk.Tk):
         shops_tab = ttk.Frame(tabs, style="Panel.TFrame", padding=20)
         tabs.add(shops_tab, text="Tattoo shops")
         self.build_studio_editor(shops_tab)
+        self.set_studio_editor_enabled(False)
         tickets_tab = ttk.Frame(tabs, style="Panel.TFrame", padding=20)
         tabs.add(tickets_tab, text="To Do List")
         self.build_ticket_editor(tickets_tab)
+        self.set_ticket_editor_enabled(False)
 
     def build_form(self):
         for widget in self.form.winfo_children():
             widget.destroy()
         self.fields = {}
-        self.add_heading("Creator details", "Choose a creator on the left, or start a new profile.")
+        self.add_heading("Creator details", "Sign in, then choose a creator on the left or start a new profile.")
         fields = [
             ("name", "Name", "Creator's public name"),
             ("slug", "Profile slug", "Used in the profile URL"),
@@ -321,7 +343,7 @@ class App(tk.Tk):
         ]
         for key, label, hint in fields:
             self.add_labeled_entry(key, label, hint)
-        self.add_labeled_combo("category", "Category", ("Tattoos", "Music", "Writing", "Videos", "Art"))
+        self.add_labeled_combo("category", "Niche", CREATOR_NICHES)
 
         self.add_heading("Verification", "Standard Mankind Minds verification is added automatically.")
         ttk.Label(self.form, text="Verified Creator  ·  AI-Free Verification  ·  Proven AI-Free Creator",
@@ -487,6 +509,46 @@ class App(tk.Tk):
     def set_status(self, text, color=None):
         self.status.config(text=text, foreground=color or PALETTE["muted"])
 
+    def set_creator_editor_enabled(self, enabled):
+        self.creator_editor_enabled = enabled
+        self.set_widget_state(self.form, enabled)
+        if self.section_rows:
+            self.section_rows[1][2].config(state="disabled", bg="#eeeae3", fg=PALETTE["muted"])
+        self.new_creator_button.config(state="normal" if self.client else "disabled")
+        self.remove_creator_button.config(state="normal" if enabled and self.selected else "disabled")
+
+    def set_studio_editor_enabled(self, enabled):
+        self.studio_editor_enabled = enabled
+        for widget in self.studio_editor_widgets:
+            widget.config(state="normal" if enabled else "disabled")
+
+    def set_ticket_editor_enabled(self, enabled):
+        self.ticket_editor_enabled = enabled
+        for widget in self.ticket_editor_widgets:
+            widget.config(state="normal" if enabled else "disabled")
+
+    def set_widget_state(self, widget, enabled):
+        try:
+            widget.config(state="normal" if enabled else "disabled")
+        except tk.TclError:
+            pass
+        for child in widget.winfo_children():
+            self.set_widget_state(child, enabled)
+
+    def set_authenticated_controls(self, enabled):
+        state = "normal" if enabled else "disabled"
+        self.refresh_button.config(state=state)
+        self.deploy_button.config(state=state)
+        self.publish_button.config(state=state)
+        self.new_creator_button.config(state=state)
+        self.new_shop_button.config(state=state)
+        self.new_ticket_button.config(state=state)
+        if not enabled:
+            self.remove_creator_button.config(state="disabled")
+            self.set_creator_editor_enabled(False)
+            self.set_studio_editor_enabled(False)
+            self.set_ticket_editor_enabled(False)
+
     def sign_in(self):
         self.sign_in_button.config(state="disabled", text="Signing in...")
         self.set_status("Opening GitHub sign-in in your browser...", PALETTE["accent"])
@@ -517,6 +579,7 @@ class App(tk.Tk):
         self.current_login = login
         self.user_label.config(text=f"Signed in as {login}")
         self.sign_in_button.config(state="normal", text="Signed in")
+        self.set_authenticated_controls(True)
         self.set_status("Sign-in successful. Loading creator records...", PALETTE["accent"])
         self.load_users()
         self.load_studios()
@@ -524,6 +587,7 @@ class App(tk.Tk):
 
     def sign_in_failed(self, error):
         self.sign_in_button.config(state="normal", text="Sign in with GitHub")
+        self.set_authenticated_controls(False)
         self.set_status("Sign-in failed. Please try again.", PALETTE["accent"])
         messagebox.showerror("Sign-in failed", error)
 
@@ -536,7 +600,7 @@ class App(tk.Tk):
 
     def load_users(self, silent=False):
         if not self.client:
-            self.set_status("Sign in to load creator records.")
+            self.set_status("Sign in with GitHub before loading or publishing records.", PALETTE["accent"])
             return
         if not silent:
             self.set_status("Loading creator records from GitHub...", PALETTE["accent"])
@@ -545,17 +609,22 @@ class App(tk.Tk):
                 branch = self.client.repository()["default_branch"]
                 data_file = self.client.file(DATA_PATH, branch)
                 content = base64.b64decode(data_file["content"]).decode("utf-8")
-                self.creators = json.loads(content)
+                self.creators = [
+                    {**creator, "category": LEGACY_NICHE_MAP.get(creator.get("category"), creator.get("category", ""))}
+                    for creator in json.loads(content)
+                ]
                 self.after(0, lambda: self.refresh_list(silent))
             except Exception as error:
                 self.after(0, lambda: messagebox.showerror("Could not load users", str(error)))
         threading.Thread(target=work, daemon=True).start()
 
     def build_studio_editor(self, parent):
+        self.studio_editor_widgets = []
         parent.columnconfigure(1, weight=2)
         parent.columnconfigure(2, weight=1)
         parent.rowconfigure(1, weight=1)
         ttk.Label(parent, text="Tattoo shops on the public map", style="Section.TLabel").grid(row=0, column=0, columnspan=2, sticky="w")
+        ttk.Label(parent, text="Sign in, then select a shop or choose + New shop to begin editing.", style="Muted.TLabel").grid(row=0, column=1, sticky="e")
         self.studio_list = ttk.Treeview(parent, columns=("city", "postcode"), show="tree headings", selectmode="browse")
         self.studio_list.heading("#0", text="Studio")
         self.studio_list.heading("city", text="City")
@@ -576,18 +645,26 @@ class App(tk.Tk):
             entry.grid(row=row, column=1, sticky="ew", pady=5)
             entry.bind("<KeyRelease>", lambda _event: self.update_studio_preview())
             self.studio_fields[key] = entry
+            self.studio_editor_widgets.append(entry)
         image_row = 13
         ttk.Label(editor, text="Image path").grid(row=image_row, column=0, sticky="w", padx=(0, 10), pady=5)
         self.studio_fields["image"] = ttk.Entry(editor)
         self.studio_fields["image"].grid(row=image_row, column=1, sticky="ew", pady=5)
         self.studio_fields["image"].bind("<KeyRelease>", lambda _event: self.update_studio_preview())
-        ttk.Button(editor, text="Choose shop photo", command=self.choose_studio_photo).grid(row=image_row + 1, column=0, pady=8, sticky="w")
+        choose_photo_button = ttk.Button(editor, text="Choose shop photo", command=self.choose_studio_photo)
+        choose_photo_button.grid(row=image_row + 1, column=0, pady=8, sticky="w")
+        self.studio_editor_widgets.append(choose_photo_button)
         self.studio_photo_label = ttk.Label(editor, text="No new photo selected", style="Muted.TLabel")
         self.studio_photo_label.grid(row=image_row + 1, column=1, sticky="w")
-        ttk.Button(editor, text="+ New shop", command=self.new_studio).grid(row=image_row + 2, column=0, pady=8, sticky="w")
-        ttk.Button(editor, text="Save shop locally", command=self.save_studio).grid(row=image_row + 2, column=1, pady=8, sticky="w")
-        ttk.Button(editor, text="Remove selected shop", command=self.remove_selected_studio).grid(row=image_row + 3, column=0, pady=8, sticky="w")
-        ttk.Button(editor, text="Publish all shops to GitHub", style="Accent.TButton", command=self.publish_studios).grid(row=image_row + 4, column=0, columnspan=2, sticky="w")
+        self.new_shop_button = ttk.Button(editor, text="+ New shop", command=self.new_studio)
+        self.new_shop_button.grid(row=image_row + 2, column=0, pady=8, sticky="w")
+        save_shop_button = ttk.Button(editor, text="Save shop locally", command=self.save_studio)
+        save_shop_button.grid(row=image_row + 2, column=1, pady=8, sticky="w")
+        remove_shop_button = ttk.Button(editor, text="Remove selected shop", command=self.remove_selected_studio)
+        remove_shop_button.grid(row=image_row + 3, column=0, pady=8, sticky="w")
+        publish_shop_button = ttk.Button(editor, text="Publish all shops to GitHub", style="Accent.TButton", command=self.publish_studios)
+        publish_shop_button.grid(row=image_row + 4, column=0, columnspan=2, sticky="w")
+        self.studio_editor_widgets.extend((self.studio_fields["image"], self.new_shop_button, save_shop_button, remove_shop_button, publish_shop_button))
         preview = ttk.Frame(parent, style="Panel.TFrame", padding=16)
         preview.grid(row=1, column=2, sticky="nsew", padx=(18, 0), pady=(12, 0))
         ttk.Label(preview, text="Map card preview", style="Section.TLabel").pack(anchor="w")
@@ -618,6 +695,7 @@ class App(tk.Tk):
         selected = self.studio_list.selection()
         if selected:
             self.selected_studio = self.studios[int(selected[0])]
+            self.set_studio_editor_enabled(True)
             self.fill_studio_form(self.selected_studio)
 
     def fill_studio_form(self, studio):
@@ -632,7 +710,11 @@ class App(tk.Tk):
         self.update_studio_preview()
 
     def new_studio(self):
+        if not self.client:
+            messagebox.showinfo("Sign in required", "Sign in with GitHub before creating a tattoo shop.")
+            return
         self.selected_studio = {"id": max([studio.get("id", 0) for studio in self.studios] or [0]) + 1, "refCode": ""}
+        self.set_studio_editor_enabled(True)
         self.fill_studio_form(self.selected_studio)
         self.studio_photo_label.config(text="Choose a photo before publishing (optional).")
 
@@ -765,6 +847,7 @@ class App(tk.Tk):
         self.deploy_latest(show_success=False)
 
     def build_ticket_editor(self, parent):
+        self.ticket_editor_widgets = []
         parent.columnconfigure(1, weight=1)
         parent.rowconfigure(1, weight=1)
         ttk.Label(parent, text="Shared staff tickets", style="Section.TLabel").grid(row=0, column=0, columnspan=2, sticky="w")
@@ -783,20 +866,27 @@ class App(tk.Tk):
         ttk.Label(editor, text="Title").grid(row=0, column=0, sticky="w", padx=(0, 10), pady=5)
         self.ticket_title = ttk.Entry(editor)
         self.ticket_title.grid(row=0, column=1, sticky="ew", pady=5)
+        self.ticket_editor_widgets.append(self.ticket_title)
         ttk.Label(editor, text="Description").grid(row=1, column=0, sticky="nw", padx=(0, 10), pady=5)
         self.ticket_description = tk.Text(editor, height=7, wrap="word", bg="#ffffff", fg=PALETTE["ink"], relief="solid", borderwidth=1)
         self.ticket_description.grid(row=1, column=1, sticky="ew", pady=5)
+        self.ticket_editor_widgets.append(self.ticket_description)
         ttk.Label(editor, text="Priority").grid(row=2, column=0, sticky="w", padx=(0, 10), pady=5)
         self.ticket_priority = ttk.Combobox(editor, values=("Low", "Medium", "High", "Urgent"), state="readonly")
         self.ticket_priority.set("Medium")
         self.ticket_priority.grid(row=2, column=1, sticky="w", pady=5)
-        self.ticket_meta = ttk.Label(editor, text="Select a ticket or create a new one.", style="Muted.TLabel")
+        self.ticket_editor_widgets.append(self.ticket_priority)
+        self.ticket_meta = ttk.Label(editor, text="Sign in, then choose + New ticket or select an existing ticket.", style="Muted.TLabel")
         self.ticket_meta.grid(row=3, column=0, columnspan=2, sticky="w", pady=(10, 5))
         actions = ttk.Frame(editor, style="Panel.TFrame")
         actions.grid(row=4, column=0, columnspan=2, sticky="w", pady=12)
-        ttk.Button(actions, text="+ New ticket", command=self.new_ticket).pack(side="left", padx=(0, 8))
-        ttk.Button(actions, text="Save ticket", style="Accent.TButton", command=self.save_ticket).pack(side="left", padx=(0, 8))
-        ttk.Button(actions, text="Resolve selected", command=self.resolve_ticket).pack(side="left")
+        self.new_ticket_button = ttk.Button(actions, text="+ New ticket", command=self.new_ticket)
+        self.new_ticket_button.pack(side="left", padx=(0, 8))
+        save_ticket_button = ttk.Button(actions, text="Save ticket", style="Accent.TButton", command=self.save_ticket)
+        save_ticket_button.pack(side="left", padx=(0, 8))
+        resolve_ticket_button = ttk.Button(actions, text="Resolve selected", command=self.resolve_ticket)
+        resolve_ticket_button.pack(side="left")
+        self.ticket_editor_widgets.extend((self.new_ticket_button, save_ticket_button, resolve_ticket_button))
 
     def load_tickets(self, silent=False):
         if not self.client:
@@ -830,6 +920,7 @@ class App(tk.Tk):
     def select_ticket(self, _event=None):
         selected = self.ticket_list.selection()
         if selected:
+            self.set_ticket_editor_enabled(True)
             self.selected_ticket = self.tickets[int(selected[0])]
             self.ticket_title.delete(0, tk.END)
             self.ticket_title.insert(0, self.selected_ticket.get("title", ""))
@@ -841,6 +932,10 @@ class App(tk.Tk):
                 + (f" · Resolved by {resolved}" if resolved else " · Open"))
 
     def new_ticket(self):
+        if not self.client:
+            messagebox.showinfo("Sign in required", "Sign in with GitHub before creating a shared ticket.")
+            return
+        self.set_ticket_editor_enabled(True)
         self.selected_ticket = None
         self.ticket_title.delete(0, tk.END)
         self.ticket_description.delete("1.0", tk.END)
@@ -924,13 +1019,15 @@ class App(tk.Tk):
             query = ""
         visible = [creator for creator in self.creators if query in creator.get("name", "").lower() or query in creator.get("category", "").lower()]
         self.selected = visible[int(selected[0])]
+        self.set_creator_editor_enabled(True)
         self.fill_form(self.selected)
 
     def fill_form(self, creator):
         for key in ("name", "slug", "description", "bio"):
             self.fields[key].delete(0, tk.END)
             self.fields[key].insert(0, creator.get(key, ""))
-        self.fields["category"].set(creator.get("category", ""))
+        category = LEGACY_NICHE_MAP.get(creator.get("category"), creator.get("category", ""))
+        self.fields["category"].set(category if category in CREATOR_NICHES else "Artist")
         for row, _, _ in self.section_rows:
             row.destroy()
         for row, _, _ in self.social_rows:
@@ -962,7 +1059,11 @@ class App(tk.Tk):
         self.update_preview()
 
     def new_user(self):
-        self.selected = {"slug": "", "name": "", "category": "Tattoos", "sections": [], "socialLinks": [], "gallery": []}
+        if not self.client:
+            messagebox.showinfo("Sign in required", "Sign in with GitHub before creating a creator profile.")
+            return
+        self.selected = {"slug": "", "name": "", "category": "Tattooist", "sections": [], "socialLinks": [], "gallery": []}
+        self.set_creator_editor_enabled(True)
         self.fill_form(self.selected)
         self.photo_label.config(text="Choose a profile photo before publishing.")
         self.set_status("New creator profile ready.")
@@ -1022,6 +1123,7 @@ class App(tk.Tk):
             with open(DRAFT_PATH, "r", encoding="utf-8") as draft:
                 creator = json.load(draft)
             self.selected = creator
+            self.set_creator_editor_enabled(True)
             self.fill_form(creator)
             self.set_status("Draft loaded locally. Review it before publishing.")
         except (OSError, json.JSONDecodeError) as error:
