@@ -54,8 +54,17 @@ function PrivacyPolicy() {
           <p>
             The tattoo map uses map tiles supplied by CARTO, with map data from
             OpenStreetMap contributors. Your browser may connect to those
-            providers to load the map. The website does not use advertising
-            trackers or an analytics service.
+            providers to load the map.
+           </p>
+
+           <p>
+            The website uses a first-party analytics system to understand how
+            the site is used. When you browse the site, it creates a random
+            anonymous visitor identifier in your browser's local storage and
+            sends page-view information such as the page path, referring page,
+            and screen width to our backend. This identifier is not your name,
+            email address, or account identity, and we do not use it to contact
+            or profile you.
           </p>
 
           <h4>4. Public Website Data</h4>
@@ -105,8 +114,12 @@ function PrivacyPolicy() {
           </p>
 
           <p>
-            Providers process information under their own terms and privacy
-            policies. We do not control their independent processing.
+            Analytics data is processed by our backend and stored in our
+            Firestore database. We store aggregated counts rather than raw
+            browsing histories or raw IP addresses. Any country or city
+            information shown in the staff dashboard is approximate and is
+            derived from available hosting metadata where possible. We do not
+            use analytics to identify or contact individual visitors.
           </p>
 
           <h4>8. Security and Retention</h4>
