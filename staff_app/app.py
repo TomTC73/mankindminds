@@ -209,6 +209,7 @@ class App(tk.Tk):
         style.configure("Treeview", background="#ffffff", fieldbackground="#ffffff", foreground=PALETTE["ink"], rowheight=34)
         style.configure("Treeview.Heading", background=PALETTE["ink"], foreground="#ffffff", font=("Segoe UI Semibold", 10))
         style.configure("Status.TLabel", background=PALETTE["paper"], foreground=PALETTE["muted"], font=("Segoe UI", 9))
+        style.configure("Footer.TButton", padding=(14, 10), font=("Segoe UI Semibold", 10))
 
     def build_ui(self):
         header = ttk.Frame(self, padding=(28, 22, 28, 16))
@@ -222,6 +223,31 @@ class App(tk.Tk):
         self.user_label.pack(side="left", padx=(0, 14))
         self.sign_in_button = ttk.Button(toolbar, text="Sign in with GitHub", style="Accent.TButton", command=self.sign_in)
         self.sign_in_button.pack(side="left")
+
+        footer = ttk.Frame(self, padding=(22, 10, 22, 18))
+        footer.pack(fill="x", side="bottom")
+        footer.columnconfigure(0, weight=1)
+        self.status = ttk.Label(footer, text="Sign in to load creator records.", style="Status.TLabel")
+        self.status.grid(row=0, column=0, sticky="w", padx=(0, 16))
+        footer_buttons = ttk.Frame(footer)
+        footer_buttons.grid(row=0, column=1, sticky="e")
+        ttk.Button(footer_buttons, text="Load draft", style="Footer.TButton", command=self.load_draft).pack(side="left", padx=(8, 0))
+        ttk.Button(footer_buttons, text="Save draft", style="Footer.TButton", command=self.save_draft).pack(side="left", padx=(8, 0))
+        ttk.Button(footer_buttons, text="Refresh", style="Footer.TButton", command=self.load_users).pack(side="left", padx=(8, 0))
+        self.deploy_button = ttk.Button(
+            footer_buttons,
+            text="Deploy latest GitHub changes",
+            style="Footer.TButton",
+            command=self.deploy_latest,
+        )
+        self.deploy_button.pack(side="left", padx=(8, 0))
+        self.publish_button = ttk.Button(
+            footer_buttons,
+            text="Publish changes to website",
+            style="Accent.TButton",
+            command=self.publish,
+        )
+        self.publish_button.pack(side="left", padx=(8, 0))
 
         tabs = ttk.Notebook(self)
         tabs.pack(fill="both", expand=True, padx=22, pady=(0, 16))
@@ -281,23 +307,6 @@ class App(tk.Tk):
         tickets_tab = ttk.Frame(tabs, style="Panel.TFrame", padding=20)
         tabs.add(tickets_tab, text="To Do List")
         self.build_ticket_editor(tickets_tab)
-
-        footer = ttk.Frame(self, padding=(22, 10, 22, 18))
-        footer.pack(fill="x", pady=(0, 4))
-        self.status = ttk.Label(footer, text="Sign in to load creator records.", style="Status.TLabel")
-        self.status.pack(side="left")
-        ttk.Button(footer, text="Load draft", command=self.load_draft).pack(side="right", padx=(8, 0))
-        ttk.Button(footer, text="Save draft", style="Outline.TButton", command=self.save_draft).pack(side="right", padx=(8, 0))
-        ttk.Button(footer, text="Refresh", command=self.load_users).pack(side="right", padx=(8, 0))
-        self.deploy_button = ttk.Button(
-            footer,
-            text="Deploy latest GitHub changes",
-            style="Outline.TButton",
-            command=self.deploy_latest,
-        )
-        self.deploy_button.pack(side="right", padx=(8, 0))
-        self.publish_button = ttk.Button(footer, text="Publish changes to website", style="Accent.TButton", command=self.publish)
-        self.publish_button.pack(side="right")
 
     def build_form(self):
         for widget in self.form.winfo_children():
