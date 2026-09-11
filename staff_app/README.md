@@ -32,6 +32,12 @@ pyinstaller --onefile --windowed app.py
 The executable is created in `dist/app.exe`. Keep the GitHub OAuth client ID
 configured in the environment of the staff computers before launching it.
 
+After opening the app, sign in before editing anything. The creator, tattoo
+shop, and ticket editors remain locked until you select an existing record or
+choose the relevant **New** button, which prevents edits from being entered
+without a record to save them to. Drafts can still be loaded and saved locally
+before signing in, but publishing requires GitHub sign-in.
+
 ## Publishing
 
 Each publish commits directly to the backend repository's default branch and
