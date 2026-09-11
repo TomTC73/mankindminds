@@ -27,6 +27,7 @@ STUDIO_ASSET_PATH = ASSET_PATH + "/studios"
 API = "https://api.github.com"
 DEPLOYMENT_EVENT = "deploy-backend"
 DEPLOYMENT_WORKFLOW = ".github/workflows/deploy-cloud-run.yml"
+ANALYTICS_API = "https://mankind-minds-api-151580998157.europe-west2.run.app/api/analytics"
 CREATOR_NICHES = ("Tattooist", "Musician", "Writer", "Content Creator", "Artist", "Illustrator", "Photographer")
 LEGACY_NICHE_MAP = {
     "Tattoos": "Tattooist",
@@ -141,6 +142,30 @@ class GitHubClient:
     def deployment_run(self, run_id):
         return self.request("GET", f"/repos/{OWNER}/{REPO}/actions/runs/{run_id}")
 
+
+class AnalyticsClient:
+    def __init__(self, base_url):
+        self.base_url = base_url
+
+    def request(self, path, params=None):
+        query = urllib.parse.urlencode(params or {})
+        url = f"{self.base_url}{path}?{query}"
+        request = urllib.request.Request(url, method="GET")
+        request.add_header("Accept", "application/json")
+        try:
+            with urllib.request.urlopen(request, timeout=30) as response:
+                return json.loads(response.read())
+        except urllib.error.HTTPError as error:
+            detail = error.read().decode("utf-8", "replace")
+            raise RuntimeError(f"Analytics API returned {error.code}: {detail}") from error
+
+    def aggregate(self):
+        return self.request("/summary")
+
+    def breakdown(self, dimension, limit=10):
+        return self.request("/breakdown", {"dimension": dimension, "limit": limit})
+
+
 def request_json(url, payload):
     request = urllib.request.Request(url, data=urllib.parse.urlencode(payload).encode(), method="POST")
     request.add_header("Accept", "application/json")
@@ -191,6 +216,7 @@ class App(tk.Tk):
         self.studio_fields = {}
         self.studio_photo_path = None
         self.current_login = ""
+        self.analytics = AnalyticsClient(ANALYTICS_API)
         self.tickets = []
         self.ticket_file_sha = None
         self.section_rows = []
@@ -329,6 +355,9 @@ class App(tk.Tk):
         tabs.add(tickets_tab, text="To Do List")
         self.build_ticket_editor(tickets_tab)
         self.set_ticket_editor_enabled(False)
+        analytics_tab = ttk.Frame(tabs, style="Panel.TFrame", padding=20)
+        tabs.add(analytics_tab, text="Analytics")
+        self.build_analytics_panel(analytics_tab)
 
     def build_form(self):
         for widget in self.form.winfo_children():
@@ -584,6 +613,8 @@ class App(tk.Tk):
         self.load_users()
         self.load_studios()
         self.load_tickets()
+        if self.analytics:
+            self.load_analytics()
 
     def sign_in_failed(self, error):
         self.sign_in_button.config(state="normal", text="Sign in with GitHub")
@@ -596,6 +627,8 @@ class App(tk.Tk):
             self.load_users(silent=True)
             self.load_studios(silent=True)
             self.load_tickets(silent=True)
+            if self.analytics:
+                self.load_analytics(silent=True)
         self.after(REFRESH_MS, self.auto_refresh)
 
     def load_users(self, silent=False):
@@ -845,6 +878,126 @@ class App(tk.Tk):
     def studios_published(self):
         self.set_status("Tattoo shops published to GitHub. Starting deployment...", "#46705b")
         self.deploy_latest(show_success=False)
+
+    def build_analytics_panel(self, parent):
+        parent.columnconfigure(0, weight=1)
+        parent.columnconfigure(1, weight=1)
+        parent.rowconfigure(2, weight=1)
+        header = ttk.Frame(parent, style="Panel.TFrame")
+        header.grid(row=0, column=0, columnspan=2, sticky="ew")
+        ttk.Label(header, text="Live site analytics", style="Section.TLabel").pack(side="left")
+        ttk.Label(
+            header,
+            text="First-party anonymous analytics",
+            style="Muted.TLabel",
+        ).pack(side="left", padx=(12, 0))
+        self.analytics_refresh_button = ttk.Button(header, text="Refresh analytics", command=self.load_analytics)
+        self.analytics_refresh_button.pack(side="right")
+        self.analytics_summary = tk.Text(
+            parent,
+            height=8,
+            wrap="word",
+            state="disabled",
+            bg="#ffffff",
+            fg=PALETTE["ink"],
+            relief="solid",
+            borderwidth=1,
+            padx=12,
+            pady=12,
+        )
+        self.analytics_summary.grid(row=1, column=0, columnspan=2, sticky="ew", pady=(12, 18))
+        self.analytics_pages = self.create_analytics_tree(parent, "Top pages", ("Page", "Visitors", "Views"), 0)
+        self.analytics_locations = self.create_analytics_tree(parent, "Visitor locations", ("Location", "Visitors", "Views"), 1)
+        self.analytics_dashboard_button = ttk.Button(
+            parent,
+            text="Open analytics API",
+            command=lambda: webbrowser.open(ANALYTICS_API),
+        )
+        self.analytics_dashboard_button.grid(row=3, column=0, columnspan=2, sticky="w", pady=(14, 0))
+        self.write_analytics_message("Sign in with GitHub, then refresh to load analytics.")
+
+    def create_analytics_tree(self, parent, title, columns, column):
+        frame = ttk.Frame(parent, style="Panel.TFrame")
+        frame.grid(row=2, column=column, sticky="nsew", padx=(0, 10) if column == 0 else (10, 0))
+        frame.rowconfigure(1, weight=1)
+        frame.columnconfigure(0, weight=1)
+        ttk.Label(frame, text=title, style="Section.TLabel").grid(row=0, column=0, sticky="w", pady=(0, 8))
+        tree = ttk.Treeview(frame, columns=columns[1:], show="tree headings", height=12)
+        tree.heading("#0", text=columns[0])
+        tree.column("#0", width=250)
+        for name in columns[1:]:
+            tree.heading(name, text=name)
+            tree.column(name, width=90, anchor="e")
+        tree.grid(row=1, column=0, sticky="nsew")
+        return tree
+
+    def write_analytics_message(self, message):
+        self.analytics_summary.config(state="normal")
+        self.analytics_summary.delete("1.0", tk.END)
+        self.analytics_summary.insert("1.0", message)
+        self.analytics_summary.config(state="disabled")
+
+    def load_analytics(self, silent=False):
+        self.analytics_refresh_button.config(state="disabled")
+        if not silent:
+            self.write_analytics_message("Loading live and historical analytics...")
+
+        def work():
+            try:
+                summary = self.analytics.aggregate()
+                pages = self.analytics.breakdown("pages")
+                countries = self.analytics.breakdown("countries")
+                cities = self.analytics.breakdown("cities")
+                self.after(0, lambda: self.show_analytics(
+                    summary,
+                    pages,
+                    countries,
+                    cities,
+                ))
+            except Exception as error:
+                self.after(0, lambda: self.analytics_failed(str(error)))
+
+        threading.Thread(target=work, daemon=True).start()
+
+    def show_analytics(self, summary_data, pages, countries, cities):
+        summary = summary_data.get("summary", summary_data)
+        bounce_rate = summary.get("bounceRate")
+        bounce_text = "Unavailable" if bounce_rate is None else f"{bounce_rate * 100:.1f}%"
+        duration = summary.get("averageVisitDurationSeconds")
+        duration_text = "Unavailable" if duration is None else f"{duration} seconds"
+        summary = (
+            f"Currently visiting: {summary.get('activeVisitors', 0)}\n"
+            f"Unique visitors (all time): {summary.get('uniqueVisitors', 0)}\n"
+            f"Visits (all time): {summary.get('visits', 0)}\n"
+            f"Page views (all time): {summary.get('pageviews', 0)}\n"
+            f"Bounce rate: {bounce_text}\n"
+            f"Average visit duration: {duration_text}"
+        )
+        self.write_analytics_message(summary)
+        self.fill_analytics_tree(self.analytics_pages, pages.get("results", []))
+        location_rows = countries.get("results", []) + cities.get("results", [])
+        self.fill_analytics_tree(self.analytics_locations, location_rows)
+        self.analytics_refresh_button.config(state="normal")
+        self.set_status("Analytics refreshed.", "#46705b")
+
+    def fill_analytics_tree(self, tree, rows):
+        tree.delete(*tree.get_children())
+        for index, row in enumerate(rows):
+            metrics = row.get("metrics", {})
+            dimensions = row.get("dimensions", [])
+            label = dimensions[0] if dimensions else "Unknown"
+            tree.insert(
+                "",
+                "end",
+                iid=str(index),
+                text=label,
+                values=(metrics.get("visitors", 0), metrics.get("pageviews", 0)),
+            )
+
+    def analytics_failed(self, error):
+        self.analytics_refresh_button.config(state="normal")
+        self.write_analytics_message(f"Analytics could not be loaded:\n\n{error}")
+        self.set_status("Analytics request failed.", PALETTE["accent"])
 
     def build_ticket_editor(self, parent):
         self.ticket_editor_widgets = []

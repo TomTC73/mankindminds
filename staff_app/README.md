@@ -38,6 +38,14 @@ choose the relevant **New** button, which prevents edits from being entered
 without a record to save them to. Drafts can still be loaded and saved locally
 before signing in, but publishing requires GitHub sign-in.
 
+### Analytics setup
+
+The **Analytics** tab uses the Mankind Minds backend for privacy-friendly
+aggregate visitor reports. The public site sends anonymous page views to the
+backend, without advertising cookies or user accounts. The tab shows current
+visitors, all-time visitors and visits, page views, bounce rate, average visit
+duration, top pages, countries, and cities.
+
 ## Publishing
 
 Each publish commits directly to the backend repository's default branch and
