@@ -16,7 +16,7 @@ const categoryGroups = {
   },
   videos: {
     label: "Videos",
-    matches: ["video", "videos", "filmmaker", "videographer", "editor", "director"],
+    matches: ["video", "videos", "filmmaker", "videographer", "editor", "director", "content creator"],
   },
   art: {
     label: "Art",
@@ -26,11 +26,24 @@ const categoryGroups = {
 
 const categoryOrder = Object.keys(categoryGroups);
 
+const nicheLabels = {
+  music: "Musician",
+  videos: "Content Creator",
+  writing: "Writer",
+  art: "Artist",
+  tattoos: "Tattooist",
+};
+
 function getCreatorCategory(category) {
   const normalizedCategory = category?.toLowerCase() || "";
   return categoryOrder.find((key) =>
     categoryGroups[key].matches.some((match) => normalizedCategory.includes(match)),
   );
+}
+
+function getCreatorNiche(category) {
+  const normalizedCategory = category?.toLowerCase() || "";
+  return nicheLabels[normalizedCategory] || category;
 }
 
 function VerifiedCreators() {
@@ -113,7 +126,7 @@ function VerifiedCreators() {
                   <h4>{creator.name}</h4>
                   <p className="creator-category">
                     {categoryGroups[creatorCategory]?.label || creator.category} Certificate
-                    <span> · {creator.category}</span>
+                    <span> · {getCreatorNiche(creator.category)}</span>
                   </p>
                   <p>{creator.description}</p>
                 </div>
