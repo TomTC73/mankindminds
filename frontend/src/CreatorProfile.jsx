@@ -5,11 +5,14 @@ import Footer from "./Footer";
 import { API_URL, resolveCreatorImageUrl, resolveSafeExternalUrl } from "./apiConfig";
 import "./index.css";
 
+const TATTOO_GALLERY_PAGE_SIZE = 9;
+
 function CreatorProfile() {
   const { slug } = useParams();
   const [creator, setCreator] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(TATTOO_GALLERY_PAGE_SIZE);
 
   useEffect(() => {
     fetch(`${API_URL}/creators/${encodeURIComponent(slug)}`)
@@ -25,6 +28,12 @@ function CreatorProfile() {
         setError(true);
         setLoading(false);
       });
+  }, [slug]);
+
+  const isTattooCreator = creator?.category?.toLowerCase().includes("tattoo");
+
+  useEffect(() => {
+    setVisibleCount(TATTOO_GALLERY_PAGE_SIZE);
   }, [slug]);
 
   if (loading) return <div style={{ padding: "2rem", textAlign: "center" }}>Loading creator profile...</div>;
@@ -83,10 +92,23 @@ function CreatorProfile() {
         <section className="section creator-gallery-section">
           <h3>Selected Work</h3>
           <div className="creator-gallery">
-            {creator.gallery.map((imageUrl) => (
-              <img key={imageUrl} src={resolveCreatorImageUrl(imageUrl)} alt={`${creator.name} work`} />
+            {(isTattooCreator ? creator.gallery.slice(0, visibleCount) : creator.gallery).map((imageUrl, idx) => (
+              <div className="creator-gallery-item" key={`${imageUrl}-${idx}`}>
+                <img src={resolveCreatorImageUrl(imageUrl)} alt={`${creator.name} work`} loading="lazy" />
+              </div>
             ))}
           </div>
+          {isTattooCreator && visibleCount < creator.gallery.length && (
+            <div className="gallery-load-more-wrap">
+              <button
+                type="button"
+                className="button"
+                onClick={() => setVisibleCount((count) => count + TATTOO_GALLERY_PAGE_SIZE)}
+              >
+                Load More ({creator.gallery.length - visibleCount} remaining)
+              </button>
+            </div>
+          )}
         </section>
       )}
 
