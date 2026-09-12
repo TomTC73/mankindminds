@@ -778,6 +778,7 @@ export default function MapPage({ embedded = false }) {
   const [artistSearchTerm, setArtistSearchTerm] = useState("");
   const [isArtistDropdownOpen, setIsArtistDropdownOpen] = useState(false);
   const [highlightedArtistId, setHighlightedArtistId] = useState(null);
+  const [expandedArtistId, setExpandedArtistId] = useState(null);
   const [studioLocations, setStudioLocations] = useState([
     ...LONDON_LOCATIONS.map((studio) => ({ ...studio, city: "London" })),
     ...NORWICH_LOCATIONS.map((studio) => ({ ...studio, city: "Norwich" })),
@@ -913,6 +914,7 @@ export default function MapPage({ embedded = false }) {
       node.scrollIntoView({ behavior: "smooth", block: "start" });
     }
     setHighlightedArtistId(artist.id);
+    setExpandedArtistId(artist.id);
   };
 
   useEffect(() => {
@@ -1582,13 +1584,15 @@ export default function MapPage({ embedded = false }) {
           </div>
         </div>
 
-        {ARTISTS_DATA.map((artist) => (
+        {ARTISTS_DATA.map((artist) => {
+          const isArtistExpanded = expandedArtistId === artist.id;
+
+          return (
           <div
             key={artist.id}
             ref={(el) => (artistCardRefs.current[artist.id] = el)}
             style={{
               marginBottom: "40px",
-              padding: "32px",
               borderRadius: "18px",
               background: "#ffffff",
               boxShadow:
@@ -1598,41 +1602,75 @@ export default function MapPage({ embedded = false }) {
               border: "1px solid #ececec",
               scrollMarginTop: "90px",
               transition: "box-shadow 0.3s ease",
+              overflow: "hidden",
             }}
           >
-            {/* Header */}
-            <div
+            {/* Tab Header — click to expand/collapse */}
+            <button
+              onClick={() =>
+                setExpandedArtistId(isArtistExpanded ? null : artist.id)
+              }
               style={{
+                width: "100%",
                 display: "flex",
                 justifyContent: "space-between",
-                alignItems: "flex-start",
-                flexWrap: "wrap",
-                gap: "20px",
+                alignItems: "center",
+                gap: "16px",
+                padding: "24px 32px",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                textAlign: "left",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <h3 style={{ margin: 0, fontSize: "24px", fontWeight: "700", color: "#0f172a" }}>
+                  {artist.name}
+                </h3>
+                {artist.verified && (
+                  <span
+                    style={{
+                      fontSize: "11px",
+                      fontWeight: "700",
+                      color: "#1B8A5A",
+                      backgroundColor: "rgba(27,138,90,0.1)",
+                      padding: "3px 10px",
+                      borderRadius: "20px",
+                      letterSpacing: "0.3px",
+                    }}
+                  >
+                    ✓ Verified
+                  </span>
+                )}
+              </div>
+
+              <span
+                style={{
+                  fontSize: "18px",
+                  fontWeight: "700",
+                  color: "#64748b",
+                  transform: isArtistExpanded ? "rotate(180deg)" : "rotate(0deg)",
+                  transition: "transform 0.2s ease",
+                }}
+              >
+                ▾
+              </span>
+            </button>
+
+            {isArtistExpanded && (
+              <div style={{ padding: "0 32px 32px" }}>
+                {/* Header */}
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "flex-start",
+                    flexWrap: "wrap",
+                    gap: "20px",
                 marginBottom: "8px",
               }}
             >
               <div style={{ maxWidth: "640px" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "4px" }}>
-                  <h3 style={{ margin: 0, fontSize: "24px", fontWeight: "700", color: "#0f172a" }}>
-                    {artist.name}
-                  </h3>
-                  {artist.verified && (
-                    <span
-                      style={{
-                        fontSize: "11px",
-                        fontWeight: "700",
-                        color: "#1B8A5A",
-                        backgroundColor: "rgba(27,138,90,0.1)",
-                        padding: "3px 10px",
-                        borderRadius: "20px",
-                        letterSpacing: "0.3px",
-                      }}
-                    >
-                      ✓ Verified
-                    </span>
-                  )}
-                </div>
-
                 <p style={{ margin: "0 0 8px 0", fontSize: "13px", color: "#64748b", fontWeight: "500" }}>
                   {artist.studio} • {artist.location}
                 </p>
@@ -1734,8 +1772,11 @@ export default function MapPage({ embedded = false }) {
                 </div>
               ))}
             </div>
+              </div>
+            )}
           </div>
-        ))}
+          );
+        })}
 
         {/* Artist Sign-Up CTA */}
         <div
