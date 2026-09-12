@@ -15,6 +15,7 @@ import CreatorApplication from "./CreatorApplication";
 import PrivacyPolicy from "./PrivacyPolicy";
 import Terms from "./Terms";
 import AnalyticsTracker from "./AnalyticsTracker";
+import Artists from "./artists";
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -43,6 +44,9 @@ function App() {
         <Route path="/process/:section" element={<Process />} />
         <Route path="/about" element={<Navigate to="/process/tattoos" replace />} />
         <Route path="/certificates" element={<VerifiedCreators />} />
+
+        {/* Added route for Artists page */}
+        <Route path="/artists" element={<Artists />} />
 
         {/* Dynamic Route to handle ALL creators */}
         <Route path="/creators/:slug" element={<CreatorProfile />} />

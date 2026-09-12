@@ -9,13 +9,12 @@ import { API_URL, resolveStudioImageUrl } from "./apiConfig";
 
 const logoIcon = "/favicon.png";
 
-
 const LONDON_CENTER = [51.5246, -0.0718];
 const NORWICH_CENTER = [52.6309, 1.2974];
 
 const LONDON_BOUNDS = [
-  [51.25, -0.55], 
-  [51.7, 0.3],    
+  [51.25, -0.55],
+  [51.7, 0.3],
 ];
 
 const NORWICH_BOUNDS = [
@@ -44,7 +43,7 @@ const LONDON_LOCATIONS = [
     hubTitle: "Cheshire Street Studio",
     postcode: "E2 6EH",
     refCode: generateRefCode(),
-    image: "/Tatooshops/image.png",
+    image: "/Tatooshops/CloakAndDagger.png",
     description: "Custom traditional, black & grey, and vibrant color tattooing.",
     starRating: 4.9,
     aiPercentage: "Unverified",
@@ -58,7 +57,7 @@ const LONDON_LOCATIONS = [
     hubTitle: "Fashion Street Studio",
     postcode: "E1 6PX",
     refCode: generateRefCode(),
-    image: "/Tatooshops/image copy 7.png",
+    image: "/Tatooshops/sevenDooorsTatoo.png",
     description: "Japanese traditional, bold blackwork, and complex compositions.",
     starRating: 4.8,
     aiPercentage: "Unverified",
@@ -72,7 +71,7 @@ const LONDON_LOCATIONS = [
     hubTitle: "Princelet Street Studio",
     postcode: "E1 5LP",
     refCode: generateRefCode(),
-    image: "/Tatooshops/image copy 2.png",
+    image: "/Tatooshops/PrinclettTatooLondon.png",
     description: "Fine line tattooing, micro-realism, and custom illustration.",
     starRating: 4.9,
     aiPercentage: "Unverified",
@@ -86,7 +85,7 @@ const LONDON_LOCATIONS = [
     hubTitle: "New Inn Yard Studio",
     postcode: "EC2A 3EY",
     refCode: generateRefCode(),
-    image: "/Tatooshops/image copy 3.png",
+    image: "/Tatooshops/DebutStudios.png",
     description: "Minimalist art, fine line, and modern boutique designs.",
     starRating: 4.7,
     aiPercentage: "Unverified",
@@ -100,7 +99,7 @@ const LONDON_LOCATIONS = [
     hubTitle: "Hackney Road Studio",
     postcode: "E2 7NX",
     refCode: generateRefCode(),
-    image: "/Tatooshops/image copy 4.png",
+    image: "/Tatooshops/HappySailorTatoo.png",
     description: "Classic sailor traditional, bold outlines, and custom flash.",
     starRating: 4.8,
     aiPercentage: "Unverified",
@@ -114,7 +113,7 @@ const LONDON_LOCATIONS = [
     hubTitle: "Bacon Street Studio",
     postcode: "E1 6LF",
     refCode: generateRefCode(),
-    image: "/Tatooshops/image copy 8.png",
+    image: "/Tatooshops/FifthDimension.png",
     description: "Geometric work, fine line, and body piercing services.",
     starRating: 4.6,
     aiPercentage: "Unverified",
@@ -128,7 +127,7 @@ const LONDON_LOCATIONS = [
     hubTitle: "Great Eastern Street Studio",
     postcode: "EC2A 3NW",
     refCode: generateRefCode(),
-    image: "/Tatooshops/image copy 6.png",
+    image: "/Tatooshops/TopNotchTatoo.png",
     description: "Walk-ins, custom designs, and body piercings.",
     starRating: 4.7,
     aiPercentage: "Unverified",
@@ -142,7 +141,7 @@ const LONDON_LOCATIONS = [
     hubTitle: "Punderson's Gardens Studio",
     postcode: "E2 9QG",
     refCode: generateRefCode(),
-    image: "/Tatooshops/image.png",
+    image: "/Tatooshops/Reverse.png",
     description: "Illustrative art, contemporary fine-line, and modern flash.",
     starRating: 4.9,
     aiPercentage: "Unverified",
@@ -156,7 +155,7 @@ const LONDON_LOCATIONS = [
     hubTitle: "Bethnal Green Road Studio",
     postcode: "E2 6DG",
     refCode: generateRefCode(),
-    image: "/Tatooshops/image copy.png",
+    image: "/Tatooshops/EastSideTatoo.png",
     description: "Traditional, custom color pieces, and tooth gems.",
     starRating: 4.7,
     aiPercentage: "Unverified",
@@ -170,7 +169,7 @@ const LONDON_LOCATIONS = [
     hubTitle: "Paul Street Studio (24-Hour)",
     postcode: "EC2A 4NE",
     refCode: generateRefCode(),
-    image: "/Tatooshops/image copy 2.png",
+    image: "/Tatooshops/HouseofMunschin.png",
     description: "Round-the-clock tattooing, walk-ins, fine line, and custom work.",
     starRating: 4.8,
     aiPercentage: "Unverified",
@@ -184,7 +183,7 @@ const LONDON_LOCATIONS = [
     hubTitle: "Wentworth Street Studio",
     postcode: "E1 7TF",
     refCode: generateRefCode(),
-    image: "/Tatooshops/inkme.png",
+    image: "/Tatooshops/inkmetatoo.png",
     description: "Custom tattooing and flash designs.",
     starRating: 5.0,
     aiPercentage: "Unverified",
@@ -310,7 +309,7 @@ const LONDON_LOCATIONS = [
     hubTitle: "Oxford Street Studio",
     postcode: "W1D 2EF",
     refCode: generateRefCode(),
-    image: "/Tatooshops/westonetatoo.png",
+    image: "/Tatooshops/westone.png",
     description: "Walk-ins and bespoke custom designs right on Oxford Street.",
     starRating: 4.7,
     aiPercentage: "Unverified",
@@ -538,7 +537,7 @@ const NORWICH_LOCATIONS = [
     hubTitle: "Ber Street Studio",
     postcode: "NR1 3EY",
     refCode: generateRefCode(),
-    image: "/Tatooshops/WildflowerTatoo.png",
+    image: "/Tatooshops/Mother of Pearl Tattoo.png",
     description: "Funky little shop to get too",
     starRating: 4.9,
     aiPercentage: "Unverified",
@@ -646,13 +645,72 @@ const NORWICH_LOCATIONS = [
   },
 ];
 
+// --- FEATURED ARTISTS ---
+const ARTISTS_DATA = [
+  {
+    id: "artist-isabella-sala",
+    name: "Isabella Sala",
+    handle: "@isabellasalatattoos",
+    instagram: {
+      url: "https://www.instagram.com/isabellasalatattoos/",
+      icon: "/icons/instagram.png",
+      handle: "@isabellasalatattoos",
+    },
+    website: "https://www.isabellasalatattoos.it/",
+    studio: "Isabella Sala Tattoos",
+    location: "Italy",
+    styles: ["Fine Line", "Minimalist", "Delicate Blackwork"],
+    bio: "Italian fine-line tattoo artist known for elegant, minimalist designs with soft detailing and clean precision.",
+    rating: "4.9",
+    verified: true,
+   portfolio: [
+  { id: 1, type: "image", url: "/Artist1work/shot1_r1_c1.png" },
+  { id: 2, type: "image", url: "/Artist1work/shot1_r1_c2.png" },
+  { id: 3, type: "image", url: "/Artist1work/shot1_r1_c3.png" },
+  { id: 4, type: "image", url: "/Artist1work/shot1_r1_c4.png" },
+  { id: 5, type: "image", url: "/Artist1work/shot1_r1_c5.png" },
+
+  { id: 6, type: "image", url: "/Artist1work/shot1_r2_c1.png" },
+  { id: 7, type: "image", url: "/Artist1work/shot1_r2_c2.png" },
+  { id: 8, type: "image", url: "/Artist1work/shot1_r2_c3.png" },
+  { id: 9, type: "image", url: "/Artist1work/shot1_r2_c4.png" },
+  { id: 10, type: "image", url: "/Artist1work/shot1_r2_c5.png" },
+
+  { id: 11, type: "image", url: "/Artist1work/shot1_r3_c1.png" },
+  { id: 12, type: "image", url: "/Artist1work/shot1_r3_c2.png" },
+  { id: 13, type: "image", url: "/Artist1work/shot1_r3_c3.png" },
+  { id: 14, type: "image", url: "/Artist1work/shot1_r3_c4.png" },
+  { id: 15, type: "image", url: "/Artist1work/shot1_r3_c5.png" },
+
+  { id: 16, type: "image", url: "/Artist1work/shot1_r4_c1.png" },
+  { id: 17, type: "image", url: "/Artist1work/shot1_r4_c2.png" },
+  { id: 18, type: "image", url: "/Artist1work/shot1_r4_c3.png" },
+  { id: 19, type: "image", url: "/Artist1work/shot1_r4_c4.png" },
+  { id: 20, type: "image", url: "/Artist1work/shot1_r4_c5.png" },
+
+  { id: 21, type: "image", url: "/Artist1work/shot1_r5_c1.png" },
+  { id: 22, type: "image", url: "/Artist1work/shot1_r5_c2.png" },
+  { id: 23, type: "image", url: "/Artist1work/shot1_r5_c3.png" },
+  { id: 24, type: "image", url: "/Artist1work/shot1_r5_c4.png" },
+  { id: 25, type: "image", url: "/Artist1work/shot1_r5_c5.png" },
+
+  { id: 26, type: "image", url: "/Artist1work/shot1_r6_c1.png" },
+  { id: 27, type: "image", url: "/Artist1work/shot1_r6_c2.png" },
+  { id: 28, type: "image", url: "/Artist1work/shot1_r6_c3.png" },
+  { id: 29, type: "image", url: "/Artist1work/shot1_r6_c4.png" },
+  { id: 30, type: "image", url: "/Artist1work/shot1_r6_c5.png" },
+]
+
+  },
+];
+
 const createCustomPinIcon = () => {
   const iconHtml = `
     <div style="
-      position: relative; 
-      width: 38px; 
-      height: 50px; 
-      cursor: pointer; 
+      position: relative;
+      width: 38px;
+      height: 50px;
+      cursor: pointer;
       filter: drop-shadow(0px 3px 6px rgba(0, 0, 0, 0.25));
     ">
       <svg width="38" height="50" viewBox="0 0 38 50" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -728,24 +786,47 @@ export default function MapPage({ embedded = false }) {
   const mapRef = useRef(null);
   const containerRef = useRef(null);
   const markerRefs = useRef({});
+  const pageTopRef = useRef(null);
+  const artistsSectionRef = useRef(null);
+  const artistCardRefs = useRef({});
+
+  const [activeSection, setActiveSection] = useState("studios");
   const [activeCity, setActiveCity] = useState("London");
   const [searchTerm, setSearchTerm] = useState("");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [selectedStudio, setSelectedStudio] = useState(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [artistSearchTerm, setArtistSearchTerm] = useState("");
+  const [isArtistDropdownOpen, setIsArtistDropdownOpen] = useState(false);
+  const [highlightedArtistId, setHighlightedArtistId] = useState(null);
   const [studioLocations, setStudioLocations] = useState([
     ...LONDON_LOCATIONS.map((studio) => ({ ...studio, city: "London" })),
     ...NORWICH_LOCATIONS.map((studio) => ({ ...studio, city: "Norwich" })),
   ]);
-  const activeLocations = activeCity === "All"
-    ? studioLocations
-    : studioLocations.filter((studio) => studio.city === activeCity);
+
+  const activeLocations =
+    activeCity === "All"
+      ? studioLocations
+      : studioLocations.filter((studio) => studio.city === activeCity);
+
   const filteredShops = activeLocations.filter((shop) => {
     const query = searchTerm.toLowerCase().trim();
     if (!query) return false;
     return (
       shop.name.toLowerCase().includes(query) ||
       shop.refCode.toLowerCase().includes(query)
+    );
+  });
+
+  const artistSuggestions = ARTISTS_DATA.filter((artist) => {
+    const query = artistSearchTerm.toLowerCase().trim();
+    if (!query) return false;
+    return (
+      artist.name.toLowerCase().includes(query) ||
+      artist.handle.toLowerCase().includes(query) ||
+      artist.studio.toLowerCase().includes(query) ||
+      artist.location.toLowerCase().includes(query) ||
+      artist.styles.some((style) => style.toLowerCase().includes(query))
     );
   });
 
@@ -758,7 +839,11 @@ export default function MapPage({ embedded = false }) {
       })
       .then((studios) => {
         if (!cancelled && Array.isArray(studios) && studios.length > 0) {
-          setStudioLocations(studios);
+          setStudioLocations((prevLocations) => {
+            const existingIds = new Set(prevLocations.map((s) => s.id));
+            const newStudios = studios.filter((s) => !existingIds.has(s.id));
+            return [...prevLocations, ...newStudios];
+          });
         }
       })
       .catch(() => {
@@ -836,33 +921,158 @@ export default function MapPage({ embedded = false }) {
     }
   };
 
-    const handleVerifyArtist = (artistName, shopName) => {
-      window.open("https://www.mankindminds.com/apply", "_blank", "noopener,noreferrer");
-    };
+  const handleVerifyArtist = () => {
+    window.open("https://www.mankindminds.com/apply", "_blank", "noopener,noreferrer");
+  };
+
+  const handleSelectArtist = (artist) => {
+    setActiveSection("artists");
+    setArtistSearchTerm("");
+    setIsArtistDropdownOpen(false);
+    const node = artistCardRefs.current[artist.id];
+    if (node) {
+      node.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+    setHighlightedArtistId(artist.id);
+  };
+
+  useEffect(() => {
+    if (!highlightedArtistId) return undefined;
+    const timer = setTimeout(() => setHighlightedArtistId(null), 2200);
+    return () => clearTimeout(timer);
+  }, [highlightedArtistId]);
+
+  const scrollToStudios = () => {
+    setActiveSection("studios");
+    if (pageTopRef.current) {
+      pageTopRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
+
+  const scrollToArtists = () => {
+    setActiveSection("artists");
+    if (artistsSectionRef.current) {
+      artistsSectionRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
 
   return (
-    <div style={{ fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif", backgroundColor: embedded ? "transparent" : "#ffffff", minHeight: embedded ? "auto" : "100vh" }}>
+    <div
+      ref={pageTopRef}
+      style={{
+        fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
+        backgroundColor: embedded ? "transparent" : "#fbfbfc",
+        minHeight: embedded ? "auto" : "100vh",
+      }}
+    >
       {!embedded && <Header />}
+
+      {/* Sticky in-page nav */}
+      <div
+        style={{
+          position: "sticky",
+          top: 0,
+          zIndex: 20,
+          backgroundColor: "rgba(255,255,255,0.9)",
+          backdropFilter: "blur(10px)",
+          WebkitBackdropFilter: "blur(10px)",
+          borderBottom: "1px solid #e9ecef",
+          display: "flex",
+          justifyContent: "center",
+          padding: "12px 20px",
+        }}
+      >
+        <div
+          style={{
+            display: "inline-flex",
+            backgroundColor: "#f1f5f9",
+            padding: "4px",
+            borderRadius: "10px",
+            border: "1px solid #e2e8f0",
+          }}
+        >
+          <button
+            onClick={scrollToStudios}
+            style={{
+              padding: "8px 22px",
+              fontSize: "14px",
+              fontWeight: "600",
+              borderRadius: "8px",
+              border: "none",
+              cursor: "pointer",
+              backgroundColor: activeSection === "studios" ? "#0f172a" : "transparent",
+              color: activeSection === "studios" ? "#ffffff" : "#64748b",
+              transition: "all 0.2s ease",
+            }}
+          >
+            Studios
+          </button>
+          <button
+            onClick={scrollToArtists}
+            style={{
+              padding: "8px 22px",
+              fontSize: "14px",
+              fontWeight: "600",
+              borderRadius: "8px",
+              border: "none",
+              cursor: "pointer",
+              backgroundColor: activeSection === "artists" ? "#0f172a" : "transparent",
+              color: activeSection === "artists" ? "#ffffff" : "#64748b",
+              transition: "all 0.2s ease",
+            }}
+          >
+            Artists
+          </button>
+        </div>
+      </div>
+
+      {/* ================= STUDIOS SECTION ================= */}
       <div
         className="map-explorer"
         style={{
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          padding: "50px 20px",
+          padding: "44px 20px 60px 20px",
         }}
       >
+        <p
+          style={{
+            margin: "0 0 8px 0",
+            fontSize: "12px",
+            fontWeight: "700",
+            letterSpacing: "1.5px",
+            color: "#1B8A5A",
+            textTransform: "uppercase",
+          }}
+        >
+          Verified Network
+        </p>
         <h2
           style={{
-            margin: "0 0 24px 0",
-            fontWeight: "600",
-            fontSize: "28px",
-            letterSpacing: "-0.5px",
+            margin: "0 0 10px 0",
+            fontWeight: "700",
+            fontSize: "32px",
+            letterSpacing: "-0.6px",
             color: "#0f172a",
+            textAlign: "center",
           }}
         >
           Find Certified Studios Near You
         </h2>
+        <p
+          style={{
+            margin: "0 0 32px 0",
+            fontSize: "15px",
+            color: "#64748b",
+            textAlign: "center",
+            maxWidth: "560px",
+            lineHeight: "1.6",
+          }}
+        >
+          Every studio on this map has been vetted for quality, hygiene, and authenticity —
+          so you can book with confidence.
+        </p>
 
         {/* Map Container */}
         <div
@@ -873,153 +1083,153 @@ export default function MapPage({ embedded = false }) {
             width: "100%",
             maxWidth: "1000px",
             height: "550px",
-            borderRadius: "12px",
+            borderRadius: "16px",
             border: "1px solid #e2e8f0",
-            boxShadow: "0 8px 24px rgba(0,0,0,0.06)",
+            boxShadow: "0 10px 30px rgba(15, 23, 42, 0.08)",
             backgroundColor: "#f8f9f9",
             overflow: "hidden",
-            marginBottom: "50px",
+            marginBottom: "56px",
           }}
         >
           <div className="map-controls">
             <div
               className="map-city-picker"
-            style={{
-              position: "absolute",
-              top: "14px",
-              left: "14px",
-              zIndex: 1000,
-              display: "inline-flex",
-              backgroundColor: "#ffffff",
-              padding: "4px",
-              borderRadius: "8px",
-              boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-              border: "1px solid #cbd5e1",
-            }}
-          >
-            <button
-              onClick={() => handleCityChange("All")}
               style={{
-                padding: "8px 16px",
-                fontSize: "13px",
-                fontWeight: "600",
-                borderRadius: "6px",
-                border: "none",
-                cursor: "pointer",
-                backgroundColor: activeCity === "All" ? "#0f172a" : "transparent",
-                color: activeCity === "All" ? "#ffffff" : "#475569",
-                transition: "all 0.2s ease",
-              }}
-            >
-              All
-            </button>
-            <button
-              onClick={() => handleCityChange("London")}
-              style={{
-                padding: "8px 16px",
-                fontSize: "13px",
-                fontWeight: "600",
-                borderRadius: "6px",
-                border: "none",
-                cursor: "pointer",
-                backgroundColor: activeCity === "London" ? "#0f172a" : "transparent",
-                color: activeCity === "London" ? "#ffffff" : "#475569",
-                transition: "all 0.2s ease",
-              }}
-            >
-              London
-            </button>
-            <button
-              onClick={() => handleCityChange("Norwich")}
-              style={{
-                padding: "8px 16px",
-                fontSize: "13px",
-                fontWeight: "600",
-                borderRadius: "6px",
-                border: "none",
-                cursor: "pointer",
-                backgroundColor: activeCity === "Norwich" ? "#0f172a" : "transparent",
-                color: activeCity === "Norwich" ? "#ffffff" : "#475569",
-                transition: "all 0.2s ease",
-              }}
-            >
-              Norwich
-            </button>
-          </div>
-
-          {/* Studio search */}
-          <div className="map-search" style={{ position: "absolute", top: "14px", right: "14px", zIndex: 1000, width: "280px" }}>
-            <input
-              type="text"
-              placeholder={`Search ${activeCity} studio or ref...`}
-              value={searchTerm}
-              onChange={(e) => {
-                setSearchTerm(e.target.value);
-                setIsDropdownOpen(true);
-              }}
-              onFocus={() => setIsDropdownOpen(true)}
-              style={{
-                width: "100%",
-                padding: "10px 14px",
-                fontSize: "13px",
-                borderRadius: "8px",
-                border: "1px solid #cbd5e1",
-                outline: "none",
+                position: "absolute",
+                top: "14px",
+                left: "14px",
+                zIndex: 1000,
+                display: "inline-flex",
                 backgroundColor: "#ffffff",
+                padding: "4px",
+                borderRadius: "8px",
                 boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-                boxSizing: "border-box",
+                border: "1px solid #cbd5e1",
               }}
-            />
-
-            {isDropdownOpen && searchTerm.trim().length > 0 && (
-              <div
+            >
+              <button
+                onClick={() => handleCityChange("All")}
                 style={{
-                  position: "absolute",
-                  top: "100%",
-                  left: 0,
-                  right: 0,
-                  marginTop: "6px",
-                  backgroundColor: "#ffffff",
-                  border: "1px solid #e2e8f0",
-                  borderRadius: "8px",
-                  boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.15)",
-                  maxHeight: "240px",
-                  overflowY: "auto",
+                  padding: "8px 16px",
+                  fontSize: "13px",
+                  fontWeight: "600",
+                  borderRadius: "6px",
+                  border: "none",
+                  cursor: "pointer",
+                  backgroundColor: activeCity === "All" ? "#0f172a" : "transparent",
+                  color: activeCity === "All" ? "#ffffff" : "#475569",
+                  transition: "all 0.2s ease",
                 }}
               >
-                {filteredShops.length > 0 ? (
-                  filteredShops.map((shop) => (
-                    <div
-                      key={shop.id}
-                      onClick={() => handleSelectShop(shop)}
-                      style={{
-                        padding: "10px 12px",
-                        cursor: "pointer",
-                        borderBottom: "1px solid #f1f5f9",
-                        transition: "background-color 0.15s ease",
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                      }}
-                      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#f8fafc")}
-                      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#ffffff")}
-                    >
-                      <span style={{ fontSize: "13px", fontWeight: "600", color: "#0f172a" }}>
-                        {shop.name}
-                      </span>
-                      <span style={{ fontSize: "11px", color: "#0284c7", fontWeight: "600" }}>
-                        Ref: {shop.refCode}
-                      </span>
+                All
+              </button>
+              <button
+                onClick={() => handleCityChange("London")}
+                style={{
+                  padding: "8px 16px",
+                  fontSize: "13px",
+                  fontWeight: "600",
+                  borderRadius: "6px",
+                  border: "none",
+                  cursor: "pointer",
+                  backgroundColor: activeCity === "London" ? "#0f172a" : "transparent",
+                  color: activeCity === "London" ? "#ffffff" : "#475569",
+                  transition: "all 0.2s ease",
+                }}
+              >
+                London
+              </button>
+              <button
+                onClick={() => handleCityChange("Norwich")}
+                style={{
+                  padding: "8px 16px",
+                  fontSize: "13px",
+                  fontWeight: "600",
+                  borderRadius: "6px",
+                  border: "none",
+                  cursor: "pointer",
+                  backgroundColor: activeCity === "Norwich" ? "#0f172a" : "transparent",
+                  color: activeCity === "Norwich" ? "#ffffff" : "#475569",
+                  transition: "all 0.2s ease",
+                }}
+              >
+                Norwich
+              </button>
+            </div>
+
+            {/* Studio search */}
+            <div className="map-search" style={{ position: "absolute", top: "14px", right: "14px", zIndex: 1000, width: "280px" }}>
+              <input
+                type="text"
+                placeholder={`Search ${activeCity} studio or ref...`}
+                value={searchTerm}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setIsDropdownOpen(true);
+                }}
+                onFocus={() => setIsDropdownOpen(true)}
+                style={{
+                  width: "100%",
+                  padding: "10px 14px",
+                  fontSize: "13px",
+                  borderRadius: "8px",
+                  border: "1px solid #cbd5e1",
+                  outline: "none",
+                  backgroundColor: "#ffffff",
+                  boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                  boxSizing: "border-box",
+                }}
+              />
+
+              {isDropdownOpen && searchTerm.trim().length > 0 && (
+                <div
+                  style={{
+                    position: "absolute",
+                    top: "100%",
+                    left: 0,
+                    right: 0,
+                    marginTop: "6px",
+                    backgroundColor: "#ffffff",
+                    border: "1px solid #e2e8f0",
+                    borderRadius: "8px",
+                    boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.15)",
+                    maxHeight: "240px",
+                    overflowY: "auto",
+                  }}
+                >
+                  {filteredShops.length > 0 ? (
+                    filteredShops.map((shop) => (
+                      <div
+                        key={shop.id}
+                        onClick={() => handleSelectShop(shop)}
+                        style={{
+                          padding: "10px 12px",
+                          cursor: "pointer",
+                          borderBottom: "1px solid #f1f5f9",
+                          transition: "background-color 0.15s ease",
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                        }}
+                        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#f8fafc")}
+                        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#ffffff")}
+                      >
+                        <span style={{ fontSize: "13px", fontWeight: "600", color: "#0f172a" }}>
+                          {shop.name}
+                        </span>
+                        <span style={{ fontSize: "11px", color: "#0284c7", fontWeight: "600" }}>
+                          Ref: {shop.refCode}
+                        </span>
+                      </div>
+                    ))
+                  ) : (
+                    <div style={{ padding: "12px", fontSize: "12px", color: "#94a3b8", textAlign: "center" }}>
+                      No studios found
                     </div>
-                  ))
-                ) : (
-                  <div style={{ padding: "12px", fontSize: "12px", color: "#94a3b8", textAlign: "center" }}>
-                    No studios found
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
 
           <MapContainer
@@ -1037,7 +1247,6 @@ export default function MapPage({ embedded = false }) {
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
             />
 
-            {/* Markers for active city */}
             {activeLocations.map((loc) => (
               <Marker
                 key={loc.id}
@@ -1045,8 +1254,7 @@ export default function MapPage({ embedded = false }) {
                 icon={customIcon}
                 ref={(el) => (markerRefs.current[loc.id] = el)}
                 eventHandlers={{ click: () => setSelectedStudio(loc) }}
-              >
-              </Marker>
+              />
             ))}
           </MapContainer>
 
@@ -1078,114 +1286,111 @@ export default function MapPage({ embedded = false }) {
               </button>
               <div className="studio-detail-content" onWheel={(event) => event.stopPropagation()}>
                 <div style={{ padding: "0px", backgroundColor: "#ffffff", color: "#0f172a", overflow: "hidden" }}>
-                    
-                    <div className="studio-detail-image-frame">
-                      <img
-                        className="studio-detail-image"
-                        src={resolveStudioImageUrl(selectedStudio.image)}
-                        alt={selectedStudio.name}
-                      />
+                  <div className="studio-detail-image-frame">
+                    <img
+                      className="studio-detail-image"
+                      src={resolveStudioImageUrl(selectedStudio.image)}
+                      alt={selectedStudio.name}
+                    />
+                  </div>
+
+                  <div style={{ padding: "10px 4px 4px 4px" }}>
+                    <h3 style={{ margin: "0 0 2px 0", fontSize: "15px", fontWeight: "600", color: "#0f172a" }}>
+                      {selectedStudio.name}
+                    </h3>
+                    <p style={{ margin: "0 0 2px 0", fontSize: "12px", color: "#64748b", fontWeight: "500" }}>
+                      {selectedStudio.hubTitle} | {selectedStudio.postcode}
+                    </p>
+                    {(selectedStudio.address || selectedStudio.phone || selectedStudio.email || selectedStudio.website) && (
+                      <p style={{ margin: "0 0 8px 0", fontSize: "11px", lineHeight: "1.45", color: "#475569" }}>
+                        {selectedStudio.address && <>{selectedStudio.address}<br /></>}
+                        {selectedStudio.phone && <>{selectedStudio.phone}<br /></>}
+                        {selectedStudio.email && <>{selectedStudio.email}<br /></>}
+                        {selectedStudio.website && <a href={selectedStudio.website} target="_blank" rel="noreferrer">{selectedStudio.website}</a>}
+                      </p>
+                    )}
+                    <p style={{ margin: "0 0 8px 0", fontSize: "11px", color: "#0284c7", fontWeight: "600" }}>
+                      Ref Code: {selectedStudio.refCode}
+                    </p>
+
+                    <p style={{ margin: "0 0 10px 0", fontSize: "12px", lineHeight: "1.4", color: "#334155" }}>
+                      {selectedStudio.description}
+                    </p>
+
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        borderTop: "1px solid #e2e8f0",
+                        paddingTop: "8px",
+                        marginBottom: "10px",
+                        fontSize: "12px",
+                        fontWeight: "600",
+                      }}
+                    >
+                      <span style={{ color: "#d97706" }}>
+                        Rating: {selectedStudio.starRating} / 5.0
+                      </span>
+                      <span style={{ color: "#475569", backgroundColor: "#f1f5f9", padding: "2px 8px", borderRadius: "4px" }}>
+                        AI Status: {selectedStudio.aiPercentage}
+                      </span>
                     </div>
 
-                    <div style={{ padding: "10px 4px 4px 4px" }}>
-                      <h3 style={{ margin: "0 0 2px 0", fontSize: "15px", fontWeight: "600", color: "#0f172a" }}>
-                        {selectedStudio.name}
-                      </h3>
-                      <p style={{ margin: "0 0 2px 0", fontSize: "12px", color: "#64748b", fontWeight: "500" }}>
-                        {selectedStudio.hubTitle} | {selectedStudio.postcode}
+                    <div style={{ borderTop: "1px solid #e2e8f0", paddingTop: "8px" }}>
+                      <p style={{ margin: "0 0 8px 0", fontSize: "11px", fontWeight: "700", color: "#64748b", letterSpacing: "0.5px" }}>
+                        VERIFIED ARTISTS
                       </p>
-                      {(selectedStudio.address || selectedStudio.phone || selectedStudio.email || selectedStudio.website) && (
-                        <p style={{ margin: "0 0 8px 0", fontSize: "11px", lineHeight: "1.45", color: "#475569" }}>
-                          {selectedStudio.address && <>{selectedStudio.address}<br /></>}
-                          {selectedStudio.phone && <>{selectedStudio.phone}<br /></>}
-                          {selectedStudio.email && <>{selectedStudio.email}<br /></>}
-                          {selectedStudio.website && <a href={selectedStudio.website} target="_blank" rel="noreferrer">{selectedStudio.website}</a>}
-                        </p>
-                      )}
-                      <p style={{ margin: "0 0 8px 0", fontSize: "11px", color: "#0284c7", fontWeight: "600" }}>
-                        Ref Code: {selectedStudio.refCode}
-                      </p>
-
-                      <p style={{ margin: "0 0 10px 0", fontSize: "12px", lineHeight: "1.4", color: "#334155" }}>
-                        {selectedStudio.description}
-                      </p>
-
                       <div
                         style={{
                           display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                          borderTop: "1px solid #e2e8f0",
-                          paddingTop: "8px",
-                          marginBottom: "10px",
-                          fontSize: "12px",
-                          fontWeight: "600",
+                          flexDirection: "column",
+                          gap: "8px",
+                          maxHeight: "120px",
+                          overflowY: "auto",
+                          paddingRight: "4px",
                         }}
                       >
-                        <span style={{ color: "#d97706" }}>
-                          Rating: {selectedStudio.starRating} / 5.0
-                        </span>
-                        <span style={{ color: "#475569", backgroundColor: "#f1f5f9", padding: "2px 8px", borderRadius: "4px" }}>
-                          AI Status: {selectedStudio.aiPercentage}
-                        </span>
-                      </div>
-
-                      {/* Verified Artists Section with Verify Link */}
-                      <div style={{ borderTop: "1px solid #e2e8f0", paddingTop: "8px" }}>
-                        <p style={{ margin: "0 0 8px 0", fontSize: "11px", fontWeight: "700", color: "#64748b", letterSpacing: "0.5px" }}>
-                          VERIFIED ARTISTS
-                        </p>
-                        <div
-                          style={{
-                            display: "flex",
-                            flexDirection: "column",
-                            gap: "8px",
-                            maxHeight: "120px",
-                            overflowY: "auto",
-                            paddingRight: "4px",
-                          }}
-                        >
-                          {(selectedStudio.artists || []).map((artist, idx) => (
-                            <div
-                              key={idx}
+                        {(selectedStudio.artists || []).map((artist, idx) => (
+                          <div
+                            key={idx}
+                            style={{
+                              width: "100%",
+                              backgroundColor: "#ffffff",
+                              border: "1px solid #e2e8f0",
+                              padding: "8px 12px",
+                              borderRadius: "8px",
+                              fontSize: "13px",
+                              fontWeight: "600",
+                              color: "#0f172a",
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "center",
+                              boxSizing: "border-box",
+                            }}
+                          >
+                            <span>{artist}</span>
+                            <button
+                              onClick={handleVerifyArtist}
                               style={{
-                                width: "100%",
-                                backgroundColor: "#ffffff",
-                                border: "1px solid #e2e8f0",
-                                padding: "8px 12px",
-                                borderRadius: "8px",
-                                fontSize: "13px",
+                                background: "none",
+                                border: "none",
+                                color: "#2563eb",
+                                textDecoration: "underline",
                                 fontWeight: "600",
-                                color: "#0f172a",
-                                display: "flex",
-                                justifyContent: "space-between",
-                                alignItems: "center",
-                                boxSizing: "border-box",
+                                fontSize: "12px",
+                                cursor: "pointer",
+                                padding: 0,
                               }}
                             >
-                              <span>{artist}</span>
-                              <button
-                                onClick={() => handleVerifyArtist(artist, selectedStudio.name)}
-                                style={{
-                                  background: "none",
-                                  border: "none",
-                                  color: "#2563eb",
-                                  textDecoration: "underline",
-                                  fontWeight: "600",
-                                  fontSize: "12px",
-                                  cursor: "pointer",
-                                  padding: 0,
-                                }}
-                              >
-                                Verify Yourself
-                              </button>
-                            </div>
-                          ))}
-                        </div>
+                              Verify Yourself
+                            </button>
+                          </div>
+                        ))}
                       </div>
-
                     </div>
                   </div>
+                </div>
               </div>
             </section>
           )}
@@ -1208,12 +1413,21 @@ export default function MapPage({ embedded = false }) {
               className="studio-card"
               style={{
                 border: "1px solid #e2e8f0",
-                borderRadius: "12px",
+                borderRadius: "14px",
                 overflow: "hidden",
                 backgroundColor: "#ffffff",
-                boxShadow: "0 4px 12px rgba(0,0,0,0.04)",
+                boxShadow: "0 4px 14px rgba(15, 23, 42, 0.05)",
                 display: "flex",
                 flexDirection: "column",
+                transition: "transform 0.2s ease, box-shadow 0.2s ease",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = "translateY(-3px)";
+                e.currentTarget.style.boxShadow = "0 10px 24px rgba(15, 23, 42, 0.10)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = "translateY(0)";
+                e.currentTarget.style.boxShadow = "0 4px 14px rgba(15, 23, 42, 0.05)";
               }}
             >
               <img
@@ -1222,14 +1436,16 @@ export default function MapPage({ embedded = false }) {
                 style={{ width: "100%", height: "180px", objectFit: "cover" }}
               />
               <div style={{ padding: "16px", display: "flex", flexDirection: "column", flexGrow: 1 }}>
-                <h3 style={{ margin: "0 0 4px 0", fontSize: "18px", color: "#0f172a" }}>{loc.name}</h3>
+                <h3 style={{ margin: "0 0 4px 0", fontSize: "18px", color: "#0f172a", fontWeight: "700" }}>
+                  {loc.name}
+                </h3>
                 <p style={{ margin: "0 0 8px 0", fontSize: "13px", color: "#64748b" }}>
                   {loc.hubTitle} • {loc.postcode}
                 </p>
-                <p style={{ fontSize: "13px", color: "#334155", flexGrow: 1, marginBottom: "16px" }}>
+                <p style={{ fontSize: "13px", color: "#334155", flexGrow: 1, marginBottom: "16px", lineHeight: "1.5" }}>
                   {loc.description}
                 </p>
-                
+
                 <button
                   onClick={() => handleSelectShop(loc)}
                   style={{
@@ -1238,7 +1454,7 @@ export default function MapPage({ embedded = false }) {
                     backgroundColor: "#1B8A5A",
                     color: "#ffffff",
                     border: "none",
-                    borderRadius: "6px",
+                    borderRadius: "8px",
                     fontWeight: "600",
                     fontSize: "13px",
                     cursor: "pointer",
@@ -1252,6 +1468,423 @@ export default function MapPage({ embedded = false }) {
               </div>
             </div>
           ))}
+        </div>
+      </div>
+
+      {/* Section divider */}
+      <div style={{ maxWidth: "1000px", margin: "0 auto", padding: "0 20px" }}>
+        <div style={{ height: "1px", backgroundColor: "#e5e7eb" }} />
+      </div>
+
+      {/* ================= ARTISTS SECTION ================= */}
+      <div
+        ref={artistsSectionRef}
+        style={{
+          padding: "64px 20px 40px 20px",
+          maxWidth: "1200px",
+          margin: "0 auto",
+          scrollMarginTop: "70px",
+        }}
+      >
+        <div style={{ textAlign: "center", marginBottom: "44px" }}>
+          <p
+            style={{
+              margin: "0 0 8px 0",
+              fontSize: "12px",
+              fontWeight: "700",
+              letterSpacing: "1.5px",
+              color: "#1B8A5A",
+              textTransform: "uppercase",
+            }}
+          >
+            Meet the Talent
+          </p>
+          <h2
+            style={{
+              margin: "0 0 12px 0",
+              fontSize: "32px",
+              fontWeight: "700",
+              letterSpacing: "-0.6px",
+              color: "#0f172a",
+            }}
+          >
+            Featured Artists
+          </h2>
+          <p
+            style={{
+              margin: "0 auto",
+              fontSize: "15px",
+              color: "#64748b",
+              maxWidth: "560px",
+              lineHeight: "1.6",
+            }}
+          >
+            Every artist below has been individually verified for authenticity and craft.
+            Explore portfolios and connect directly through Instagram.
+          </p>
+        </div>
+
+        {/* Artist search */}
+        <div style={{ display: "flex", justifyContent: "center", marginBottom: "40px" }}>
+          <div style={{ position: "relative", width: "100%", maxWidth: "420px" }}>
+            <input
+              type="text"
+              placeholder="Search artists by name, style, or studio..."
+              value={artistSearchTerm}
+              onChange={(e) => {
+                setArtistSearchTerm(e.target.value);
+                setIsArtistDropdownOpen(true);
+              }}
+              onFocus={() => setIsArtistDropdownOpen(true)}
+              onBlur={() => setTimeout(() => setIsArtistDropdownOpen(false), 150)}
+              style={{
+                width: "100%",
+                padding: "12px 16px",
+                fontSize: "13px",
+                borderRadius: "10px",
+                border: "1px solid #e2e8f0",
+                outline: "none",
+                backgroundColor: "#ffffff",
+                boxShadow: "0 2px 8px rgba(15, 23, 42, 0.05)",
+                boxSizing: "border-box",
+              }}
+            />
+
+            {isArtistDropdownOpen && artistSearchTerm.trim().length > 0 && (
+              <div
+                style={{
+                  position: "absolute",
+                  top: "100%",
+                  left: 0,
+                  right: 0,
+                  marginTop: "6px",
+                  backgroundColor: "#ffffff",
+                  border: "1px solid #e2e8f0",
+                  borderRadius: "10px",
+                  boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.15)",
+                  maxHeight: "260px",
+                  overflowY: "auto",
+                  zIndex: 30,
+                  textAlign: "left",
+                }}
+              >
+                {artistSuggestions.length > 0 ? (
+                  artistSuggestions.map((artist) => (
+                    <div
+                      key={artist.id}
+                      onMouseDown={() => handleSelectArtist(artist)}
+                      style={{
+                        padding: "10px 14px",
+                        cursor: "pointer",
+                        borderBottom: "1px solid #f1f5f9",
+                        transition: "background-color 0.15s ease",
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                      }}
+                      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#f8fafc")}
+                      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#ffffff")}
+                    >
+                      <span style={{ fontSize: "13px", fontWeight: "600", color: "#0f172a" }}>
+                        {artist.name}
+                      </span>
+                      <span style={{ fontSize: "11px", color: "#0284c7", fontWeight: "600" }}>
+                        {artist.styles[0]}
+                      </span>
+                    </div>
+                  ))
+                ) : (
+                  <div style={{ padding: "12px", fontSize: "12px", color: "#94a3b8", textAlign: "center" }}>
+                    No artists found
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {ARTISTS_DATA.map((artist) => (
+          <div
+            key={artist.id}
+            ref={(el) => (artistCardRefs.current[artist.id] = el)}
+            style={{
+              marginBottom: "40px",
+              padding: "32px",
+              borderRadius: "18px",
+              background: "#ffffff",
+              boxShadow:
+                highlightedArtistId === artist.id
+                  ? "0 0 0 3px #1B8A5A, 0 8px 24px rgba(15, 23, 42, 0.06)"
+                  : "0 8px 24px rgba(15, 23, 42, 0.06)",
+              border: "1px solid #ececec",
+              scrollMarginTop: "90px",
+              transition: "box-shadow 0.3s ease",
+            }}
+          >
+            {/* Header */}
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "flex-start",
+                flexWrap: "wrap",
+                gap: "20px",
+                marginBottom: "8px",
+              }}
+            >
+              <div style={{ maxWidth: "640px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "4px" }}>
+                  <h3 style={{ margin: 0, fontSize: "24px", fontWeight: "700", color: "#0f172a" }}>
+                    {artist.name}
+                  </h3>
+                  {artist.verified && (
+                    <span
+                      style={{
+                        fontSize: "11px",
+                        fontWeight: "700",
+                        color: "#1B8A5A",
+                        backgroundColor: "rgba(27,138,90,0.1)",
+                        padding: "3px 10px",
+                        borderRadius: "20px",
+                        letterSpacing: "0.3px",
+                      }}
+                    >
+                      ✓ Verified
+                    </span>
+                  )}
+                </div>
+
+                <p style={{ margin: "0 0 8px 0", fontSize: "13px", color: "#64748b", fontWeight: "500" }}>
+                  {artist.studio} • {artist.location}
+                </p>
+
+                <p style={{ margin: "0 0 10px 0", fontSize: "15px", color: "#334155", lineHeight: "1.6" }}>
+                  {artist.bio}
+                </p>
+
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                  {artist.styles.map((style) => (
+                    <span
+                      key={style}
+                      style={{
+                        fontSize: "12px",
+                        fontWeight: "600",
+                        color: "#475569",
+                        backgroundColor: "#f1f5f9",
+                        padding: "4px 10px",
+                        borderRadius: "20px",
+                      }}
+                    >
+                      {style}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "10px" }}>
+                <a
+                  href={artist.instagram.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    background: "linear-gradient(135deg, #f58529, #dd2a7b, #8134af, #515bd4)",
+                    padding: "10px 18px",
+                    borderRadius: "40px",
+                    color: "white",
+                    fontWeight: "600",
+                    fontSize: "14px",
+                    textDecoration: "none",
+                    boxShadow: "0 4px 12px rgba(0,0,0,0.12)",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  <img src={artist.instagram.icon} alt="Instagram" style={{ width: "18px", height: "18px" }} />
+                  {artist.instagram.handle}
+                </a>
+                <span style={{ fontSize: "12px", fontWeight: "600", color: "#d97706" }}>
+                  ★ {artist.rating} rating
+                </span>
+              </div>
+            </div>
+
+            {/* Portfolio Grid */}
+            <div
+              style={{
+                marginTop: "24px",
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fill, minmax(190px, 1fr))",
+                gap: "12px",
+              }}
+            >
+              {artist.portfolio.map((item) => (
+                <div
+                  key={item.id}
+                  style={{
+                    overflow: "hidden",
+                    borderRadius: "10px",
+                    aspectRatio: "1 / 1",
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+                    transition: "transform 0.2s ease, box-shadow 0.2s ease",
+                    cursor: "pointer",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = "scale(1.03)";
+                    e.currentTarget.style.boxShadow = "0 8px 20px rgba(0,0,0,0.15)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = "scale(1)";
+                    e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.08)";
+                  }}
+                >
+                  <img
+                    src={item.url}
+                    alt={`${artist.name} tattoo ${item.id}`}
+                    loading="lazy"
+                    decoding="async"
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                      display: "block",
+                      imageRendering: "auto",
+                    }}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+
+        {/* Artist Sign-Up CTA */}
+        <div
+          style={{
+            marginTop: "56px",
+            padding: "48px 40px",
+            borderRadius: "20px",
+            background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)",
+            boxShadow: "0 12px 32px rgba(15, 23, 42, 0.25)",
+            textAlign: "center",
+            color: "#ffffff",
+            position: "relative",
+            overflow: "hidden",
+          }}
+        >
+          <div
+            style={{
+              position: "absolute",
+              top: "-60px",
+              right: "-60px",
+              width: "200px",
+              height: "200px",
+              borderRadius: "50%",
+              background: "radial-gradient(circle, rgba(27,138,90,0.25) 0%, rgba(27,138,90,0) 70%)",
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              bottom: "-80px",
+              left: "-40px",
+              width: "220px",
+              height: "220px",
+              borderRadius: "50%",
+              background: "radial-gradient(circle, rgba(74,222,128,0.12) 0%, rgba(74,222,128,0) 70%)",
+            }}
+          />
+
+          <p
+            style={{
+              margin: "0 0 10px 0",
+              fontSize: "13px",
+              fontWeight: "700",
+              letterSpacing: "1.5px",
+              color: "#4ade80",
+              textTransform: "uppercase",
+            }}
+          >
+            For Tattoo Artists
+          </p>
+
+          <h2 style={{ margin: "0 0 14px 0", fontSize: "32px", fontWeight: "800", letterSpacing: "-0.5px" }}>
+            Get Verified. Get Discovered.
+          </h2>
+
+          <p
+            style={{
+              margin: "0 auto 32px auto",
+              fontSize: "16px",
+              lineHeight: "1.6",
+              color: "#cbd5e1",
+              maxWidth: "560px",
+            }}
+          >
+            Join a growing network of verified studios and artists. Showcase your portfolio,
+            build trust with a verification badge, and get discovered by clients actively
+            searching for certified talent near them.
+          </p>
+
+          <div style={{ display: "flex", justifyContent: "center", flexWrap: "wrap", gap: "28px", marginBottom: "36px" }}>
+            {[
+              { icon: "✓", label: "Verified Badge" },
+              { icon: "📈", label: "Increased Visibility" },
+              { icon: "🖼️", label: "Free Portfolio Page" },
+            ].map((benefit) => (
+              <div
+                key={benefit.label}
+                style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "14px", fontWeight: "600", color: "#e2e8f0" }}
+              >
+                <span
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    width: "24px",
+                    height: "24px",
+                    borderRadius: "50%",
+                    backgroundColor: "rgba(74, 222, 128, 0.15)",
+                    color: "#4ade80",
+                    fontSize: "13px",
+                  }}
+                >
+                  {benefit.icon}
+                </span>
+                {benefit.label}
+              </div>
+            ))}
+          </div>
+
+          <button
+            onClick={handleVerifyArtist}
+            style={{
+              padding: "14px 36px",
+              fontSize: "15px",
+              fontWeight: "700",
+              borderRadius: "10px",
+              border: "none",
+              cursor: "pointer",
+              backgroundColor: "#1B8A5A",
+              color: "#ffffff",
+              boxShadow: "0 6px 18px rgba(27, 138, 90, 0.35)",
+              transition: "background-color 0.2s ease, transform 0.15s ease",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = "#146c46";
+              e.currentTarget.style.transform = "translateY(-1px)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = "#1B8A5A";
+              e.currentTarget.style.transform = "translateY(0)";
+            }}
+          >
+            Apply to Join
+          </button>
+
+          <p style={{ marginTop: "16px", fontSize: "12px", color: "#94a3b8" }}>
+            Applications reviewed within 48 hours · No fees to apply
+          </p>
         </div>
       </div>
     </div>
