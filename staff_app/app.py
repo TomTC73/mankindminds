@@ -294,6 +294,7 @@ class App(tk.Tk):
 
         tabs = ttk.Notebook(self)
         tabs.pack(fill="both", expand=True, padx=22, pady=(0, 16))
+        self.tabs = tabs
         main = ttk.Panedwindow(tabs, orient="horizontal")
         tabs.add(main, text="Creators")
         left = ttk.Frame(main, style="Panel.TFrame", padding=16)
@@ -347,6 +348,9 @@ class App(tk.Tk):
         self.preview_text.tag_configure("heading", font=("Georgia", 14), spacing1=12, spacing3=4)
         self.preview_text.tag_configure("label", foreground=PALETTE["accent"], font=("Segoe UI Semibold", 9))
         self.update_preview()
+        tattoo_tab = ttk.Frame(tabs, style="Panel.TFrame", padding=20)
+        tabs.insert(1, tattoo_tab, text="Tattoo Creators")
+        self.build_tattoo_creators_panel(tattoo_tab)
         shops_tab = ttk.Frame(tabs, style="Panel.TFrame", padding=20)
         tabs.add(shops_tab, text="Tattoo shops")
         self.build_studio_editor(shops_tab)
@@ -373,6 +377,15 @@ class App(tk.Tk):
         for key, label, hint in fields:
             self.add_labeled_entry(key, label, hint)
         self.add_labeled_combo("category", "Niche", CREATOR_NICHES)
+
+        self.add_heading("Tattooist details", "Shown on the map's Artists tab. Only used when Niche is Tattooist.")
+        for key, label, hint in (
+            ("studio", "Studio name", "e.g. Isabella Sala Tattoos"),
+            ("location", "Location", "e.g. Italy"),
+            ("styles", "Styles (comma-separated)", "e.g. Fine Line, Minimalist"),
+            ("rating", "Rating", "e.g. 4.9"),
+        ):
+            self.add_labeled_entry(key, label, hint)
 
         self.add_heading("Verification", "Standard Mankind Minds verification is added automatically.")
         ttk.Label(self.form, text="Verified Creator  ·  AI-Free Verification  ·  Proven AI-Free Creator",
@@ -570,6 +583,7 @@ class App(tk.Tk):
         self.deploy_button.config(state=state)
         self.publish_button.config(state=state)
         self.new_creator_button.config(state=state)
+        self.new_tattoo_creator_button.config(state=state)
         self.new_shop_button.config(state=state)
         self.new_ticket_button.config(state=state)
         if not enabled:
@@ -650,6 +664,78 @@ class App(tk.Tk):
             except Exception as error:
                 self.after(0, lambda: messagebox.showerror("Could not load users", str(error)))
         threading.Thread(target=work, daemon=True).start()
+
+    def build_tattoo_creators_panel(self, parent):
+        parent.columnconfigure(0, weight=1)
+        parent.rowconfigure(1, weight=1)
+        ttk.Label(parent, text="Tattoo creators", style="Section.TLabel").grid(row=0, column=0, sticky="w")
+        ttk.Label(
+            parent,
+            text="Every verified tattooist shown in the map's Artists tab. Select one to edit their "
+                 "photo, portfolio, and description in the Creators tab, or add a new one below.",
+            style="Muted.TLabel",
+        ).grid(row=0, column=1, sticky="e")
+        self.tattoo_creator_list = ttk.Treeview(
+            parent, columns=("studio", "location"), show="tree headings", selectmode="browse",
+        )
+        self.tattoo_creator_list.heading("#0", text="Name")
+        self.tattoo_creator_list.heading("studio", text="Studio")
+        self.tattoo_creator_list.heading("location", text="Location")
+        self.tattoo_creator_list.column("#0", width=200)
+        self.tattoo_creator_list.grid(row=1, column=0, columnspan=2, sticky="nsew", pady=(12, 0))
+        self.tattoo_creator_list.bind("<<TreeviewSelect>>", self.select_tattoo_creator)
+        button_row = ttk.Frame(parent, style="Panel.TFrame")
+        button_row.grid(row=2, column=0, columnspan=2, sticky="w", pady=(12, 0))
+        self.new_tattoo_creator_button = ttk.Button(
+            button_row, text="+  New tattoo creator", style="Accent.TButton", command=self.new_tattoo_creator,
+        )
+        self.new_tattoo_creator_button.pack(side="left")
+        ttk.Label(
+            button_row,
+            text="Opens the Creators tab with their profile photo, portfolio, and description ready to edit.",
+            style="Muted.TLabel",
+        ).pack(side="left", padx=(12, 0))
+
+    def refresh_tattoo_creator_list(self):
+        if not hasattr(self, "tattoo_creator_list"):
+            return
+        self.tattoo_creator_list.delete(*self.tattoo_creator_list.get_children())
+        for index, creator in enumerate(self.tattoo_creators()):
+            self.tattoo_creator_list.insert(
+                "", "end", iid=str(index), text=creator.get("name", ""),
+                values=(creator.get("studio", ""), creator.get("location", "")),
+            )
+
+    def tattoo_creators(self):
+        return [creator for creator in self.creators if creator.get("category") == "Tattooist"]
+
+    def select_tattoo_creator(self, _event=None):
+        selected = self.tattoo_creator_list.selection()
+        if not selected:
+            return
+        creator = self.tattoo_creators()[int(selected[0])]
+        self.open_creator_in_editor(creator)
+
+    def open_creator_in_editor(self, creator):
+        self.selected = creator
+        self.set_creator_editor_enabled(True)
+        self.fill_form(creator)
+        self.tabs.select(0)
+        for iid in self.user_list.get_children():
+            if self.user_list.item(iid, "text") == creator.get("name", ""):
+                self.user_list.selection_set(iid)
+                break
+
+    def new_tattoo_creator(self):
+        if not self.client:
+            messagebox.showinfo("Sign in required", "Sign in with GitHub before creating a tattoo creator profile.")
+            return
+        self.selected = {"slug": "", "name": "", "category": "Tattooist", "sections": [], "socialLinks": [], "gallery": []}
+        self.set_creator_editor_enabled(True)
+        self.fill_form(self.selected)
+        self.tabs.select(0)
+        self.photo_label.config(text="Choose a profile photo before publishing.")
+        self.set_status("New tattoo creator profile ready. Add their photo, portfolio, and description.")
 
     def build_studio_editor(self, parent):
         self.studio_editor_widgets = []
@@ -842,6 +928,16 @@ class App(tk.Tk):
         except GitHubError as error:
             if "404" not in str(error):
                 raise
+
+    def existing_asset_sha(self, path, branch):
+        """Return the current file's sha if it exists, so re-uploads overwrite it
+        instead of failing with a 'file already exists' error from GitHub."""
+        try:
+            return self.client.file(path.lstrip("/"), branch)["sha"]
+        except GitHubError as error:
+            if "404" in str(error):
+                return None
+            raise
 
     def publish_studios(self, save_current=True):
         if not self.client:
@@ -1160,6 +1256,7 @@ class App(tk.Tk):
         for index, creator in enumerate(visible):
             self.user_list.insert("", "end", iid=str(index), text=creator.get("name", ""), values=(creator.get("category", ""),))
         self.count_label.config(text=str(len(self.creators)))
+        self.refresh_tattoo_creator_list()
         if not silent:
             self.set_status(f"{len(self.creators)} creator records loaded. Refreshes automatically every minute.", "#46705b")
 
@@ -1181,6 +1278,14 @@ class App(tk.Tk):
             self.fields[key].insert(0, creator.get(key, ""))
         category = LEGACY_NICHE_MAP.get(creator.get("category"), creator.get("category", ""))
         self.fields["category"].set(category if category in CREATOR_NICHES else "Artist")
+        self.fields["studio"].delete(0, tk.END)
+        self.fields["studio"].insert(0, creator.get("studio", ""))
+        self.fields["location"].delete(0, tk.END)
+        self.fields["location"].insert(0, creator.get("location", ""))
+        self.fields["styles"].delete(0, tk.END)
+        self.fields["styles"].insert(0, ", ".join(creator.get("styles", []) or []))
+        self.fields["rating"].delete(0, tk.END)
+        self.fields["rating"].insert(0, creator.get("rating", ""))
         for row, _, _ in self.section_rows:
             row.destroy()
         for row, _, _ in self.social_rows:
@@ -1246,6 +1351,14 @@ class App(tk.Tk):
         if any(not item["name"] or not item["url"] for item in links):
             raise ValueError("Complete or remove every social link.")
         creator = {key: widget.get().strip() for key, widget in self.fields.items()}
+        is_tattooist = creator.get("category") == "Tattooist"
+        styles_raw = creator.pop("styles", "")
+        if is_tattooist:
+            creator["styles"] = [style.strip() for style in styles_raw.split(",") if style.strip()]
+        else:
+            creator.pop("studio", None)
+            creator.pop("location", None)
+            creator.pop("rating", None)
         creator["badgeText"] = STANDARD_BADGE
         creator["aiFreeCard"] = STANDARD_CARD.copy()
         creator["sections"] = sections
@@ -1297,26 +1410,35 @@ class App(tk.Tk):
             try:
                 repo = self.client.repository()
                 base = repo["default_branch"]
+                previous_image_url = self.selected.get("imageUrl", "") if self.selected else ""
                 if self.photo_path:
                     extension = os.path.splitext(self.photo_path)[1].lower() or ".jpg"
                     filename = creator["slug"] + extension
+                    new_image_path = f"{ASSET_PATH}/{filename}"
+                    if previous_image_url and previous_image_url.lstrip("/") != new_image_path.lstrip("/"):
+                        # Extension changed (or slug changed) - remove the old file so it
+                        # doesn't linger unused once the new one overwrites/replaces it.
+                        self.delete_asset_if_present(previous_image_url, base, f"Replace profile photo for {creator['name']}")
                     with open(self.photo_path, "rb") as photo:
                         self.client.put_file(
-                            f"{ASSET_PATH}/{filename}",
+                            new_image_path,
                             photo.read(),
                             base,
-                            f"Add profile photo for {creator['name']}",
+                            f"Update profile photo for {creator['name']}",
+                            self.existing_asset_sha(new_image_path, base),
                         )
                     creator["imageUrl"] = f"/assets/{filename}"
                 for index, path in enumerate(self.gallery_paths, start=1):
                     extension = os.path.splitext(path)[1].lower() or ".jpg"
                     filename = f"{creator['slug']}-gallery-{index}{extension}"
+                    gallery_path = f"{ASSET_PATH}/{filename}"
                     with open(path, "rb") as photo:
                         self.client.put_file(
-                            f"{ASSET_PATH}/{filename}",
+                            gallery_path,
                             photo.read(),
                             base,
                             f"Add gallery photo for {creator['name']}",
+                            self.existing_asset_sha(gallery_path, base),
                         )
                     creator["gallery"].append(f"/assets/{filename}")
                 data_file = self.client.file(DATA_PATH, base)

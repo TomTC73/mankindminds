@@ -6,7 +6,7 @@ import "leaflet/dist/leaflet.css";
 import "./MapPage.css";
 
 import Header from "./Header";
-import { API_URL, resolveStudioImageUrl } from "./apiConfig";
+import { API_URL, resolveStudioImageUrl, resolveCreatorImageUrl } from "./apiConfig";
 
 const logoIcon = "/favicon.png";
 
@@ -647,7 +647,10 @@ const NORWICH_LOCATIONS = [
 ];
 
 // --- FEATURED ARTISTS ---
-const ARTISTS_DATA = [
+// Bundled fallback so the Artists tab still renders if the creators API is briefly
+// unavailable. New tattooist creators added via the staff manager app are fetched
+// from the backend below and merged in automatically — no code changes needed.
+const FALLBACK_ARTISTS_DATA = [
   {
     id: "artist-isabella-sala",
     name: "Isabella Sala",
@@ -665,6 +668,7 @@ const ARTISTS_DATA = [
     bio: "Italian fine-line tattoo artist known for elegant, minimalist designs with soft detailing and clean precision.",
     rating: "4.9",
     verified: true,
+    imageUrl: "/Artist1work/3.PNG",
    portfolio: [
   { id: 1, type: "image", url: "/Artist1work/3.PNG" },
   { id: 2, type: "image", url: "/Artist1work/4.PNG" },
@@ -780,6 +784,7 @@ export default function MapPage({ embedded = false }) {
   const [artistSearchTerm, setArtistSearchTerm] = useState("");
   const [isArtistDropdownOpen, setIsArtistDropdownOpen] = useState(false);
   const [highlightedArtistId, setHighlightedArtistId] = useState(null);
+  const [artistsData, setArtistsData] = useState(FALLBACK_ARTISTS_DATA);
   const [studioLocations, setStudioLocations] = useState([
     ...LONDON_LOCATIONS.map((studio) => ({ ...studio, city: "London" })),
     ...NORWICH_LOCATIONS.map((studio) => ({ ...studio, city: "Norwich" })),
@@ -799,17 +804,69 @@ export default function MapPage({ embedded = false }) {
     );
   });
 
-  const artistSuggestions = ARTISTS_DATA.filter((artist) => {
+  const artistSuggestions = artistsData.filter((artist) => {
     const query = artistSearchTerm.toLowerCase().trim();
     if (!query) return false;
     return (
       artist.name.toLowerCase().includes(query) ||
-      artist.handle.toLowerCase().includes(query) ||
-      artist.studio.toLowerCase().includes(query) ||
-      artist.location.toLowerCase().includes(query) ||
-      artist.styles.some((style) => style.toLowerCase().includes(query))
+      (artist.handle || "").toLowerCase().includes(query) ||
+      (artist.studio || "").toLowerCase().includes(query) ||
+      (artist.location || "").toLowerCase().includes(query) ||
+      (artist.styles || []).some((style) => style.toLowerCase().includes(query))
     );
   });
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch(`${API_URL}/creators`)
+      .then((response) => {
+        if (!response.ok) throw new Error(`Creators request failed: ${response.status}`);
+        return response.json();
+      })
+      .then((creators) => {
+        if (cancelled || !Array.isArray(creators)) return;
+        const tattooCreators = creators
+          .filter((creator) => creator.category?.toLowerCase().includes("tattoo"))
+          .map((creator) => {
+            const socialLinks = creator.socialLinks || [];
+            const instagramLink = socialLinks.find((link) => link.name?.toLowerCase() === "instagram");
+            const websiteLink = socialLinks.find((link) => link.name?.toLowerCase() === "website");
+            return {
+              id: `artist-${creator.slug}`,
+              name: creator.name,
+              creatorSlug: creator.slug,
+              handle: instagramLink?.url ? `@${instagramLink.url.replace(/\/$/, "").split("/").pop()}` : "",
+              instagram: instagramLink
+                ? { url: instagramLink.url, icon: "/icons/instagram.png", handle: instagramLink.url }
+                : null,
+              website: websiteLink?.url || "",
+              studio: creator.studio || "",
+              location: creator.location || "",
+              styles: creator.styles && creator.styles.length > 0 ? creator.styles : [],
+              bio: creator.bio || creator.description || "",
+              rating: creator.rating || "",
+              verified: true,
+              imageUrl: resolveCreatorImageUrl(creator.imageUrl),
+              portfolio: (creator.gallery || []).map((url, index) => ({
+                id: index + 1,
+                type: "image",
+                url: resolveCreatorImageUrl(url),
+              })),
+            };
+          });
+        setArtistsData((previous) => {
+          const bySlug = new Map(previous.map((artist) => [artist.creatorSlug, artist]));
+          tattooCreators.forEach((artist) => bySlug.set(artist.creatorSlug, artist));
+          return Array.from(bySlug.values());
+        });
+      })
+      .catch(() => {
+        // Keep the bundled fallback artist(s) available while the API is unavailable.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -1570,7 +1627,7 @@ export default function MapPage({ embedded = false }) {
                         {artist.name}
                       </span>
                       <span style={{ fontSize: "11px", color: "#0284c7", fontWeight: "600" }}>
-                        {artist.styles[0]}
+                        {artist.styles?.[0]}
                       </span>
                     </div>
                   ))
@@ -1584,7 +1641,7 @@ export default function MapPage({ embedded = false }) {
           </div>
         </div>
 
-        {ARTISTS_DATA.map((artist) => (
+        {artistsData.map((artist) => (
           <Link
             key={artist.id}
             to={artist.creatorSlug ? `/creators/${artist.creatorSlug}` : "#"}
@@ -1630,7 +1687,7 @@ export default function MapPage({ embedded = false }) {
             >
               <div style={{ display: "flex", gap: "18px", maxWidth: "640px" }}>
                 <img
-                  src={artist.portfolio?.[0]?.url}
+                  src={artist.imageUrl || artist.portfolio?.[0]?.url}
                   alt={`${artist.name} profile`}
                   style={{
                     width: "76px",
@@ -1664,16 +1721,18 @@ export default function MapPage({ embedded = false }) {
                     )}
                   </div>
 
-                  <p style={{ margin: "0 0 8px 0", fontSize: "13px", color: "#64748b", fontWeight: "500" }}>
-                    {artist.studio} • {artist.location}
-                  </p>
+                  {(artist.studio || artist.location) && (
+                    <p style={{ margin: "0 0 8px 0", fontSize: "13px", color: "#64748b", fontWeight: "500" }}>
+                      {[artist.studio, artist.location].filter(Boolean).join(" • ")}
+                    </p>
+                  )}
 
                   <p style={{ margin: "0 0 10px 0", fontSize: "15px", color: "#334155", lineHeight: "1.6" }}>
                     {artist.bio}
                   </p>
 
                   <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-                    {artist.styles.map((style) => (
+                    {(artist.styles || []).map((style) => (
                       <span
                         key={style}
                         style={{
@@ -1693,9 +1752,11 @@ export default function MapPage({ embedded = false }) {
               </div>
 
               <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "10px" }}>
-                <span style={{ fontSize: "12px", fontWeight: "600", color: "#d97706" }}>
-                  ★ {artist.rating} rating
-                </span>
+                {artist.rating && (
+                  <span style={{ fontSize: "12px", fontWeight: "600", color: "#d97706" }}>
+                    ★ {artist.rating} rating
+                  </span>
+                )}
                 <span
                   style={{
                     fontSize: "13px",
