@@ -1592,14 +1592,15 @@ export default function MapPage({ embedded = false }) {
             style={{
               display: "block",
               marginBottom: "40px",
-              padding: "32px",
-              borderRadius: "18px",
-              background: "#ffffff",
+              padding: "28px",
+              borderRadius: "20px",
+              background: "linear-gradient(180deg, #ffffff 0%, #fbfdfc 100%)",
               boxShadow:
                 highlightedArtistId === artist.id
-                  ? "0 0 0 3px #1B8A5A, 0 8px 24px rgba(15, 23, 42, 0.06)"
-                  : "0 8px 24px rgba(15, 23, 42, 0.06)",
+                  ? "0 0 0 3px #1B8A5A, 0 10px 30px rgba(15, 23, 42, 0.08)"
+                  : "0 10px 30px rgba(15, 23, 42, 0.07)",
               border: "1px solid #ececec",
+              borderTop: "3px solid #1B8A5A",
               scrollMarginTop: "90px",
               transition: "box-shadow 0.3s ease, transform 0.15s ease",
               textDecoration: "none",
@@ -1607,14 +1608,14 @@ export default function MapPage({ embedded = false }) {
               cursor: "pointer",
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.boxShadow = "0 12px 28px rgba(15, 23, 42, 0.12)";
-              e.currentTarget.style.transform = "translateY(-2px)";
+              e.currentTarget.style.boxShadow = "0 16px 36px rgba(15, 23, 42, 0.14)";
+              e.currentTarget.style.transform = "translateY(-3px)";
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.boxShadow =
                 highlightedArtistId === artist.id
-                  ? "0 0 0 3px #1B8A5A, 0 8px 24px rgba(15, 23, 42, 0.06)"
-                  : "0 8px 24px rgba(15, 23, 42, 0.06)";
+                  ? "0 0 0 3px #1B8A5A, 0 10px 30px rgba(15, 23, 42, 0.08)"
+                  : "0 10px 30px rgba(15, 23, 42, 0.07)";
               e.currentTarget.style.transform = "translateY(0)";
             }}
           >
@@ -1627,52 +1628,67 @@ export default function MapPage({ embedded = false }) {
                 gap: "20px",
               }}
             >
-              <div style={{ maxWidth: "640px" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "4px" }}>
-                  <h3 style={{ margin: 0, fontSize: "24px", fontWeight: "700", color: "#0f172a" }}>
-                    {artist.name}
-                  </h3>
-                  {artist.verified && (
-                    <span
-                      style={{
-                        fontSize: "11px",
-                        fontWeight: "700",
-                        color: "#1B8A5A",
-                        backgroundColor: "rgba(27,138,90,0.1)",
-                        padding: "3px 10px",
-                        borderRadius: "20px",
-                        letterSpacing: "0.3px",
-                      }}
-                    >
-                      ✓ Verified
-                    </span>
-                  )}
-                </div>
+              <div style={{ display: "flex", gap: "18px", maxWidth: "640px" }}>
+                <img
+                  src={artist.portfolio?.[0]?.url}
+                  alt={`${artist.name} profile`}
+                  style={{
+                    width: "76px",
+                    height: "76px",
+                    borderRadius: "50%",
+                    objectFit: "cover",
+                    flexShrink: 0,
+                    border: "3px solid #ffffff",
+                    boxShadow: "0 4px 14px rgba(15, 23, 42, 0.18)",
+                  }}
+                />
+                <div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "4px" }}>
+                    <h3 style={{ margin: 0, fontSize: "24px", fontWeight: "700", color: "#0f172a" }}>
+                      {artist.name}
+                    </h3>
+                    {artist.verified && (
+                      <span
+                        style={{
+                          fontSize: "11px",
+                          fontWeight: "700",
+                          color: "#1B8A5A",
+                          backgroundColor: "rgba(27,138,90,0.1)",
+                          padding: "3px 10px",
+                          borderRadius: "20px",
+                          letterSpacing: "0.3px",
+                        }}
+                      >
+                        ✓ Verified
+                      </span>
+                    )}
+                  </div>
 
-                <p style={{ margin: "0 0 8px 0", fontSize: "13px", color: "#64748b", fontWeight: "500" }}>
-                  {artist.studio} • {artist.location}
-                </p>
+                  <p style={{ margin: "0 0 8px 0", fontSize: "13px", color: "#64748b", fontWeight: "500" }}>
+                    {artist.studio} • {artist.location}
+                  </p>
 
-                <p style={{ margin: "0 0 10px 0", fontSize: "15px", color: "#334155", lineHeight: "1.6" }}>
-                  {artist.bio}
-                </p>
+                  <p style={{ margin: "0 0 10px 0", fontSize: "15px", color: "#334155", lineHeight: "1.6" }}>
+                    {artist.bio}
+                  </p>
 
-                <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-                  {artist.styles.map((style) => (
-                    <span
-                      key={style}
-                      style={{
-                        fontSize: "12px",
-                        fontWeight: "600",
-                        color: "#475569",
-                        backgroundColor: "#f1f5f9",
-                        padding: "4px 10px",
-                        borderRadius: "20px",
-                      }}
-                    >
-                      {style}
-                    </span>
-                  ))}
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                    {artist.styles.map((style) => (
+                      <span
+                        key={style}
+                        style={{
+                          fontSize: "12px",
+                          fontWeight: "600",
+                          color: "#475569",
+                          backgroundColor: "#f1f5f9",
+                          padding: "4px 10px",
+                          borderRadius: "20px",
+                        }}
+                      >
+                        {style}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               </div>
 
@@ -1694,6 +1710,66 @@ export default function MapPage({ embedded = false }) {
                 </span>
               </div>
             </div>
+
+            {artist.portfolio?.length > 0 && (
+              <div style={{ marginTop: "22px" }}>
+                <p
+                  style={{
+                    margin: "0 0 10px 0",
+                    fontSize: "11px",
+                    fontWeight: "700",
+                    color: "#94a3b8",
+                    letterSpacing: "0.6px",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  Recent work
+                </p>
+                <div style={{ display: "flex", gap: "10px" }}>
+                  {artist.portfolio.slice(0, 5).map((item, index) => {
+                    const remaining = artist.portfolio.length - 5;
+                    const isLastVisible = index === 4 && remaining > 0;
+                    return (
+                      <div
+                        key={item.id}
+                        style={{
+                          position: "relative",
+                          width: "72px",
+                          height: "72px",
+                          borderRadius: "12px",
+                          overflow: "hidden",
+                          flexShrink: 0,
+                          boxShadow: "0 3px 10px rgba(15, 23, 42, 0.12)",
+                        }}
+                      >
+                        <img
+                          src={item.url}
+                          alt={`${artist.name} work ${index + 1}`}
+                          style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                        />
+                        {isLastVisible && (
+                          <div
+                            style={{
+                              position: "absolute",
+                              inset: 0,
+                              background: "rgba(15, 23, 42, 0.55)",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              color: "#ffffff",
+                              fontSize: "13px",
+                              fontWeight: "700",
+                            }}
+                          >
+                            +{remaining}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </Link>
         ))}
 
