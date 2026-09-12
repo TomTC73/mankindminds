@@ -5,7 +5,7 @@ import "leaflet/dist/leaflet.css";
 import "./MapPage.css";
 
 import Header from "./Header";
-import { API_URL } from "./apiConfig";
+import { API_URL, resolveStudioImageUrl } from "./apiConfig";
 
 const logoIcon = "/favicon.png";
 
@@ -1082,7 +1082,7 @@ export default function MapPage({ embedded = false }) {
                     <div className="studio-detail-image-frame">
                       <img
                         className="studio-detail-image"
-                        src={selectedStudio.image}
+                        src={resolveStudioImageUrl(selectedStudio.image)}
                         alt={selectedStudio.name}
                       />
                     </div>
@@ -1217,7 +1217,7 @@ export default function MapPage({ embedded = false }) {
               }}
             >
               <img
-                src={loc.image}
+                src={resolveStudioImageUrl(loc.image)}
                 alt={loc.name}
                 style={{ width: "100%", height: "180px", objectFit: "cover" }}
               />

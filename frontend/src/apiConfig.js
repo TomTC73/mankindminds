@@ -7,10 +7,20 @@ export const API_URL = `${API_BASE}/api`;
 export function resolveCreatorImageUrl(imageUrl) {
   if (!imageUrl) return "";
   if (imageUrl.startsWith("/assets")) {
-    return `${API_BASE}${imageUrl}`;
+    return encodeURI(`${API_BASE}${imageUrl}`);
   }
   return imageUrl;
 }
+
+export function resolveStudioImageUrl(imageUrl) {
+  if (!imageUrl) return "";
+  if (imageUrl.startsWith("/assets")) {
+    return encodeURI(`${API_BASE}${imageUrl}`);
+  }
+  return imageUrl;
+}
+
+export const resolveImageUrl = resolveCreatorImageUrl;
 
 export function resolveSafeExternalUrl(value) {
   if (!value) return "";
