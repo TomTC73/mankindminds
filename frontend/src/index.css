@@ -298,12 +298,35 @@ a {
   margin: 0 auto;
 }
 
-.creator-gallery img {
+.creator-gallery-item {
+  overflow: hidden;
+  border: 1px solid var(--line, #d2cbc0);
+  border-radius: 6px;
+  box-shadow: 4px 4px 0 rgba(36, 35, 33, 0.05);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.creator-gallery-item:hover {
+  transform: translateY(-4px);
+  box-shadow: 6px 8px 0 rgba(36, 35, 33, 0.1);
+}
+
+.creator-gallery-item img {
   display: block;
   width: 100%;
   aspect-ratio: 1;
   object-fit: cover;
-  border: 1px solid var(--line, #d2cbc0);
+  transition: transform 0.35s ease;
+}
+
+.creator-gallery-item:hover img {
+  transform: scale(1.06);
+}
+
+.gallery-load-more-wrap {
+  display: flex;
+  justify-content: center;
+  margin-top: 32px;
 }
 
 /* Creator application form */

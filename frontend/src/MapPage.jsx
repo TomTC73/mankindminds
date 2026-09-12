@@ -1,11 +1,12 @@
 import React, { useRef, useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { MapContainer, TileLayer, Marker, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "./MapPage.css";
 
 import Header from "./Header";
-import { API_URL, resolveStudioImageUrl } from "./apiConfig";
+import { API_URL, resolveStudioImageUrl, resolveCreatorImageUrl } from "./apiConfig";
 
 const logoIcon = "/favicon.png";
 
@@ -646,10 +647,14 @@ const NORWICH_LOCATIONS = [
 ];
 
 // --- FEATURED ARTISTS ---
-const ARTISTS_DATA = [
+// Bundled fallback so the Artists tab still renders if the creators API is briefly
+// unavailable. New tattooist creators added via the staff manager app are fetched
+// from the backend below and merged in automatically — no code changes needed.
+const FALLBACK_ARTISTS_DATA = [
   {
     id: "artist-isabella-sala",
     name: "Isabella Sala",
+    creatorSlug: "isabella-sala",
     handle: "@isabellasalatattoos",
     instagram: {
       url: "https://www.instagram.com/isabellasalatattoos/",
@@ -663,6 +668,7 @@ const ARTISTS_DATA = [
     bio: "Italian fine-line tattoo artist known for elegant, minimalist designs with soft detailing and clean precision.",
     rating: "4.9",
     verified: true,
+    imageUrl: "/Artist1work/3.PNG",
    portfolio: [
   { id: 1, type: "image", url: "/Artist1work/3.PNG" },
   { id: 2, type: "image", url: "/Artist1work/4.PNG" },
@@ -778,6 +784,7 @@ export default function MapPage({ embedded = false }) {
   const [artistSearchTerm, setArtistSearchTerm] = useState("");
   const [isArtistDropdownOpen, setIsArtistDropdownOpen] = useState(false);
   const [highlightedArtistId, setHighlightedArtistId] = useState(null);
+  const [artistsData, setArtistsData] = useState(FALLBACK_ARTISTS_DATA);
   const [studioLocations, setStudioLocations] = useState([
     ...LONDON_LOCATIONS.map((studio) => ({ ...studio, city: "London" })),
     ...NORWICH_LOCATIONS.map((studio) => ({ ...studio, city: "Norwich" })),
@@ -797,17 +804,69 @@ export default function MapPage({ embedded = false }) {
     );
   });
 
-  const artistSuggestions = ARTISTS_DATA.filter((artist) => {
+  const artistSuggestions = artistsData.filter((artist) => {
     const query = artistSearchTerm.toLowerCase().trim();
     if (!query) return false;
     return (
       artist.name.toLowerCase().includes(query) ||
-      artist.handle.toLowerCase().includes(query) ||
-      artist.studio.toLowerCase().includes(query) ||
-      artist.location.toLowerCase().includes(query) ||
-      artist.styles.some((style) => style.toLowerCase().includes(query))
+      (artist.handle || "").toLowerCase().includes(query) ||
+      (artist.studio || "").toLowerCase().includes(query) ||
+      (artist.location || "").toLowerCase().includes(query) ||
+      (artist.styles || []).some((style) => style.toLowerCase().includes(query))
     );
   });
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch(`${API_URL}/creators`)
+      .then((response) => {
+        if (!response.ok) throw new Error(`Creators request failed: ${response.status}`);
+        return response.json();
+      })
+      .then((creators) => {
+        if (cancelled || !Array.isArray(creators)) return;
+        const tattooCreators = creators
+          .filter((creator) => creator.category?.toLowerCase().includes("tattoo"))
+          .map((creator) => {
+            const socialLinks = creator.socialLinks || [];
+            const instagramLink = socialLinks.find((link) => link.name?.toLowerCase() === "instagram");
+            const websiteLink = socialLinks.find((link) => link.name?.toLowerCase() === "website");
+            return {
+              id: `artist-${creator.slug}`,
+              name: creator.name,
+              creatorSlug: creator.slug,
+              handle: instagramLink?.url ? `@${instagramLink.url.replace(/\/$/, "").split("/").pop()}` : "",
+              instagram: instagramLink
+                ? { url: instagramLink.url, icon: "/icons/instagram.png", handle: instagramLink.url }
+                : null,
+              website: websiteLink?.url || "",
+              studio: creator.studio || "",
+              location: creator.location || "",
+              styles: creator.styles && creator.styles.length > 0 ? creator.styles : [],
+              bio: creator.bio || creator.description || "",
+              rating: creator.rating || "",
+              verified: true,
+              imageUrl: resolveCreatorImageUrl(creator.imageUrl),
+              portfolio: (creator.gallery || []).map((url, index) => ({
+                id: index + 1,
+                type: "image",
+                url: resolveCreatorImageUrl(url),
+              })),
+            };
+          });
+        setArtistsData((previous) => {
+          const bySlug = new Map(previous.map((artist) => [artist.creatorSlug, artist]));
+          tattooCreators.forEach((artist) => bySlug.set(artist.creatorSlug, artist));
+          return Array.from(bySlug.values());
+        });
+      })
+      .catch(() => {
+        // Keep the bundled fallback artist(s) available while the API is unavailable.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -1568,7 +1627,7 @@ export default function MapPage({ embedded = false }) {
                         {artist.name}
                       </span>
                       <span style={{ fontSize: "11px", color: "#0284c7", fontWeight: "600" }}>
-                        {artist.styles[0]}
+                        {artist.styles?.[0]}
                       </span>
                     </div>
                   ))
@@ -1582,25 +1641,41 @@ export default function MapPage({ embedded = false }) {
           </div>
         </div>
 
-        {ARTISTS_DATA.map((artist) => (
-          <div
+        {artistsData.map((artist) => (
+          <Link
             key={artist.id}
+            to={artist.creatorSlug ? `/creators/${artist.creatorSlug}` : "#"}
             ref={(el) => (artistCardRefs.current[artist.id] = el)}
             style={{
+              display: "block",
               marginBottom: "40px",
-              padding: "32px",
-              borderRadius: "18px",
-              background: "#ffffff",
+              padding: "28px",
+              borderRadius: "20px",
+              background: "linear-gradient(180deg, #ffffff 0%, #fbfdfc 100%)",
               boxShadow:
                 highlightedArtistId === artist.id
-                  ? "0 0 0 3px #1B8A5A, 0 8px 24px rgba(15, 23, 42, 0.06)"
-                  : "0 8px 24px rgba(15, 23, 42, 0.06)",
+                  ? "0 0 0 3px #1B8A5A, 0 10px 30px rgba(15, 23, 42, 0.08)"
+                  : "0 10px 30px rgba(15, 23, 42, 0.07)",
               border: "1px solid #ececec",
+              borderTop: "3px solid #1B8A5A",
               scrollMarginTop: "90px",
-              transition: "box-shadow 0.3s ease",
+              transition: "box-shadow 0.3s ease, transform 0.15s ease",
+              textDecoration: "none",
+              color: "inherit",
+              cursor: "pointer",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.boxShadow = "0 16px 36px rgba(15, 23, 42, 0.14)";
+              e.currentTarget.style.transform = "translateY(-3px)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.boxShadow =
+                highlightedArtistId === artist.id
+                  ? "0 0 0 3px #1B8A5A, 0 10px 30px rgba(15, 23, 42, 0.08)"
+                  : "0 10px 30px rgba(15, 23, 42, 0.07)";
+              e.currentTarget.style.transform = "translateY(0)";
             }}
           >
-            {/* Header */}
             <div
               style={{
                 display: "flex",
@@ -1608,133 +1683,155 @@ export default function MapPage({ embedded = false }) {
                 alignItems: "flex-start",
                 flexWrap: "wrap",
                 gap: "20px",
-                marginBottom: "8px",
               }}
             >
-              <div style={{ maxWidth: "640px" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "4px" }}>
-                  <h3 style={{ margin: 0, fontSize: "24px", fontWeight: "700", color: "#0f172a" }}>
-                    {artist.name}
-                  </h3>
-                  {artist.verified && (
-                    <span
-                      style={{
-                        fontSize: "11px",
-                        fontWeight: "700",
-                        color: "#1B8A5A",
-                        backgroundColor: "rgba(27,138,90,0.1)",
-                        padding: "3px 10px",
-                        borderRadius: "20px",
-                        letterSpacing: "0.3px",
-                      }}
-                    >
-                      ✓ Verified
-                    </span>
+              <div style={{ display: "flex", gap: "18px", maxWidth: "640px" }}>
+                <img
+                  src={artist.imageUrl || artist.portfolio?.[0]?.url}
+                  alt={`${artist.name} profile`}
+                  style={{
+                    width: "76px",
+                    height: "76px",
+                    borderRadius: "50%",
+                    objectFit: "cover",
+                    flexShrink: 0,
+                    border: "3px solid #ffffff",
+                    boxShadow: "0 4px 14px rgba(15, 23, 42, 0.18)",
+                  }}
+                />
+                <div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "4px" }}>
+                    <h3 style={{ margin: 0, fontSize: "24px", fontWeight: "700", color: "#0f172a" }}>
+                      {artist.name}
+                    </h3>
+                    {artist.verified && (
+                      <span
+                        style={{
+                          fontSize: "11px",
+                          fontWeight: "700",
+                          color: "#1B8A5A",
+                          backgroundColor: "rgba(27,138,90,0.1)",
+                          padding: "3px 10px",
+                          borderRadius: "20px",
+                          letterSpacing: "0.3px",
+                        }}
+                      >
+                        ✓ Verified
+                      </span>
+                    )}
+                  </div>
+
+                  {(artist.studio || artist.location) && (
+                    <p style={{ margin: "0 0 8px 0", fontSize: "13px", color: "#64748b", fontWeight: "500" }}>
+                      {[artist.studio, artist.location].filter(Boolean).join(" • ")}
+                    </p>
                   )}
-                </div>
 
-                <p style={{ margin: "0 0 8px 0", fontSize: "13px", color: "#64748b", fontWeight: "500" }}>
-                  {artist.studio} • {artist.location}
-                </p>
+                  <p style={{ margin: "0 0 10px 0", fontSize: "15px", color: "#334155", lineHeight: "1.6" }}>
+                    {artist.bio}
+                  </p>
 
-                <p style={{ margin: "0 0 10px 0", fontSize: "15px", color: "#334155", lineHeight: "1.6" }}>
-                  {artist.bio}
-                </p>
-
-                <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-                  {artist.styles.map((style) => (
-                    <span
-                      key={style}
-                      style={{
-                        fontSize: "12px",
-                        fontWeight: "600",
-                        color: "#475569",
-                        backgroundColor: "#f1f5f9",
-                        padding: "4px 10px",
-                        borderRadius: "20px",
-                      }}
-                    >
-                      {style}
-                    </span>
-                  ))}
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                    {(artist.styles || []).map((style) => (
+                      <span
+                        key={style}
+                        style={{
+                          fontSize: "12px",
+                          fontWeight: "600",
+                          color: "#475569",
+                          backgroundColor: "#f1f5f9",
+                          padding: "4px 10px",
+                          borderRadius: "20px",
+                        }}
+                      >
+                        {style}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               </div>
 
               <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "10px" }}>
-                <a
-                  href={artist.instagram.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                {artist.rating && (
+                  <span style={{ fontSize: "12px", fontWeight: "600", color: "#d97706" }}>
+                    ★ {artist.rating} rating
+                  </span>
+                )}
+                <span
                   style={{
+                    fontSize: "13px",
+                    fontWeight: "700",
+                    color: "#0f172a",
                     display: "flex",
                     alignItems: "center",
-                    gap: "8px",
-                    background: "linear-gradient(135deg, #f58529, #dd2a7b, #8134af, #515bd4)",
-                    padding: "10px 18px",
-                    borderRadius: "40px",
-                    color: "white",
-                    fontWeight: "600",
-                    fontSize: "14px",
-                    textDecoration: "none",
-                    boxShadow: "0 4px 12px rgba(0,0,0,0.12)",
-                    whiteSpace: "nowrap",
+                    gap: "6px",
                   }}
                 >
-                  <img src={artist.instagram.icon} alt="Instagram" style={{ width: "18px", height: "18px" }} />
-                  {artist.instagram.handle}
-                </a>
-                <span style={{ fontSize: "12px", fontWeight: "600", color: "#d97706" }}>
-                  ★ {artist.rating} rating
+                  View Profile →
                 </span>
               </div>
             </div>
 
-            {/* Portfolio Grid */}
-            <div
-              style={{
-                marginTop: "24px",
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fill, minmax(190px, 1fr))",
-                gap: "12px",
-              }}
-            >
-              {artist.portfolio.map((item) => (
-                <div
-                  key={item.id}
+            {artist.portfolio?.length > 0 && (
+              <div style={{ marginTop: "22px" }}>
+                <p
                   style={{
-                    overflow: "hidden",
-                    borderRadius: "10px",
-                    aspectRatio: "1 / 1",
-                    boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-                    transition: "transform 0.2s ease, box-shadow 0.2s ease",
-                    cursor: "pointer",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = "scale(1.03)";
-                    e.currentTarget.style.boxShadow = "0 8px 20px rgba(0,0,0,0.15)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = "scale(1)";
-                    e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.08)";
+                    margin: "0 0 10px 0",
+                    fontSize: "11px",
+                    fontWeight: "700",
+                    color: "#94a3b8",
+                    letterSpacing: "0.6px",
+                    textTransform: "uppercase",
                   }}
                 >
-                  <img
-                    src={item.url}
-                    alt={`${artist.name} tattoo ${item.id}`}
-                    loading="lazy"
-                    decoding="async"
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "cover",
-                      display: "block",
-                      imageRendering: "auto",
-                    }}
-                  />
+                  Recent work
+                </p>
+                <div style={{ display: "flex", gap: "10px" }}>
+                  {artist.portfolio.slice(0, 5).map((item, index) => {
+                    const remaining = artist.portfolio.length - 5;
+                    const isLastVisible = index === 4 && remaining > 0;
+                    return (
+                      <div
+                        key={item.id}
+                        style={{
+                          position: "relative",
+                          width: "72px",
+                          height: "72px",
+                          borderRadius: "12px",
+                          overflow: "hidden",
+                          flexShrink: 0,
+                          boxShadow: "0 3px 10px rgba(15, 23, 42, 0.12)",
+                        }}
+                      >
+                        <img
+                          src={item.url}
+                          alt={`${artist.name} work ${index + 1}`}
+                          style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                        />
+                        {isLastVisible && (
+                          <div
+                            style={{
+                              position: "absolute",
+                              inset: 0,
+                              background: "rgba(15, 23, 42, 0.55)",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              color: "#ffffff",
+                              fontSize: "13px",
+                              fontWeight: "700",
+                            }}
+                          >
+                            +{remaining}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
-              ))}
-            </div>
-          </div>
+              </div>
+            )}
+          </Link>
         ))}
 
         {/* Artist Sign-Up CTA */}
