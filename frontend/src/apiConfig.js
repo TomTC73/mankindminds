@@ -6,7 +6,10 @@ export const API_URL = `${API_BASE}/api`;
 
 export function resolveCreatorImageUrl(imageUrl) {
   if (!imageUrl) return "";
-  if (imageUrl.startsWith("/assets")) {
+  if (imageUrl.startsWith("http://") || imageUrl.startsWith("https://")) {
+    return imageUrl;
+  }
+  if (imageUrl.startsWith("/assets") || imageUrl.startsWith("/Artist1work")) {
     return encodeURI(`${API_BASE}${imageUrl}`);
   }
   return imageUrl;
@@ -14,7 +17,10 @@ export function resolveCreatorImageUrl(imageUrl) {
 
 export function resolveStudioImageUrl(imageUrl) {
   if (!imageUrl) return "";
-  if (imageUrl.startsWith("/assets")) {
+  if (imageUrl.startsWith("http://") || imageUrl.startsWith("https://")) {
+    return imageUrl;
+  }
+  if (imageUrl.startsWith("/assets") || imageUrl.startsWith("/Artist1work")) {
     return encodeURI(`${API_BASE}${imageUrl}`);
   }
   return imageUrl;

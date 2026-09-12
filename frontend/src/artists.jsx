@@ -1,312 +1,357 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { API_URL, resolveCreatorImageUrl } from "./apiConfig";
 
-// Mock dataset for individual artists
+// Fallback dataset for individual artists if offline
 export const ARTISTS_DATA = [
   {
     id: "artist-isabella-sala",
+    slug: "isabella-sala",
     name: "Isabella Sala",
     handle: "@isabellasalatattoos",
-
+    category: "Tattooist",
+    imageUrl: "/Artist1work/shot1_r5_c5.png",
     instagram: {
       url: "https://www.instagram.com/isabellasalatattoos/",
-      icon: "/icons/instagram.png",   // ← your PNG icon
+      icon: "/icons/instagram.png",
       handle: "@isabellasalatattoos"
     },
-
     website: "https://www.isabellasalatattoos.it/",
     studio: "Isabella Sala Tattoos",
     location: "Italy",
     styles: ["Fine Line", "Minimalist", "Delicate Blackwork"],
+    summary: "Italian fine-line tattoo artist known for elegant, minimalist designs with soft detailing and clean precision.",
     bio: "Italian fine-line tattoo artist known for elegant, minimalist designs with soft detailing and clean precision.",
     rating: "4.9",
-    verified: true,
-
-    portfolio: [
-      { id: 1, type: "image", url: "/Artist1work/shot1_r5_c5.png" },
-      { id: 2, type: "image", url: "/Artist1work/shot1_r5_c6.png" },
-      { id: 3, type: "image", url: "/Artist1work/shot1_r6_c1.png" },
-      { id: 4, type: "image", url: "/Artist1work/shot1_r6_c2.png" },
-      { id: 5, type: "image", url: "/Artist1work/shot1_r6_c3.png" },
-      { id: 6, type: "image", url: "/Artist1work/shot1_r6_c4.png" },
-      { id: 7, type: "image", url: "/Artist1work/shot1_r6_c6.png" },
-      { id: 8, type: "image", url: "/Artist1work/shot2_r1_c1.png" },
-      { id: 9, type: "image", url: "/Artist1work/shot2_r1_c2.png" },
-      { id: 10, type: "image", url: "/Artist1work/shot2_r1_c3.png" },
-      { id: 11, type: "image", url: "/Artist1work/shot2_r1_c5.png" },
-      { id: 12, type: "image", url: "/Artist1work/shot2_r1_c6.png" },
-      { id: 13, type: "image", url: "/Artist1work/shot2_r2_c1.png" },
-      { id: 14, type: "image", url: "/Artist1work/shot2_r2_c2.png" },
-      { id: 15, type: "image", url: "/Artist1work/shot2_r2_c3.png" },
-      { id: 16, type: "image", url: "/Artist1work/shot2_r2_c4.png" },
-      { id: 17, type: "image", url: "/Artist1work/shot2_r2_c6.png" },
-      { id: 18, type: "image", url: "/Artist1work/shot3_r1_c1.png" },
-      { id: 19, type: "image", url: "/Artist1work/shot3_r1_c2.png" },
-      { id: 20, type: "image", url: "/Artist1work/shot3_r1_c3.png" },
-      { id: 21, type: "image", url: "/Artist1work/shot3_r1_c5.png" },
-      { id: 22, type: "image", url: "/Artist1work/shot3_r1_c6.png" },
-      { id: 23, type: "image", url: "/Artist1work/shot3_r2_c1.png" },
-      { id: 24, type: "image", url: "/Artist1work/shot3_r2_c2.png" },
-      { id: 25, type: "image", url: "/Artist1work/shot3_r2_c3.png" },
-      { id: 26, type: "image", url: "/Artist1work/shot3_r2_c4.png" },
-      { id: 27, type: "image", url: "/Artist1work/shot3_r2_c6.png" },
-      { id: 28, type: "image", url: "/Artist1work/shot3_r3_c1.png" },
-      { id: 29, type: "image", url: "/Artist1work/shot3_r3_c2.png" },
-      { id: 30, type: "image", url: "/Artist1work/shot3_r3_c4.png" },
-      { id: 31, type: "image", url: "/Artist1work/shot3_r3_c5.png" }
-    ]
+    verified: true
   }
 ];
 
-
-
-
-export default function Artists({ onNavigateToStudios }) {
+export default function Artists() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedStyle, setSelectedStyle] = useState("All");
+  const [creators, setCreators] = useState([]);
 
-  const stylesList = ["All", "Fine Line", "Micro-realism", "Neo-Traditional", "Blackwork", "Japanese"];
+  useEffect(() => {
+    fetch(`${API_URL}/creators`)
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to fetch creators");
+        return res.json();
+      })
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          const tattooArtists = data.filter((c) =>
+            c.category?.toLowerCase().includes("tattoo") ||
+            c.category?.toLowerCase().includes("tattooist") ||
+            (c.styles && c.styles.length > 0)
+          );
+          setCreators(tattooArtists.length > 0 ? tattooArtists : data);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
-  const filteredArtists = ARTISTS_DATA.filter((artist) => {
+  const artistsList = creators.length > 0 ? creators : ARTISTS_DATA;
+
+  const stylesList = ["All", "Fine Line", "Micro-realism", "Neo-Traditional", "Blackwork", "Japanese", "Minimalist", "Delicate Blackwork"];
+
+  const filteredArtists = artistsList.filter((artist) => {
+    const name = artist.name || "";
+    const handle = artist.handle || "";
+    const studio = artist.studio || "";
+    const styles = artist.styles || [];
+
     const matchesSearch =
-      artist.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      artist.handle.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      artist.studio.toLowerCase().includes(searchTerm.toLowerCase());
+      name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      handle.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      studio.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesStyle =
-      selectedStyle === "All" || artist.styles.includes(selectedStyle);
+      selectedStyle === "All" || styles.includes(selectedStyle);
 
     return matchesSearch && matchesStyle;
   });
 
- return (
-  <div style={{ padding: "32px", maxWidth: "1200px", margin: "0 auto" }}>
-
-    {/* MAIN SITE NAVIGATION */}
-    <nav
-      style={{
-        display: "flex",
-        justifyContent: "center",
-        gap: "24px",
-        marginBottom: "32px",
-        flexWrap: "wrap",
-        fontWeight: "600",
-        fontSize: "15px",
-      }}
-    >
-      <a href="/tattoos" style={{ textDecoration: "none", color: "#111" }}>Tattoos</a>
-      <a href="/music" style={{ textDecoration: "none", color: "#111" }}>Music</a>
-      <a href="/writing" style={{ textDecoration: "none", color: "#111" }}>Writing</a>
-      <a href="/videos" style={{ textDecoration: "none", color: "#111" }}>Videos</a>
-      <a href="/art" style={{ textDecoration: "none", color: "#111" }}>Art</a>
-      <a href="/" style={{ textDecoration: "none", color: "#111" }}>Mankind Minds</a>
-      <a href="/process/tattoos" style={{ textDecoration: "none", color: "#111" }}>Process</a>
-      <a href="/map" style={{ textDecoration: "none", color: "#111" }}>Map</a>
-      <a href="/apply" style={{ textDecoration: "none", color: "#111" }}>Apply</a>
-    </nav>
-
-    {/* LOCAL NAVIGATION */}
-    <div
-      style={{
-        display: "flex",
-        justifyContent: "center",
-        gap: "16px",
-        marginBottom: "32px",
-      }}
-    >
-      <a
-        href="/map"
+  return (
+    <div style={{ padding: "32px", maxWidth: "1200px", margin: "0 auto", fontFamily: "system-ui, -apple-system, sans-serif" }}>
+      {/* MAIN SITE NAVIGATION */}
+      <nav
         style={{
-          padding: "10px 18px",
-          background: "#111",
-          color: "white",
-          borderRadius: "8px",
-          textDecoration: "none",
+          display: "flex",
+          justifyContent: "center",
+          gap: "24px",
+          marginBottom: "32px",
+          flexWrap: "wrap",
           fontWeight: "600",
           fontSize: "15px",
         }}
       >
-        ← Back to Studios
-      </a>
+        <a href="/tattoos" style={{ textDecoration: "none", color: "#111" }}>Tattoos</a>
+        <a href="/music" style={{ textDecoration: "none", color: "#111" }}>Music</a>
+        <a href="/writing" style={{ textDecoration: "none", color: "#111" }}>Writing</a>
+        <a href="/videos" style={{ textDecoration: "none", color: "#111" }}>Videos</a>
+        <a href="/art" style={{ textDecoration: "none", color: "#111" }}>Art</a>
+        <a href="/" style={{ textDecoration: "none", color: "#111" }}>Mankind Minds</a>
+        <a href="/process/tattoos" style={{ textDecoration: "none", color: "#111" }}>Process</a>
+        <a href="/map" style={{ textDecoration: "none", color: "#111" }}>Map</a>
+        <a href="/apply" style={{ textDecoration: "none", color: "#111" }}>Apply</a>
+      </nav>
 
-      <a
-        href="/tattoos"
-        style={{
-          padding: "10px 18px",
-          background: "#f3f4f6",
-          color: "#111",
-          borderRadius: "8px",
-          textDecoration: "none",
-          fontWeight: "600",
-          fontSize: "15px",
-        }}
-      >
-        Home
-      </a>
-
-      <a
-        href="/apply"
-        style={{
-          padding: "10px 18px",
-          background: "#1b8a5a",
-          color: "white",
-          borderRadius: "8px",
-          textDecoration: "none",
-          fontWeight: "600",
-          fontSize: "15px",
-        }}
-      >
-        Apply as Artist
-      </a>
-    </div>
-
-    {/* PAGE TITLE */}
-    <h1
-      style={{
-        fontSize: "36px",
-        fontWeight: "800",
-        marginBottom: "32px",
-        textAlign: "center",
-      }}
-    >
-      Featured Artists
-    </h1>
-
-    {/* ARTISTS */}
-    {ARTISTS_DATA.map((artist) => (
+      {/* LOCAL NAVIGATION */}
       <div
-        key={artist.id}
         style={{
-          marginBottom: "50px",
-          padding: "28px",
-          borderRadius: "16px",
-          background: "#ffffff",
-          boxShadow: "0 6px 20px rgba(0,0,0,0.06)",
-          border: "1px solid #ececec",
+          display: "flex",
+          justifyContent: "center",
+          gap: "16px",
+          marginBottom: "32px",
         }}
       >
-        {/* Header */}
-        <div
+        <a
+          href="/map"
           style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            flexWrap: "wrap",
-            gap: "16px",
+            padding: "10px 18px",
+            background: "#111",
+            color: "white",
+            borderRadius: "8px",
+            textDecoration: "none",
+            fontWeight: "600",
+            fontSize: "15px",
           }}
         >
-          <div>
-            <h2
-              style={{
-                margin: 0,
-                fontSize: "28px",
-                fontWeight: "700",
-              }}
-            >
-              {artist.name}
-            </h2>
+          ← Back to Studios
+        </a>
 
-            <p
-              style={{
-                marginTop: "6px",
-                fontSize: "16px",
-                color: "#555",
-                maxWidth: "600px",
-              }}
-            >
-              {artist.bio}
-            </p>
+        <a
+          href="/tattoos"
+          style={{
+            padding: "10px 18px",
+            background: "#f3f4f6",
+            color: "#111",
+            borderRadius: "8px",
+            textDecoration: "none",
+            fontWeight: "600",
+            fontSize: "15px",
+          }}
+        >
+          Home
+        </a>
 
-            <p
+        <a
+          href="/apply"
+          style={{
+            padding: "10px 18px",
+            background: "#1b8a5a",
+            color: "white",
+            borderRadius: "8px",
+            textDecoration: "none",
+            fontWeight: "600",
+            fontSize: "15px",
+          }}
+        >
+          Apply as Artist
+        </a>
+      </div>
+
+      {/* PAGE TITLE */}
+      <div style={{ textAlign: "center", marginBottom: "36px" }}>
+        <h1
+          style={{
+            fontSize: "36px",
+            fontWeight: "800",
+            margin: "0 0 12px 0",
+            color: "#0f172a",
+          }}
+        >
+          Featured Verified Artists
+        </h1>
+        <p style={{ color: "#64748b", fontSize: "16px", maxWidth: "600px", margin: "0 auto" }}>
+          Discover handpicked, AI-free verified tattoo artists. Click on any artist tab to view their full profile, bio, and verified artwork portfolio.
+        </p>
+      </div>
+
+      {/* SEARCH AND FILTER CONTROLS */}
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: "16px",
+          alignItems: "center",
+          marginBottom: "40px",
+        }}
+      >
+        <input
+          type="text"
+          placeholder="Search artists by name, handle, or studio..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          style={{
+            width: "100%",
+            maxWidth: "480px",
+            padding: "12px 18px",
+            fontSize: "15px",
+            borderRadius: "12px",
+            border: "1px solid #cbd5e1",
+            outline: "none",
+            boxShadow: "0 2px 6px rgba(0,0,0,0.04)",
+          }}
+        />
+
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", justifyContent: "center" }}>
+          {stylesList.map((style) => (
+            <button
+              key={style}
+              onClick={() => setSelectedStyle(style)}
               style={{
-                marginTop: "8px",
-                fontSize: "15px",
+                padding: "8px 16px",
+                borderRadius: "20px",
+                border: "none",
+                backgroundColor: selectedStyle === style ? "#0f172a" : "#f1f5f9",
+                color: selectedStyle === style ? "#ffffff" : "#475569",
                 fontWeight: "600",
-                color: "#333",
+                fontSize: "13px",
+                cursor: "pointer",
+                transition: "all 0.2s ease",
               }}
             >
-              Styles:{" "}
-              <span style={{ fontWeight: "500" }}>
-                {artist.styles.join(", ")}
-              </span>
-            </p>
-          </div>
-
-          {/* Instagram Button */}
-          <a
-            href={artist.instagram.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              background:
-                "linear-gradient(135deg, #f58529, #dd2a7b, #8134af, #515bd4)",
-              padding: "10px 18px",
-              borderRadius: "40px",
-              color: "white",
-              fontWeight: "600",
-              fontSize: "15px",
-              textDecoration: "none",
-              boxShadow: "0 4px 12px rgba(0,0,0,0.12)",
-            }}
-          >
-            <img
-              src={artist.instagram.icon}
-              alt="Instagram"
-              style={{ width: "20px", height: "20px" }}
-            />
-            {artist.instagram.handle}
-          </a>
-        </div>
-
-        {/* Portfolio Grid */}
-        <div
-          style={{
-            marginTop: "24px",
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))",
-            gap: "14px",
-          }}
-        >
-          {artist.portfolio.map((item) => (
-            <div
-              key={item.id}
-              style={{
-                overflow: "hidden",
-                borderRadius: "12px",
-                boxShadow: "0 3px 12px rgba(0,0,0,0.10)",
-                transition: "transform 0.2s ease, box-shadow 0.2s ease",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "scale(1.02)";
-                e.currentTarget.style.boxShadow =
-                  "0 6px 20px rgba(0,0,0,0.15)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "scale(1)";
-                e.currentTarget.style.boxShadow =
-                  "0 3px 12px rgba(0,0,0,0.10)";
-              }}
-            >
-              <img
-                src={item.url}
-                alt={`${artist.name} tattoo ${item.id}`}
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  objectFit: "cover",
-                  display: "block",
-                }}
-              />
-            </div>
+              {style}
+            </button>
           ))}
         </div>
       </div>
-    ))}
-  </div>
-);
 
+      {/* ARTISTS TABS GRID */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
+          gap: "28px",
+        }}
+      >
+        {filteredArtists.map((artist) => {
+          const artistSlug = artist.slug || artist.id || "artist";
+          const profileUrl = `/creators/${artistSlug}`;
+          const artistImg = resolveCreatorImageUrl(
+            artist.imageUrl || (artist.portfolio && artist.portfolio[0]?.url)
+          );
+          const artistStyles = artist.styles || [];
 
+          return (
+            <div
+              key={artist.id || artist.slug}
+              onClick={() => { window.location.href = profileUrl; }}
+              style={{
+                borderRadius: "18px",
+                backgroundColor: "#ffffff",
+                boxShadow: "0 8px 24px rgba(15, 23, 42, 0.08)",
+                border: "1px solid #e2e8f0",
+                overflow: "hidden",
+                display: "flex",
+                flexDirection: "column",
+                cursor: "pointer",
+                transition: "transform 0.2s ease, boxShadow 0.2s ease",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = "translateY(-4px)";
+                e.currentTarget.style.boxShadow = "0 14px 32px rgba(15, 23, 42, 0.12)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = "translateY(0)";
+                e.currentTarget.style.boxShadow = "0 8px 24px rgba(15, 23, 42, 0.08)";
+              }}
+            >
+              {/* Cover / Avatar */}
+              <div style={{ position: "relative", height: "220px", backgroundColor: "#f8fafc", overflow: "hidden" }}>
+                {artistImg ? (
+                  <img
+                    src={artistImg}
+                    alt={artist.name}
+                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                  />
+                ) : (
+                  <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "#94a3b8" }}>
+                    No Preview Available
+                  </div>
+                )}
+                <span
+                  style={{
+                    position: "absolute",
+                    top: "12px",
+                    right: "12px",
+                    backgroundColor: "rgba(255, 255, 255, 0.92)",
+                    backdropFilter: "blur(4px)",
+                    padding: "4px 10px",
+                    borderRadius: "20px",
+                    fontSize: "12px",
+                    fontWeight: "700",
+                    color: "#1B8A5A",
+                  }}
+                >
+                  ✓ AI-Free Verified
+                </span>
+              </div>
 
+              {/* Info Body */}
+              <div style={{ padding: "20px", flex: 1, display: "flex", flexDirection: "column" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "4px" }}>
+                  <h2 style={{ margin: 0, fontSize: "22px", fontWeight: "700", color: "#0f172a" }}>
+                    {artist.name}
+                  </h2>
+                  {artist.rating && (
+                    <span style={{ fontSize: "13px", fontWeight: "700", color: "#d97706" }}>
+                      ★ {artist.rating}
+                    </span>
+                  )}
+                </div>
+
+                <p style={{ margin: "0 0 10px 0", fontSize: "13px", color: "#64748b", fontWeight: "500" }}>
+                  {artist.studio || "Tattoo Studio"} {artist.location ? `• ${artist.location}` : ""}
+                </p>
+
+                <p style={{ margin: "0 0 16px 0", fontSize: "14px", color: "#334155", lineHeight: "1.5", flex: 1 }}>
+                  {artist.summary || artist.bio}
+                </p>
+
+                {artistStyles.length > 0 && (
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginBottom: "20px" }}>
+                    {artistStyles.map((style) => (
+                      <span
+                        key={style}
+                        style={{
+                          fontSize: "11px",
+                          fontWeight: "600",
+                          color: "#475569",
+                          backgroundColor: "#f1f5f9",
+                          padding: "4px 10px",
+                          borderRadius: "12px",
+                        }}
+                      >
+                        {style}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                <a
+                  href={profileUrl}
+                  style={{
+                    display: "block",
+                    textAlign: "center",
+                    padding: "12px 18px",
+                    backgroundColor: "#0f172a",
+                    color: "#ffffff",
+                    borderRadius: "10px",
+                    fontWeight: "600",
+                    fontSize: "14px",
+                    textDecoration: "none",
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  View Profile & Portfolio →
+                </a>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
 }

@@ -6,6 +6,10 @@ import { API_URL, resolveCreatorImageUrl } from "./apiConfig";
 import "./index.css";
 
 const categoryGroups = {
+  tattoos: {
+    label: "Tattoos",
+    matches: ["tattoo", "tattoos", "tattooist", "tattoo artist"],
+  },
   music: {
     label: "Music",
     matches: ["music", "musician", "songwriter", "producer", "band"],
