@@ -1663,6 +1663,8 @@ export default function MapPage({ embedded = false }) {
               textDecoration: "none",
               color: "inherit",
               cursor: "pointer",
+              overflow: "hidden",
+              boxSizing: "border-box",
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.boxShadow = "0 16px 36px rgba(15, 23, 42, 0.14)";
@@ -1786,7 +1788,7 @@ export default function MapPage({ embedded = false }) {
                 >
                   Recent work
                 </p>
-                <div style={{ display: "flex", gap: "10px" }}>
+                <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", maxWidth: "100%", overflow: "hidden" }}>
                   {artist.portfolio.slice(0, 5).map((item, index) => {
                     const remaining = artist.portfolio.length - 5;
                     const isLastVisible = index === 4 && remaining > 0;
@@ -1795,8 +1797,8 @@ export default function MapPage({ embedded = false }) {
                         key={item.id}
                         style={{
                           position: "relative",
-                          width: "72px",
-                          height: "72px",
+                          width: "clamp(52px, 18vw, 72px)",
+                          height: "clamp(52px, 18vw, 72px)",
                           borderRadius: "12px",
                           overflow: "hidden",
                           flexShrink: 0,
