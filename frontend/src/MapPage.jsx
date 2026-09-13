@@ -1656,6 +1656,7 @@ export default function MapPage({ embedded = false }) {
             key={artist.id}
             to={artist.creatorSlug ? `/creators/${artist.creatorSlug}` : "#"}
             ref={(el) => (artistCardRefs.current[artist.id] = el)}
+            className="artist-card-link"
             style={{
               display: "block",
               marginBottom: "40px",
@@ -1689,6 +1690,7 @@ export default function MapPage({ embedded = false }) {
             }}
           >
             <div
+              className="artist-card-top-row"
               style={{
                 display: "flex",
                 justifyContent: "space-between",
@@ -1697,10 +1699,11 @@ export default function MapPage({ embedded = false }) {
                 gap: "20px",
               }}
             >
-              <div style={{ display: "flex", gap: "18px", maxWidth: "640px" }}>
+              <div className="artist-card-main-info" style={{ display: "flex", gap: "18px", maxWidth: "640px" }}>
                 <img
                   src={artist.imageUrl || artist.portfolio?.[0]?.url}
                   alt={`${artist.name} profile`}
+                  className="artist-card-avatar"
                   style={{
                     width: "76px",
                     height: "76px",
@@ -1711,9 +1714,9 @@ export default function MapPage({ embedded = false }) {
                     boxShadow: "0 4px 14px rgba(15, 23, 42, 0.18)",
                   }}
                 />
-                <div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "4px" }}>
-                    <h3 style={{ margin: 0, fontSize: "24px", fontWeight: "700", color: "#0f172a" }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "4px", flexWrap: "wrap" }}>
+                    <h3 className="artist-card-name" style={{ margin: 0, fontSize: "24px", fontWeight: "700", color: "#0f172a" }}>
                       {artist.name}
                     </h3>
                     {artist.verified && (
@@ -1734,16 +1737,16 @@ export default function MapPage({ embedded = false }) {
                   </div>
 
                   {(artist.studio || artist.location) && (
-                    <p style={{ margin: "0 0 8px 0", fontSize: "13px", color: "#64748b", fontWeight: "500" }}>
+                    <p className="artist-card-subhead" style={{ margin: "0 0 8px 0", fontSize: "13px", color: "#64748b", fontWeight: "500" }}>
                       {[artist.studio, artist.location].filter(Boolean).join(" • ")}
                     </p>
                   )}
 
-                  <p style={{ margin: "0 0 10px 0", fontSize: "15px", color: "#334155", lineHeight: "1.6" }}>
+                  <p className="artist-card-bio" style={{ margin: "0 0 10px 0", fontSize: "15px", color: "#334155", lineHeight: "1.6" }}>
                     {artist.bio}
                   </p>
 
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                  <div className="artist-card-styles" style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
                     {(artist.styles || []).map((style) => (
                       <span
                         key={style}
@@ -1763,13 +1766,14 @@ export default function MapPage({ embedded = false }) {
                 </div>
               </div>
 
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "10px" }}>
+              <div className="artist-card-action-side" style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "10px" }}>
                 {artist.rating && (
                   <span style={{ fontSize: "12px", fontWeight: "600", color: "#d97706" }}>
                     ★ {artist.rating} rating
                   </span>
                 )}
                 <span
+                  className="artist-card-profile-link"
                   style={{
                     fontSize: "13px",
                     fontWeight: "700",
@@ -1785,7 +1789,7 @@ export default function MapPage({ embedded = false }) {
             </div>
 
             {artist.portfolio?.length > 0 && (
-              <div style={{ marginTop: "22px" }}>
+              <div className="artist-card-recent-work" style={{ marginTop: "22px" }}>
                 <p
                   style={{
                     margin: "0 0 10px 0",
@@ -1798,13 +1802,14 @@ export default function MapPage({ embedded = false }) {
                 >
                   Recent work
                 </p>
-                <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", maxWidth: "100%", overflow: "hidden" }}>
+                <div className="artist-card-thumbnails" style={{ display: "flex", gap: "10px", flexWrap: "wrap", maxWidth: "100%", overflow: "hidden" }}>
                   {artist.portfolio.slice(0, 5).map((item, index) => {
                     const remaining = artist.portfolio.length - 5;
                     const isLastVisible = index === 4 && remaining > 0;
                     return (
                       <div
                         key={item.id}
+                        className="artist-card-thumb-item"
                         style={{
                           position: "relative",
                           width: "clamp(52px, 18vw, 72px)",
