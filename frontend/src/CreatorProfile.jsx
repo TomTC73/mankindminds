@@ -13,6 +13,7 @@ function CreatorProfile() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [visibleCount, setVisibleCount] = useState(TATTOO_GALLERY_PAGE_SIZE);
+  const [selectedImage, setSelectedImage] = useState(null);
 
   useEffect(() => {
     fetch(`${API_URL}/creators/${encodeURIComponent(slug)}`)
@@ -150,7 +151,12 @@ function CreatorProfile() {
           <h3>Selected Work</h3>
           <div className="creator-gallery">
             {(isTattooCreator ? creator.gallery.slice(0, visibleCount) : creator.gallery).map((imageUrl, idx) => (
-              <div className="creator-gallery-item" key={`${imageUrl}-${idx}`}>
+              <div 
+                className="creator-gallery-item" 
+                key={`${imageUrl}-${idx}`}
+                onClick={() => setSelectedImage(imageUrl)}
+                style={{ cursor: "pointer" }}
+              >
                 <img src={resolveCreatorImageUrl(imageUrl)} alt={`${creator.name} work`} loading="lazy" />
               </div>
             ))}

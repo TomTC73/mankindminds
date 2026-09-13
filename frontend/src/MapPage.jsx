@@ -7,7 +7,6 @@ import "./MapPage.css";
 
 import Header from "./Header";
 import { API_URL, resolveStudioImageUrl, resolveCreatorImageUrl } from "./apiConfig";
-import { API_URL, resolveStudioImageUrl, resolveCreatorImageUrl } from "./apiConfig";
 
 const logoIcon = "/favicon.png";
 
