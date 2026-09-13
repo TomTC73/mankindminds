@@ -211,6 +211,9 @@ class App(tk.Tk):
         self.selected = None
         self.photo_path = None
         self.gallery_paths = []
+        self.gallery_replacements = {}
+        self.gallery_deleted = []
+        self.gallery_tree = None
         self.studios = []
         self.selected_studio = None
         self.studio_fields = {}
@@ -349,7 +352,7 @@ class App(tk.Tk):
         self.preview_text.tag_configure("label", foreground=PALETTE["accent"], font=("Segoe UI Semibold", 9))
         self.update_preview()
         tattoo_tab = ttk.Frame(tabs, style="Panel.TFrame", padding=20)
-        tabs.insert(1, tattoo_tab, text="Tattoo Creators")
+        tabs.add(tattoo_tab, text="Tattoo Creators")
         self.build_tattoo_creators_panel(tattoo_tab)
         shops_tab = ttk.Frame(tabs, style="Panel.TFrame", padding=20)
         tabs.add(shops_tab, text="Tattoo shops")
@@ -412,6 +415,41 @@ class App(tk.Tk):
         ttk.Button(photo_buttons, text="Add gallery photos", style="Outline.TButton", command=self.choose_gallery).pack(side="left", padx=8)
         self.gallery_label = ttk.Label(self.form, text="No gallery photos selected", style="Muted.TLabel")
         self.gallery_label.pack(anchor="w")
+
+        gallery_frame = ttk.Frame(self.form, style="Panel.TFrame")
+        gallery_frame.pack(fill="x", pady=(8, 0))
+        self.gallery_tree = ttk.Treeview(
+            gallery_frame,
+            columns=("photo", "status"),
+            show="headings",
+            height=6,
+            selectmode="browse",
+        )
+        self.gallery_tree.heading("photo", text="Gallery photo")
+        self.gallery_tree.heading("status", text="Status")
+        self.gallery_tree.column("photo", width=360)
+        self.gallery_tree.column("status", width=150)
+        self.gallery_tree.pack(fill="x", expand=True)
+
+        gallery_actions = ttk.Frame(self.form, style="Panel.TFrame")
+        gallery_actions.pack(fill="x", pady=(8, 4))
+        ttk.Button(
+            gallery_actions, text="View selected", style="Outline.TButton",
+            command=self.view_selected_gallery
+        ).pack(side="left")
+        ttk.Button(
+            gallery_actions, text="Replace selected", style="Outline.TButton",
+            command=self.replace_selected_gallery
+        ).pack(side="left", padx=8)
+        ttk.Button(
+            gallery_actions, text="Delete selected", style="Outline.TButton",
+            command=self.delete_selected_gallery
+        ).pack(side="left")
+        ttk.Label(
+            self.form,
+            text="Select a photo above to view it, replace it, or remove it. Changes are applied when you publish.",
+            style="Muted.TLabel",
+        ).pack(anchor="w", pady=(0, 8))
 
     def add_heading(self, title, subtitle):
         ttk.Label(self.form, text=title, style="Section.TLabel").pack(anchor="w", pady=(12, 2))
@@ -638,7 +676,11 @@ class App(tk.Tk):
 
     def auto_refresh(self):
         if self.client:
-            self.load_users(silent=True)
+            # Never replace the in-progress creator editor from GitHub while staff
+            # are editing a creator. This used to make unsaved tattooist details
+            # disappear during the automatic refresh.
+            if not self.creator_editor_enabled:
+                self.load_users(silent=True)
             self.load_studios(silent=True)
             self.load_tickets(silent=True)
             if self.analytics:
@@ -1311,8 +1353,10 @@ class App(tk.Tk):
             self.add_social_row(link)
         self.photo_path = None
         self.gallery_paths = []
+        self.gallery_replacements = {}
+        self.gallery_deleted = []
         self.photo_label.config(text=f"Current profile photo: {creator.get('imageUrl', 'none')}")
-        self.gallery_label.config(text=f"{len(creator.get('gallery', []))} existing gallery photos")
+        self.refresh_gallery_manager()
         self.canvas.yview_moveto(0)
         self.update_preview()
 
@@ -1332,8 +1376,131 @@ class App(tk.Tk):
             self.photo_label.config(text=os.path.basename(self.photo_path))
 
     def choose_gallery(self):
-        self.gallery_paths = list(filedialog.askopenfilenames(filetypes=[("Images", "*.jpg *.jpeg *.png *.webp")]))
-        self.gallery_label.config(text=f"{len(self.gallery_paths)} gallery photos selected")
+        paths = list(filedialog.askopenfilenames(filetypes=[("Images", "*.jpg *.jpeg *.png *.webp")]))
+        if paths:
+            self.gallery_paths.extend(paths)
+            self.refresh_gallery_manager()
+
+    def refresh_gallery_manager(self):
+        if not self.gallery_tree:
+            return
+        self.gallery_tree.delete(*self.gallery_tree.get_children())
+
+        existing = list(self.selected.get("gallery", [])) if self.selected else []
+        for index, image_url in enumerate(existing):
+            status = "Replacement staged" if image_url in self.gallery_replacements else "Published"
+            self.gallery_tree.insert(
+                "", "end", iid=f"existing:{index}",
+                values=(image_url.rsplit("/", 1)[-1], status),
+            )
+
+        for index, path in enumerate(self.gallery_paths):
+            self.gallery_tree.insert(
+                "", "end", iid=f"new:{index}",
+                values=(os.path.basename(path), "New / pending"),
+            )
+
+        total = len(existing) + len(self.gallery_paths)
+        self.gallery_label.config(
+            text=f"{total} gallery photos ({len(existing)} published, {len(self.gallery_paths)} pending)"
+            if total else "No gallery photos selected"
+        )
+
+    def _selected_gallery_item(self):
+        if not self.gallery_tree:
+            return None
+        selection = self.gallery_tree.selection()
+        if not selection:
+            messagebox.showinfo("No gallery photo selected", "Select a gallery photo first.")
+            return None
+        kind, raw_index = selection[0].split(":", 1)
+        index = int(raw_index)
+
+        if kind == "existing":
+            existing = list(self.selected.get("gallery", [])) if self.selected else []
+            if index >= len(existing):
+                return None
+            return kind, index, existing[index]
+
+        if index >= len(self.gallery_paths):
+            return None
+        return kind, index, self.gallery_paths[index]
+
+    def view_selected_gallery(self):
+        item = self._selected_gallery_item()
+        if not item:
+            return
+        kind, _index, value = item
+        try:
+            if kind == "new":
+                webbrowser.open(
+                    urllib.parse.urljoin(
+                        "file:",
+                        urllib.request.pathname2url(os.path.abspath(value)),
+                    )
+                )
+                return
+
+            branch = self.client.repository()["default_branch"] if self.client else "main"
+            asset_path = value.lstrip("/")
+            url = (
+                f"https://github.com/{OWNER}/{REPO}/blob/"
+                f"{urllib.parse.quote(branch, safe='')}/"
+                f"{urllib.parse.quote(asset_path, safe='/')}"
+            )
+            webbrowser.open(url)
+        except Exception as error:
+            messagebox.showerror("Could not view gallery photo", str(error))
+
+    def replace_selected_gallery(self):
+        item = self._selected_gallery_item()
+        if not item:
+            return
+        kind, index, value = item
+        replacement = filedialog.askopenfilename(
+            filetypes=[("Images", "*.jpg *.jpeg *.png *.webp")]
+        )
+        if not replacement:
+            return
+
+        if kind == "existing":
+            self.gallery_replacements[value] = replacement
+        else:
+            self.gallery_paths[index] = replacement
+
+        self.refresh_gallery_manager()
+        self.set_status(
+            "Gallery photo replacement staged. Publish to make it live.",
+            PALETTE["accent"],
+        )
+
+    def delete_selected_gallery(self):
+        item = self._selected_gallery_item()
+        if not item:
+            return
+        kind, index, value = item
+
+        if kind == "existing":
+            name = value.rsplit("/", 1)[-1]
+            if not messagebox.askyesno(
+                "Delete gallery photo",
+                f"Remove {name} from this creator's gallery? The uploaded asset will be deleted when you publish.",
+            ):
+                return
+
+            existing = list(self.selected.get("gallery", []))
+            existing.pop(index)
+            self.selected["gallery"] = existing
+            self.gallery_deleted.append(value)
+            self.gallery_replacements.pop(value, None)
+        else:
+            self.gallery_paths.pop(index)
+
+        self.refresh_gallery_manager()
+        self.set_status(
+            "Gallery photo removed from the pending changes. Publish to apply it.",
+            PALETTE["accent"],
+        )
 
     def read_form(self):
         self.ensure_standard_sections()
@@ -1350,15 +1517,23 @@ class App(tk.Tk):
             raise ValueError("Complete or remove every profile section.")
         if any(not item["name"] or not item["url"] for item in links):
             raise ValueError("Complete or remove every social link.")
-        creator = {key: widget.get().strip() for key, widget in self.fields.items()}
+        # Preserve the complete existing record and update only fields managed by
+        # this editor. Rebuilding the dict from the form alone could silently drop
+        # tattooist metadata (or any newer backend fields) when publishing.
+        creator = dict(self.selected or {})
+        creator.update({key: widget.get().strip() for key, widget in self.fields.items()})
+
         is_tattooist = creator.get("category") == "Tattooist"
         styles_raw = creator.pop("styles", "")
         if is_tattooist:
             creator["styles"] = [style.strip() for style in styles_raw.split(",") if style.strip()]
         else:
+            # Category changes away from Tattooist are an intentional removal of
+            # tattooist-only fields.
             creator.pop("studio", None)
             creator.pop("location", None)
             creator.pop("rating", None)
+
         creator["badgeText"] = STANDARD_BADGE
         creator["aiFreeCard"] = STANDARD_CARD.copy()
         creator["sections"] = sections
@@ -1428,9 +1603,27 @@ class App(tk.Tk):
                             self.existing_asset_sha(new_image_path, base),
                         )
                     creator["imageUrl"] = f"/assets/{filename}"
-                for index, path in enumerate(self.gallery_paths, start=1):
+                for image_url, replacement_path in self.gallery_replacements.items():
+                    gallery_path = image_url.lstrip("/")
+                    with open(replacement_path, "rb") as photo:
+                        self.client.put_file(
+                            gallery_path,
+                            photo.read(),
+                            base,
+                            f"Replace gallery photo for {creator['name']}",
+                            self.existing_asset_sha(gallery_path, base),
+                        )
+
+                for image_url in self.gallery_deleted:
+                    self.delete_asset_if_present(
+                        image_url,
+                        base,
+                        f"Delete gallery photo for {creator['name']}",
+                    )
+
+                for path in self.gallery_paths:
                     extension = os.path.splitext(path)[1].lower() or ".jpg"
-                    filename = f"{creator['slug']}-gallery-{index}{extension}"
+                    filename = f"{creator['slug']}-gallery-{int(time.time() * 1000)}{extension}"
                     gallery_path = f"{ASSET_PATH}/{filename}"
                     with open(path, "rb") as photo:
                         self.client.put_file(
@@ -1441,10 +1634,26 @@ class App(tk.Tk):
                             self.existing_asset_sha(gallery_path, base),
                         )
                     creator["gallery"].append(f"/assets/{filename}")
+
                 data_file = self.client.file(DATA_PATH, base)
                 creators = json.loads(base64.b64decode(data_file["content"]).decode("utf-8"))
+
+                # Merge into the latest GitHub record instead of replacing it with
+                # only the fields currently represented by the editor.
+                # This is especially important for tattooist details.
+                merged = None
+                for item in creators:
+                    if item.get("slug") == creator["slug"]:
+                        merged = dict(item)
+                        merged.update(creator)
+                        break
+
+                if merged is None:
+                    merged = creator
+
                 creators = [item for item in creators if item.get("slug") != creator["slug"]]
-                creators.append(creator)
+                creators.append(merged)
+
                 self.client.put_file(
                     DATA_PATH,
                     json.dumps(creators, indent=2, ensure_ascii=False).encode("utf-8"),
@@ -1452,12 +1661,26 @@ class App(tk.Tk):
                     f"Update creator profile: {creator['name']}",
                     data_file["sha"],
                 )
+
+                # Keep the in-memory creator list in sync with GitHub immediately.
+                # New profiles used to be written successfully, but self.creators was
+                # not updated, so the new tattooist disappeared from the editor/list
+                # until a full reload (and could not be selected for gallery editing).
+                self.creators = [item for item in creators]
+                self.selected = merged
                 self.after(0, self.publish_complete)
             except Exception as error:
                 self.after(0, lambda: self.publish_failed(str(error)))
         threading.Thread(target=work, daemon=True).start()
 
     def publish_complete(self):
+        # Refresh the local creator/tattooist lists without reloading from GitHub.
+        # This keeps a newly-created profile selectable immediately after publishing.
+        self.refresh_list(silent=True)
+        self.gallery_paths = []
+        self.gallery_replacements = {}
+        self.gallery_deleted = []
+        self.refresh_gallery_manager()
         self.publish_button.config(state="disabled", text="Deploying...")
         self.set_status("Published to GitHub. Starting the backend deployment...", "#46705b")
         self.deploy_latest(show_success=False)
