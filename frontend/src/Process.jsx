@@ -160,8 +160,8 @@ function Process() {
             <div className="tattoo-process-gallery">
               <figure className="tattoo-process-image-frame">
                 <img
-                  src="/Tatooshops/image.png"
-                  alt="Tattoo detail from a contemporary studio"
+                  src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRd4X9ibBUcl8OqfhaUk5tqHha_fsSYgo3lYCJqkgQW4C-FAZm7KRpQ8fw&s=10"
+                  alt="An early tattoo shop based outside of Waterloo"
                 />
                 <figcaption>Living linework, carrying the tradition forward.</figcaption>
               </figure>
