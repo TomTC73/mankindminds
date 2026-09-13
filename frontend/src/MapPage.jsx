@@ -1851,134 +1851,161 @@ export default function MapPage({ embedded = false }) {
           </Link>
         ))}
 
-        {/* Artist Sign-Up CTA */}
-        <div
+ {/* Artist Sign-Up CTA */}
+<div
+  style={{
+    marginTop: "72px",
+    padding: "64px 48px",
+    borderRadius: "20px",
+    backgroundColor: "#ffffff",
+    border: "1px solid rgba(15,23,42,0.06)",
+    color: "#0f172a",
+    position: "relative",
+  }}
+>
+  {/* Logo */}
+  <img
+    src="/favicon.png"
+    alt="Mankind Minds Logo"
+    style={{
+      width: "58px",
+      height: "58px",
+      objectFit: "contain",
+      marginBottom: "32px",
+      opacity: 0.9,
+      display: "block",
+      marginLeft: "auto",
+      marginRight: "auto",
+    }}
+  />
+
+  {/* Title */}
+  <p
+    style={{
+      margin: "0 0 10px 0",
+      fontSize: "12px",
+      fontWeight: "600",
+      letterSpacing: "1.4px",
+      color: "#1e293b",
+      textTransform: "uppercase",
+      textAlign: "center",
+    }}
+  >
+    For Tattoo Artists
+  </p>
+
+  <h2
+    style={{
+      margin: "0 0 20px 0",
+      fontSize: "30px",
+      fontWeight: "800",
+      letterSpacing: "-0.4px",
+      color: "#0f172a",
+      textAlign: "center",
+    }}
+  >
+    Get Verified. Get Discovered.
+  </h2>
+
+  {/* Description */}
+  <p
+    style={{
+      margin: "0 auto 40px auto",
+      maxWidth: "540px",
+      fontSize: "16px",
+      lineHeight: "1.65",
+      color: "#475569",
+      textAlign: "center",
+    }}
+  >
+    Join a curated network of professional tattoo artists and studios.
+    Showcase your work, earn trust with verification, and connect with
+    clients searching for certified talent.
+  </p>
+
+  {/* Benefits */}
+  <div
+    style={{
+      display: "flex",
+      justifyContent: "center",
+      flexWrap: "wrap",
+      gap: "32px",
+      marginBottom: "48px",
+    }}
+  >
+    {[
+      "Verified Status",
+      "Higher Visibility",
+      "Portfolio Showcase",
+    ].map((label) => (
+      <div
+        key={label}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "10px",
+          fontSize: "15px",
+          fontWeight: "600",
+          color: "#334155",
+        }}
+      >
+        <span
           style={{
-            marginTop: "56px",
-            padding: "48px 40px",
-            borderRadius: "20px",
-            background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)",
-            boxShadow: "0 12px 32px rgba(15, 23, 42, 0.25)",
-            textAlign: "center",
-            color: "#ffffff",
-            position: "relative",
-            overflow: "hidden",
+            width: "6px",
+            height: "6px",
+            borderRadius: "50%",
+            backgroundColor: "#0f172a",
+            display: "inline-block",
           }}
-        >
-          <div
-            style={{
-              position: "absolute",
-              top: "-60px",
-              right: "-60px",
-              width: "200px",
-              height: "200px",
-              borderRadius: "50%",
-              background: "radial-gradient(circle, rgba(27,138,90,0.25) 0%, rgba(27,138,90,0) 70%)",
-            }}
-          />
-          <div
-            style={{
-              position: "absolute",
-              bottom: "-80px",
-              left: "-40px",
-              width: "220px",
-              height: "220px",
-              borderRadius: "50%",
-              background: "radial-gradient(circle, rgba(74,222,128,0.12) 0%, rgba(74,222,128,0) 70%)",
-            }}
-          />
+        />
+        {label}
+      </div>
+    ))}
+  </div>
 
-          <p
-            style={{
-              margin: "0 0 10px 0",
-              fontSize: "13px",
-              fontWeight: "700",
-              letterSpacing: "1.5px",
-              color: "#4ade80",
-              textTransform: "uppercase",
-            }}
-          >
-            For Tattoo Artists
-          </p>
+  {/* CTA Button */}
+  <button
+    onClick={handleVerifyArtist}
+    style={{
+      padding: "14px 40px",
+      fontSize: "15px",
+      fontWeight: "700",
+      borderRadius: "8px",
+      border: "1px solid #0f172a",
+      backgroundColor: "#0f172a",
+      color: "#ffffff",
+      cursor: "pointer",
+      transition: "all 0.2s ease",
+      display: "block",
+      marginLeft: "auto",
+      marginRight: "auto",
+    }}
+    onMouseEnter={(e) => {
+      e.currentTarget.style.backgroundColor = "#1e293b";
+      e.currentTarget.style.transform = "translateY(-2px)";
+    }}
+    onMouseLeave={(e) => {
+      e.currentTarget.style.backgroundColor = "#0f172a";
+      e.currentTarget.style.transform = "translateY(0)";
+    }}
+  >
+    Apply to Join
+  </button>
 
-          <h2 style={{ margin: "0 0 14px 0", fontSize: "32px", fontWeight: "800", letterSpacing: "-0.5px" }}>
-            Get Verified. Get Discovered.
-          </h2>
+  <p
+    style={{
+      marginTop: "18px",
+      fontSize: "12px",
+      color: "#64748b",
+      textAlign: "center",
+    }}
+  >
+    Applications reviewed within 48 hours · No fees to apply
+  </p>
+</div>
 
-          <p
-            style={{
-              margin: "0 auto 32px auto",
-              fontSize: "16px",
-              lineHeight: "1.6",
-              color: "#cbd5e1",
-              maxWidth: "560px",
-            }}
-          >
-            Join a growing network of verified studios and artists. Showcase your portfolio,
-            build trust with a verification badge, and get discovered by clients actively
-            searching for certified talent near them.
-          </p>
 
-          <div style={{ display: "flex", justifyContent: "center", flexWrap: "wrap", gap: "28px", marginBottom: "36px" }}>
-            {[
-              { icon: "✓", label: "Verified Badge" },
-              { icon: "📈", label: "Increased Visibility" },
-              { icon: "🖼️", label: "Free Portfolio Page" },
-            ].map((benefit) => (
-              <div
-                key={benefit.label}
-                style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "14px", fontWeight: "600", color: "#e2e8f0" }}
-              >
-                <span
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    width: "24px",
-                    height: "24px",
-                    borderRadius: "50%",
-                    backgroundColor: "rgba(74, 222, 128, 0.15)",
-                    color: "#4ade80",
-                    fontSize: "13px",
-                  }}
-                >
-                  {benefit.icon}
-                </span>
-                {benefit.label}
-              </div>
-            ))}
-          </div>
-
-          <button
-            onClick={handleVerifyArtist}
-            style={{
-              padding: "14px 36px",
-              fontSize: "15px",
-              fontWeight: "700",
-              borderRadius: "10px",
-              border: "none",
-              cursor: "pointer",
-              backgroundColor: "#1B8A5A",
-              color: "#ffffff",
-              boxShadow: "0 6px 18px rgba(27, 138, 90, 0.35)",
-              transition: "background-color 0.2s ease, transform 0.15s ease",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = "#146c46";
-              e.currentTarget.style.transform = "translateY(-1px)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = "#1B8A5A";
-              e.currentTarget.style.transform = "translateY(0)";
-            }}
-          >
-            Apply to Join
-          </button>
-
-          <p style={{ marginTop: "16px", fontSize: "12px", color: "#94a3b8" }}>
-            Applications reviewed within 48 hours · No fees to apply
-          </p>
-        </div>
+       
       </div>
     </div>
   );
