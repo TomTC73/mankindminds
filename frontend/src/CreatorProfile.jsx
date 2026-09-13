@@ -58,21 +58,16 @@ function CreatorProfile() {
       <Header />
 
       {/* Top Back Navigation Bar */}
-      <div style={{ maxWidth: "1000px", margin: "20px auto 0", padding: "0 20px" }}>
+      <div style={{ maxWidth: "900px", margin: "24px auto 0", padding: "0 20px" }}>
         <Link
           to="/certificates"
+          className="button"
           style={{
             display: "inline-flex",
             alignItems: "center",
             gap: "8px",
-            textDecoration: "none",
-            color: "#475569",
-            fontWeight: "600",
-            fontSize: "14px",
-            background: "#f1f5f9",
+            fontSize: "13px",
             padding: "8px 16px",
-            borderRadius: "8px",
-            transition: "all 0.2s ease",
           }}
         >
           ← Back to All Creators
@@ -83,11 +78,11 @@ function CreatorProfile() {
         <div className="hero-box profile-hero-box" style={{ maxWidth: "900px" }}>
           <div className="profile-header">
             <img src={resolveCreatorImageUrl(creator.imageUrl)} alt={`${creator.name} profile`} className="profile-image" />
-            <div style={{ flex: 1 }}>
-              <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
+            <div className="profile-header-meta" style={{ flex: 1 }}>
+              <div className="profile-badge-row" style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
                 <span className="verified-badge">{creator.badgeText || "Verified Creator"}</span>
                 {creator.rating && (
-                  <span style={{ fontSize: "13px", fontWeight: "700", color: "#d97706", backgroundColor: "#fef3c7", padding: "2px 8px", borderRadius: "12px" }}>
+                  <span style={{ fontSize: "13px", fontWeight: "700", color: "var(--accent, #8d2d20)", border: "1px solid var(--line, #c8c8c8)", padding: "2px 8px" }}>
                     ★ {creator.rating}
                   </span>
                 )}
@@ -96,7 +91,7 @@ function CreatorProfile() {
               <p className="creator-category" style={{ margin: "0 0 10px 0" }}>{creator.category}</p>
 
               {(creator.studio || creator.location) && (
-                <p style={{ fontSize: "14px", color: "#64748b", margin: "0 0 10px 0", fontWeight: "500" }}>
+                <p style={{ fontSize: "14px", color: "var(--muted-ink, #666666)", margin: "0 0 10px 0", fontWeight: "500" }}>
                   {creator.studio && <span>📍 {creator.studio}</span>}
                   {creator.studio && creator.location && <span> • </span>}
                   {creator.location && <span>{creator.location}</span>}
@@ -104,17 +99,17 @@ function CreatorProfile() {
               )}
 
               {creator.styles && creator.styles.length > 0 && (
-                <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginTop: "8px" }}>
+                <div className="profile-styles-row" style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginTop: "8px" }}>
                   {creator.styles.map((style) => (
                     <span
                       key={style}
                       style={{
                         fontSize: "12px",
                         fontWeight: "600",
-                        color: "#0f172a",
-                        backgroundColor: "#e2e8f0",
+                        color: "var(--ink, #111111)",
+                        backgroundColor: "rgba(0,0,0,0.05)",
+                        border: "1px solid var(--line, #c8c8c8)",
                         padding: "3px 10px",
-                        borderRadius: "16px",
                       }}
                     >
                       {style}
@@ -125,13 +120,13 @@ function CreatorProfile() {
             </div>
           </div>
 
-          <p style={{ fontSize: "16px", lineHeight: "1.6", color: "#334155", margin: "16px 0" }}>{creator.bio}</p>
+          <p style={{ fontSize: "16px", lineHeight: "1.6", margin: "16px 0" }}>{creator.bio}</p>
 
           {creator.aiFreeCard && (
-            <div className="ai-free-card" style={{ borderRadius: "12px", border: "1px solid #1B8A5A", backgroundColor: "#f0fdf4", padding: "20px" }}>
-              <h3 style={{ margin: "0 0 8px 0", color: "#166534" }}>{creator.aiFreeCard.title}</h3>
-              <p style={{ margin: "0 0 12px 0", color: "#15803d" }}>{creator.aiFreeCard.description}</p>
-              <strong style={{ color: "#166534", fontSize: "14px" }}>✓ Status: {creator.aiFreeCard.status}</strong>
+            <div className="ai-free-card">
+              <h3>{creator.aiFreeCard.title}</h3>
+              <p>{creator.aiFreeCard.description}</p>
+              <strong>Status: {creator.aiFreeCard.status}</strong>
             </div>
           )}
         </div>
