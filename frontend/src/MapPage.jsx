@@ -794,8 +794,6 @@ export default function MapPage({ embedded = false }) {
     ...NORWICH_LOCATIONS.map((studio) => ({ ...studio, city: "Norwich" })),
   ]);
 
-  const displayArtists = featuredArtists.length > 0 ? featuredArtists : ARTISTS_DATA;
-
   const activeLocations =
     activeCity === "All"
       ? studioLocations
