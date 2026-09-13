@@ -163,7 +163,7 @@ function Process() {
                   src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRd4X9ibBUcl8OqfhaUk5tqHha_fsSYgo3lYCJqkgQW4C-FAZm7KRpQ8fw&s=10"
                   alt="An early tattoo shop based outside of Waterloo"
                 />
-                <figcaption>Living linework, carrying the tradition forward.</figcaption>
+                <figcaption>One of Burchett's stalls, outside of Waterloo.</figcaption>
               </figure>
               <figure className="tattoo-process-image-frame tattoo-process-history-image">
                 <img
