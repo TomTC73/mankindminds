@@ -7,6 +7,7 @@ import "./MapPage.css";
 
 import Header from "./Header";
 import { API_URL, resolveStudioImageUrl, resolveCreatorImageUrl } from "./apiConfig";
+import { API_URL, resolveStudioImageUrl, resolveCreatorImageUrl } from "./apiConfig";
 
 const logoIcon = "/favicon.png";
 
@@ -653,9 +654,12 @@ const NORWICH_LOCATIONS = [
 const FALLBACK_ARTISTS_DATA = [
   {
     id: "artist-isabella-sala",
+    slug: "isabella-sala",
     name: "Isabella Sala",
     creatorSlug: "isabella-sala",
     handle: "@isabellasalatattoos",
+    category: "Tattooist",
+    imageUrl: "/Artist1work/shot1_r5_c5.png",
     instagram: {
       url: "https://www.instagram.com/isabellasalatattoos/",
       icon: "/icons/instagram.png",
@@ -665,6 +669,7 @@ const FALLBACK_ARTISTS_DATA = [
     studio: "Isabella Sala Tattoos",
     location: "Italy",
     styles: ["Fine Line", "Minimalist", "Delicate Blackwork"],
+    summary: "Italian fine-line tattoo artist known for elegant, minimalist designs with soft detailing and clean precision.",
     bio: "Italian fine-line tattoo artist known for elegant, minimalist designs with soft detailing and clean precision.",
     rating: "4.9",
     verified: true,
@@ -790,6 +795,8 @@ export default function MapPage({ embedded = false }) {
     ...NORWICH_LOCATIONS.map((studio) => ({ ...studio, city: "Norwich" })),
   ]);
 
+  const displayArtists = featuredArtists.length > 0 ? featuredArtists : ARTISTS_DATA;
+
   const activeLocations =
     activeCity === "All"
       ? studioLocations
@@ -807,6 +814,7 @@ export default function MapPage({ embedded = false }) {
   const artistSuggestions = artistsData.filter((artist) => {
     const query = artistSearchTerm.toLowerCase().trim();
     if (!query) return false;
+    const styles = artist.styles || [];
     return (
       artist.name.toLowerCase().includes(query) ||
       (artist.handle || "").toLowerCase().includes(query) ||
@@ -964,14 +972,19 @@ export default function MapPage({ embedded = false }) {
   };
 
   const handleSelectArtist = (artist) => {
+    const artistSlug = artist.slug || artist.id;
+    if (artist.slug) {
+      window.location.href = `/creators/${artist.slug}`;
+      return;
+    }
     setActiveSection("artists");
     setArtistSearchTerm("");
     setIsArtistDropdownOpen(false);
-    const node = artistCardRefs.current[artist.id];
+    const node = artistCardRefs.current[artistSlug];
     if (node) {
       node.scrollIntoView({ behavior: "smooth", block: "start" });
     }
-    setHighlightedArtistId(artist.id);
+    setHighlightedArtistId(artistSlug);
   };
 
   useEffect(() => {
