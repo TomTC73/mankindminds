@@ -97,7 +97,7 @@ function CreatorProfile() {
 
               {(creator.studio || creator.location) && (
                 <p style={{ fontSize: "14px", color: "#64748b", margin: "0 0 10px 0", fontWeight: "500" }}>
-                  {creator.studio && <span>📍 {creator.studio}</span>}
+                  {creator.studio && <span>{creator.studio}</span>}
                   {creator.studio && creator.location && <span> • </span>}
                   {creator.location && <span>{creator.location}</span>}
                 </p>
