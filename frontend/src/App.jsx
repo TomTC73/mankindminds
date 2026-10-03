@@ -16,6 +16,7 @@ import PrivacyPolicy from "./PrivacyPolicy";
 import Terms from "./Terms";
 import AnalyticsTracker from "./AnalyticsTracker";
 import Artists from "./artists";
+import Report from "./Report";
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -50,6 +51,9 @@ function App() {
 
         {/* Dynamic Route to handle ALL creators */}
         <Route path="/creators/:slug" element={<CreatorProfile />} />
+
+        {/* Route for reporting creators */}
+        <Route path="/report" element={<Report />} />
 
         <Route path="/apply" element={<CreatorApplication />} />
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />

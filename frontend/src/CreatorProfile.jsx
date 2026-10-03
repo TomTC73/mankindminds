@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import Header from "./Header";
 import Footer from "./Footer";
 import { API_URL, resolveCreatorImageUrl, resolveSafeExternalUrl } from "./apiConfig";
@@ -9,6 +9,7 @@ const TATTOO_GALLERY_PAGE_SIZE = 9;
 
 function CreatorProfile() {
   const { slug } = useParams();
+  const navigate = useNavigate();
   const [creator, setCreator] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -36,6 +37,16 @@ function CreatorProfile() {
   useEffect(() => {
     setVisibleCount(TATTOO_GALLERY_PAGE_SIZE);
   }, [slug]);
+
+  const handleReportRedirect = () => {
+    navigate("/report", {
+      state: {
+        creatorSlug: slug,
+        creatorName: creator?.name,
+        creatorId: creator?._id || creator?.id,
+      },
+    });
+  };
 
   if (loading) return <div style={{ padding: "2rem", textAlign: "center" }}>Loading creator profile...</div>;
 
@@ -75,7 +86,48 @@ function CreatorProfile() {
       </div>
 
       <section className="hero">
-        <div className="hero-box profile-hero-box" style={{ maxWidth: "900px" }}>
+        <div className="hero-box profile-hero-box" style={{ maxWidth: "900px", position: "relative" }}>
+          
+          {/* Top-Right Small Report Icon */}
+          <button
+            type="button"
+            onClick={handleReportRedirect}
+            title="Report this profile"
+            aria-label="Report this profile"
+            style={{
+              position: "absolute",
+              top: "16px",
+              right: "16px",
+              background: "transparent",
+              border: "none",
+              cursor: "pointer",
+              padding: "6px",
+              borderRadius: "50%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "#64748b",
+              transition: "color 0.2s ease, transform 0.2s ease",
+            }}
+            onMouseOver={(e) => (e.currentTarget.style.color = "#dc2626")}
+            onMouseOut={(e) => (e.currentTarget.style.color = "#64748b")}
+          >
+            {/* SVG Flag Icon */}
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
+              <line x1="4" y1="22" x2="4" y2="15" />
+            </svg>
+          </button>
+
           <div className="profile-header">
             <img src={resolveCreatorImageUrl(creator.imageUrl)} alt={`${creator.name} profile`} className="profile-image" />
             <div className="profile-header-meta" style={{ flex: 1 }}>
@@ -224,37 +276,85 @@ function CreatorProfile() {
         </div>
       )}
 
-      {creator.socialLinks && creator.socialLinks.length > 0 && (
-        <section className="section" id="socials" style={{ textAlign: "center", padding: "30px 20px" }}>
-          <h3>Connect & Follow</h3>
-          <div className="social-links" style={{ display: "flex", flexWrap: "wrap", gap: "12px", justifyContent: "center" }}>
-            {creator.socialLinks.map((link, index) => {
-              const safeUrl = resolveSafeExternalUrl(link.url);
-              if (!safeUrl) return null;
+      {/* Social Links & Report Action Section */}
+      <section className="section" id="socials" style={{ textAlign: "center", padding: "30px 20px" }}>
+        {creator.socialLinks && creator.socialLinks.length > 0 && (
+          <>
+            <h3>Connect & Follow</h3>
+            <div className="social-links" style={{ display: "flex", flexWrap: "wrap", gap: "12px", justifyContent: "center", marginBottom: "20px" }}>
+              {creator.socialLinks.map((link, index) => {
+                const safeUrl = resolveSafeExternalUrl(link.url);
+                if (!safeUrl) return null;
 
-              return (
-                <a
-                  key={index}
-                  href={safeUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="social-link"
-                  style={{
-                    padding: "12px 22px",
-                    borderRadius: "30px",
-                    fontWeight: "600",
-                    fontSize: "14px",
-                    textDecoration: "none",
-                    transition: "all 0.2s ease",
-                  }}
-                >
-                  {link.name}
-                </a>
-              );
-            })}
-          </div>
-        </section>
-      )}
+                return (
+                  <a
+                    key={index}
+                    href={safeUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="social-link"
+                    style={{
+                      padding: "12px 22px",
+                      borderRadius: "30px",
+                      fontWeight: "600",
+                      fontSize: "14px",
+                      textDecoration: "none",
+                      transition: "all 0.2s ease",
+                    }}
+                  >
+                    {link.name}
+                  </a>
+                );
+              })}
+            </div>
+          </>
+        )}
+
+        {/* Report Button */}
+        <div style={{ marginTop: "16px" }}>
+          <button
+            type="button"
+            onClick={handleReportRedirect}
+            style={{
+              background: "none",
+              border: "1px solid #e2e8f0",
+              color: "#64748b",
+              padding: "8px 16px",
+              borderRadius: "20px",
+              fontSize: "13px",
+              fontWeight: "500",
+              cursor: "pointer",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "6px",
+              transition: "all 0.2s ease",
+            }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.borderColor = "#fca5a5";
+              e.currentTarget.style.color = "#dc2626";
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.borderColor = "#e2e8f0";
+              e.currentTarget.style.color = "#64748b";
+            }}
+          >
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
+              <line x1="4" y1="22" x2="4" y2="15" />
+            </svg>
+            Report Profile
+          </button>
+        </div>
+      </section>
 
       <Footer />
     </div>
