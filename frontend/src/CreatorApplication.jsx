@@ -2,6 +2,7 @@ import "./index.css";
 import Header from "./Header";
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { API_URL } from "./apiConfig";
 
 const categories = ["Tattoos", "Music", "Writing", "Videos", "Art"];
 
@@ -21,6 +22,9 @@ function CreatorApplication() {
   const [businessName, setBusinessName] = useState("");
   const [businessContact, setBusinessContact] = useState("");
   const [businessEmail, setBusinessEmail] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
   const [selectedCategory, setSelectedCategory] = useState(() => {
     const requestedCategory = new URLSearchParams(location.search).get("category");
     const matchingCategory = categories.find(
@@ -34,7 +38,10 @@ function CreatorApplication() {
     );
   });
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setErrorMsg("");
+
     if (
       selectedCategory === "Tattoos" &&
       applicationType === "business" &&
@@ -42,11 +49,47 @@ function CreatorApplication() {
         !businessName.trim() ||
         !businessEmail.trim())
     ) {
-      e.preventDefault();
-      alert("Please complete your name, business name, and email address.");
+      setErrorMsg("Please complete your name, business name, and email address.");
+      return;
     } else if (applicationType === "individual" && !platformHandle.trim()) {
-      e.preventDefault();
-      alert("Please provide a social media or portfolio link/username.");
+      setErrorMsg("Please provide a social media or portfolio link/username.");
+      return;
+    }
+
+    const formData = new FormData(e.currentTarget);
+    const isBusiness = applicationType === "business";
+    const application = {
+      applicationType,
+      creatorName: isBusiness ? null : formData.get("creator_name")?.trim(),
+      email: isBusiness ? null : formData.get("email")?.trim(),
+      category: selectedCategory,
+      socialPlatform: selectedPlatform,
+      socialHandle: isBusiness ? null : platformHandle.trim(),
+      businessContactName: isBusiness ? businessContact.trim() : null,
+      businessName: isBusiness ? businessName.trim() : null,
+      businessEmail: isBusiness ? businessEmail.trim() : null,
+      termsAgreement: formData.get("terms_agreement") === "Agreed",
+      aiFreeConfirmation: formData.get("ai_free_confirmation") === "Confirmed",
+    };
+
+    setSubmitting(true);
+    try {
+      const response = await fetch(`${API_URL}/applications`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(application),
+      });
+
+      if (!response.ok) {
+        const body = await response.json().catch(() => null);
+        throw new Error(body?.error || "Failed to submit your application. Please try again.");
+      }
+
+      setSubmitted(true);
+    } catch (error) {
+      setErrorMsg(error.message || "An unexpected error occurred.");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -72,42 +115,16 @@ function CreatorApplication() {
       <section className="section">
         <h3>Apply to Become Verified</h3>
 
-        <form
-          className={`application-form ${applicationType}-application`}
-          action="https://api.web3forms.com/submit"
-          method="POST"
-          onSubmit={handleSubmit}
-        >
-          <input
-            type="hidden"
-            name="access_key"
-            value="a268b81e-bb0f-4add-822b-edbb7c854136"
-          />
-
-          <input
-            type="hidden"
-            name="subject"
-            value="New Verified Creator Application"
-          />
-
-          <input
-            type="hidden"
-            name="from_name"
-            value="Mankind Minds Website"
-          />
-
-          {/* Hidden inputs to pass selected platform & handle to Web3Forms */}
-          <input
-            type="hidden"
-            name="social_platform"
-            value={selectedPlatform}
-          />
-          <input
-            type="hidden"
-            name="social_handle"
-            value={platformHandle}
-          />
-          <input type="hidden" name="application_type" value={applicationType} />
+        {submitted ? (
+          <div className="application-form" role="status" style={{ textAlign: "center" }}>
+            <h3>Application Submitted</h3>
+            <p>Thank you for applying. Our team will review your information shortly.</p>
+          </div>
+        ) : (
+          <form
+            className={`application-form ${applicationType}-application`}
+            onSubmit={handleSubmit}
+          >
 
           {selectedCategory === "Tattoos" && (
             <div className="application-type-tabs" role="tablist" aria-label="Tattoo application type">
@@ -217,6 +234,7 @@ function CreatorApplication() {
             >
               <select
                 className="platform-select"
+                name="social_platform"
                 value={selectedPlatform}
                 onChange={(e) => setSelectedPlatform(e.target.value)}
                 style={{
@@ -235,6 +253,7 @@ function CreatorApplication() {
 
               <input
                 type="text"
+                name="social_handle"
                 value={platformHandle}
                 placeholder={getPlaceholder()}
                 onChange={(e) => setPlatformHandle(e.target.value)}
@@ -285,10 +304,17 @@ function CreatorApplication() {
             verification.
           </p>
 
-          <button className="button" type="submit">
-            Submit Application
+          {errorMsg && (
+            <div role="alert" style={{ color: "var(--accent, #8d2d20)", fontSize: "14px", fontWeight: "600" }}>
+              {errorMsg}
+            </div>
+          )}
+
+          <button className="button" type="submit" disabled={submitting}>
+            {submitting ? "Submitting Application..." : "Submit Application"}
           </button>
-        </form>
+          </form>
+        )}
       </section>
 
       <footer className="footer">
