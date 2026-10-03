@@ -28,6 +28,10 @@ API = "https://api.github.com"
 DEPLOYMENT_EVENT = "deploy-backend"
 DEPLOYMENT_WORKFLOW = ".github/workflows/deploy-cloud-run.yml"
 ANALYTICS_API = "https://mankind-minds-api-151580998157.europe-west2.run.app/api/analytics"
+ACCOUNT_API = os.environ.get(
+    "MM_ACCOUNT_API",
+    "https://mankind-minds-api-151580998157.europe-west2.run.app/api/accounts",
+)
 CREATOR_NICHES = ("Tattooist", "Musician", "Writer", "Content Creator", "Artist", "Illustrator", "Photographer")
 LEGACY_NICHE_MAP = {
     "Tattoos": "Tattooist",
@@ -166,6 +170,51 @@ class AnalyticsClient:
         return self.request("/breakdown", {"dimension": dimension, "limit": limit})
 
 
+class AccountAdminClient:
+    def __init__(self, token, base_url=ACCOUNT_API):
+        self.token = token
+        self.base_url = base_url.rstrip("/")
+
+    def request(self, method, path, payload=None):
+        data = None if payload is None else json.dumps(payload).encode("utf-8")
+        request = urllib.request.Request(self.base_url + path, data=data, method=method)
+        request.add_header("Accept", "application/json")
+        request.add_header("Authorization", "Bearer " + self.token)
+        if data:
+            request.add_header("Content-Type", "application/json")
+        try:
+            with urllib.request.urlopen(request, timeout=30) as response:
+                raw = response.read()
+                return json.loads(raw) if raw else {}
+        except urllib.error.HTTPError as error:
+            detail = error.read().decode("utf-8", "replace")
+            raise RuntimeError(f"Account API returned {error.code}: {detail}") from error
+
+    def accounts(self):
+        return self.request("GET", "/staff")
+
+    def set_status(self, account_id, status):
+        return self.request("PUT", f"/staff/{urllib.parse.quote(account_id, safe='')}/status", {"status": status})
+
+    def update_profile(self, account_id, profile):
+        return self.request("PUT", f"/staff/{urllib.parse.quote(account_id, safe='')}/profile", profile)
+
+    def delete_account(self, account_id):
+        return self.request("DELETE", f"/staff/{urllib.parse.quote(account_id, safe='')}")
+
+    def reset_password(self, account_id):
+        return self.request("POST", f"/staff/{urllib.parse.quote(account_id, safe='')}/password-reset")
+
+    def bans(self):
+        return self.request("GET", "/staff/bans")
+
+    def add_ban(self, ban_type, value):
+        return self.request("POST", "/staff/bans", {"type": ban_type, "value": value})
+
+    def remove_ban(self, ban_id):
+        return self.request("DELETE", f"/staff/bans/{urllib.parse.quote(ban_id, safe='')}")
+
+
 def request_json(url, payload):
     request = urllib.request.Request(url, data=urllib.parse.urlencode(payload).encode(), method="POST")
     request.add_header("Accept", "application/json")
@@ -207,6 +256,9 @@ class App(tk.Tk):
         self.minsize(980, 650)
         self.configure(bg=PALETTE["paper"])
         self.client = None
+        self.account_admin = None
+        self.account_rows = {}
+        self.ban_rows = {}
         self.creators = []
         self.selected = None
         self.photo_path = None
@@ -365,6 +417,263 @@ class App(tk.Tk):
         analytics_tab = ttk.Frame(tabs, style="Panel.TFrame", padding=20)
         tabs.add(analytics_tab, text="Analytics")
         self.build_analytics_panel(analytics_tab)
+        accounts_tab = ttk.Frame(tabs, style="Panel.TFrame", padding=20)
+        tabs.add(accounts_tab, text="Member accounts")
+        self.build_account_admin(accounts_tab)
+
+    def build_account_admin(self, parent):
+        parent.columnconfigure(0, weight=1)
+        parent.rowconfigure(1, weight=1)
+        ttk.Label(parent, text="Member accounts", style="Section.TLabel").grid(row=0, column=0, sticky="w")
+        ttk.Label(
+            parent,
+            text="Pending accounts stay private until staff approve them. Profile data and reset links are managed here.",
+            style="Muted.TLabel",
+        ).grid(row=0, column=1, sticky="e")
+
+        self.account_tree = ttk.Treeview(
+            parent,
+            columns=("email", "name", "category", "status"),
+            show="headings",
+            selectmode="browse",
+        )
+        for column, title, width in (
+            ("email", "Email", 260),
+            ("name", "Display name", 190),
+            ("category", "Category", 120),
+            ("status", "Status", 110),
+        ):
+            self.account_tree.heading(column, text=title)
+            self.account_tree.column(column, width=width)
+        self.account_tree.grid(row=1, column=0, columnspan=2, sticky="nsew", pady=(12, 8))
+        self.account_tree.bind("<<TreeviewSelect>>", self.select_account)
+
+        actions = ttk.Frame(parent, style="Panel.TFrame")
+        actions.grid(row=2, column=0, columnspan=2, sticky="w")
+        self.account_refresh_button = ttk.Button(actions, text="Refresh", command=self.load_account_admin)
+        self.account_refresh_button.pack(side="left")
+        self.account_approve_button = ttk.Button(actions, text="Approve", command=lambda: self.set_selected_account_status("APPROVED"))
+        self.account_approve_button.pack(side="left", padx=(8, 0))
+        self.account_reject_button = ttk.Button(actions, text="Reject", command=lambda: self.set_selected_account_status("REJECTED"))
+        self.account_reject_button.pack(side="left", padx=(8, 0))
+        self.account_edit_button = ttk.Button(actions, text="Edit details", command=self.edit_selected_account)
+        self.account_edit_button.pack(side="left", padx=(8, 0))
+        self.account_reset_button = ttk.Button(actions, text="Send password reset", command=self.reset_selected_account_password)
+        self.account_reset_button.pack(side="left", padx=(8, 0))
+        self.account_delete_button = ttk.Button(actions, text="Delete account", command=self.delete_selected_account)
+        self.account_delete_button.pack(side="left", padx=(8, 0))
+
+        ban_frame = ttk.LabelFrame(parent, text="Banned email addresses and IPs", padding=12)
+        ban_frame.grid(row=3, column=0, columnspan=2, sticky="nsew", pady=(18, 0))
+        ban_frame.columnconfigure(1, weight=1)
+        self.ban_type = ttk.Combobox(ban_frame, values=("email", "ip"), state="readonly", width=10)
+        self.ban_type.set("email")
+        self.ban_type.grid(row=0, column=0, sticky="w")
+        self.ban_value = ttk.Entry(ban_frame)
+        self.ban_value.grid(row=0, column=1, sticky="ew", padx=8)
+        self.ban_value.insert(0, "")
+        self.ban_button = ttk.Button(ban_frame, text="Add ban", command=self.add_account_ban)
+        self.ban_button.grid(row=0, column=2)
+        self.ban_tree = ttk.Treeview(ban_frame, columns=("type", "label"), show="headings", height=4)
+        self.ban_tree.heading("type", text="Type")
+        self.ban_tree.heading("label", text="Blocked address (IP shown as fingerprint)")
+        self.ban_tree.column("type", width=90)
+        self.ban_tree.column("label", width=320)
+        self.ban_tree.grid(row=1, column=0, columnspan=2, sticky="ew", pady=(10, 0))
+        self.unban_button = ttk.Button(ban_frame, text="Remove selected ban", command=self.remove_selected_ban)
+        self.unban_button.grid(row=1, column=2, padx=(8, 0), pady=(10, 0), sticky="n")
+
+    def selected_account(self):
+        selection = self.account_tree.selection()
+        return self.account_rows.get(selection[0]) if selection else None
+
+    def select_account(self, _event=None):
+        enabled = bool(self.selected_account()) and bool(self.account_admin)
+        state = "normal" if enabled else "disabled"
+        for button in (
+            self.account_approve_button,
+            self.account_reject_button,
+            self.account_edit_button,
+            self.account_reset_button,
+            self.account_delete_button,
+        ):
+            button.config(state=state)
+
+    def load_account_admin(self, silent=False):
+        if not self.client:
+            if not silent:
+                self.set_status("Sign in with GitHub before managing member accounts.", PALETTE["accent"])
+            return
+        self.account_admin = AccountAdminClient(self.client.token)
+        self.set_status("Loading member accounts...", PALETTE["accent"])
+
+        def work():
+            try:
+                rows = self.account_admin.accounts()
+                bans = self.account_admin.bans()
+                self.after(0, lambda: self.refresh_account_admin(rows, bans))
+            except Exception as error:
+                self.after(0, lambda: messagebox.showerror("Could not load member accounts", str(error)))
+
+        threading.Thread(target=work, daemon=True).start()
+
+    def refresh_account_admin(self, rows, bans):
+        self.account_tree.delete(*self.account_tree.get_children())
+        self.account_rows = {}
+        for account in rows:
+            account_id = account.get("id")
+            if not account_id:
+                continue
+            self.account_rows[account_id] = account
+            self.account_tree.insert(
+                "",
+                "end",
+                iid=account_id,
+                values=(
+                    account.get("email", ""),
+                    account.get("displayName", ""),
+                    account.get("category", ""),
+                    account.get("status", ""),
+                ),
+            )
+        self.ban_tree.delete(*self.ban_tree.get_children())
+        self.ban_rows = {}
+        for ban in bans:
+            ban_id = ban.get("id")
+            if not ban_id:
+                continue
+            self.ban_rows[ban_id] = ban
+            self.ban_tree.insert(
+                "",
+                "end",
+                iid=ban_id,
+                values=(ban.get("type", ""), ban.get("label", "")),
+            )
+        self.select_account()
+        self.set_status(f"Loaded {len(rows)} member accounts and {len(bans)} active bans.", "#46705b")
+
+    def account_admin_action(self, title, action, success_message):
+        if not self.account_admin:
+            messagebox.showerror(title, "Sign in with an authorized staff GitHub account first.")
+            return
+        self.set_status(title + "...", PALETTE["accent"])
+
+        def work():
+            try:
+                action()
+                self.after(0, lambda: self.load_account_admin(silent=True))
+                self.after(0, lambda: self.set_status(success_message, "#46705b"))
+            except Exception as error:
+                self.after(0, lambda: messagebox.showerror(title, str(error)))
+
+        threading.Thread(target=work, daemon=True).start()
+
+    def set_selected_account_status(self, status):
+        account = self.selected_account()
+        if not account:
+            return
+        self.account_admin_action(
+            "Update account status",
+            lambda: self.account_admin.set_status(account["id"], status),
+            f"Account marked {status.lower()}.",
+        )
+
+    def edit_selected_account(self):
+        account = self.selected_account()
+        if not account:
+            return
+        fields = (
+            ("email", "Email address"),
+            ("displayName", "Display name"),
+            ("category", "Category"),
+            ("socialPlatform", "Social platform"),
+            ("socialHandle", "Social profile URL"),
+            ("businessName", "Business name"),
+            ("businessContactName", "Business contact"),
+            ("businessEmail", "Business email"),
+        )
+        window = tk.Toplevel(self)
+        window.title("Edit member account")
+        window.transient(self)
+        window.grab_set()
+        entries = {}
+        for row, (key, label) in enumerate(fields):
+            ttk.Label(window, text=label).grid(row=row, column=0, sticky="w", padx=12, pady=5)
+            entry = ttk.Entry(window, width=48)
+            entry.insert(0, account.get(key, "") or "")
+            entry.grid(row=row, column=1, sticky="ew", padx=12, pady=5)
+            entries[key] = entry
+        window.columnconfigure(1, weight=1)
+
+        def save():
+            profile = {key: entry.get().strip() for key, entry in entries.items()}
+            self.account_admin_action(
+                "Edit member account",
+                lambda: self.account_admin.update_profile(account["id"], profile),
+                "Member account updated.",
+            )
+            window.destroy()
+
+        ttk.Button(window, text="Save account", command=save).grid(
+            row=len(fields), column=1, sticky="e", padx=12, pady=12,
+        )
+
+    def reset_selected_account_password(self):
+        account = self.selected_account()
+        if not account:
+            return
+        if not messagebox.askyesno(
+            "Send password reset",
+            f"Send a password-reset link to {account.get('email', 'this account')}?",
+        ):
+            return
+        self.account_admin_action(
+            "Send password reset",
+            lambda: self.account_admin.reset_password(account["id"]),
+            "Password reset email sent.",
+        )
+
+    def delete_selected_account(self):
+        account = self.selected_account()
+        if not account:
+            return
+        if not messagebox.askyesno(
+            "Delete account",
+            f"Permanently delete {account.get('email', 'this account')} and its sign-in sessions?",
+        ):
+            return
+        self.account_admin_action(
+            "Delete account",
+            lambda: self.account_admin.delete_account(account["id"]),
+            "Account deleted.",
+        )
+
+    def add_account_ban(self):
+        if not self.account_admin:
+            messagebox.showerror("Manage bans", "Sign in with an authorized staff GitHub account first.")
+            return
+        value = self.ban_value.get().strip()
+        if not value or value == "Email address or IP address":
+            messagebox.showerror("Add ban", "Enter an email address or IP address.")
+            return
+        self.account_admin_action(
+            "Add ban",
+            lambda: self.account_admin.add_ban(self.ban_type.get(), value),
+            f"{self.ban_type.get().upper()} ban added.",
+        )
+
+    def remove_selected_ban(self):
+        selection = self.ban_tree.selection()
+        if not selection:
+            return
+        ban_id = selection[0]
+        if not messagebox.askyesno("Remove ban", "Allow this email address or IP to use the site again?"):
+            return
+        self.account_admin_action(
+            "Remove ban",
+            lambda: self.account_admin.remove_ban(ban_id),
+            "Ban removed.",
+        )
 
     def build_form(self):
         for widget in self.form.winfo_children():
@@ -665,6 +974,7 @@ class App(tk.Tk):
         self.load_users()
         self.load_studios()
         self.load_tickets()
+        self.load_account_admin()
         if self.analytics:
             self.load_analytics()
 

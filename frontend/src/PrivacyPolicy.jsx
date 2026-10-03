@@ -40,6 +40,11 @@ function PrivacyPolicy() {
             create a pseudonymous fingerprint of the submitting network's IP
             address and retain it to enforce the permanent one-application
             limit. We do not store the raw IP address with the application.
+            Account registration also stores your email, password hash, and
+            creator profile information. Your profile is private while pending
+            staff approval. Once approved, your display name, category, social
+            platform and handle, and business name may appear on the public
+            member directory. Password-reset links are sent by email.
           </p>
 
           <h4>3. Information Collected When You Browse</h4>

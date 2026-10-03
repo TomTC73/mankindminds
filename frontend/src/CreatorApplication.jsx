@@ -3,6 +3,7 @@ import Header from "./Header";
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { API_URL } from "./apiConfig";
+import { useAccount } from "./AccountContext";
 
 const categories = ["Tattoos", "Music", "Writing", "Videos", "Art"];
 
@@ -16,6 +17,7 @@ const categoryFromSection = {
 
 function CreatorApplication() {
   const location = useLocation();
+  const { account, token } = useAccount();
   const [selectedPlatform, setSelectedPlatform] = useState("Instagram");
   const [platformHandle, setPlatformHandle] = useState("");
   const [applicationType, setApplicationType] = useState("individual");
@@ -76,7 +78,10 @@ function CreatorApplication() {
     try {
       const response = await fetch(`${API_URL}/applications`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify(application),
       });
 
@@ -176,6 +181,7 @@ function CreatorApplication() {
             <input
               type="text"
               name="creator_name"
+              defaultValue={account?.displayName || ""}
               placeholder="Your name or creator name"
               required={applicationType === "individual"}
             />
@@ -189,6 +195,7 @@ function CreatorApplication() {
             <input
               type="email"
               name="email"
+              defaultValue={account?.email || ""}
               placeholder="your@email.com"
               required={applicationType === "individual"}
             />
