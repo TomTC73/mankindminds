@@ -52,46 +52,28 @@ function getCreatorNiche(category) {
 
 function VerifiedCreators() {
   const [creators, setCreators] = useState([]);
-  const [memberAccounts, setMemberAccounts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [creatorError, setCreatorError] = useState("");
-  const [memberError, setMemberError] = useState("");
   const [searchParams] = useSearchParams();
   const activeCategory = searchParams.get("category")?.toLowerCase();
   const activeCategoryGroup = categoryGroups[activeCategory] || null;
   const filteredCreators = activeCategoryGroup
     ? creators.filter((creator) => getCreatorCategory(creator.category) === activeCategory)
     : creators;
-  const filteredMemberAccounts = activeCategoryGroup
-    ? memberAccounts.filter((member) => getCreatorCategory(member.category) === activeCategory)
-    : memberAccounts;
 
   useEffect(() => {
     let active = true;
-    Promise.allSettled([
-      fetch(`${API_URL}/creators`).then((response) => {
-        if (!response.ok) throw new Error("Could not load creator certificates.");
+    fetch(`${API_URL}/creators`)
+      .then((response) => {
+        if (!response.ok) throw new Error(`Creator request failed (${response.status}).`);
         return response.json();
-      }),
-      fetch(`${API_URL}/accounts/public`).then((response) => {
-        if (!response.ok) throw new Error("Could not load approved member profiles.");
-        return response.json();
-      }),
-    ])
-      .then(([creatorResult, memberResult]) => {
-        if (!active) return;
-        if (creatorResult.status === "fulfilled") {
-          setCreators(creatorResult.value);
-        } else {
-          console.error("Error fetching creators:", creatorResult.reason);
-          setCreatorError("Creator certificates could not be loaded.");
-        }
-        if (memberResult.status === "fulfilled") {
-          setMemberAccounts(memberResult.value);
-        } else {
-          console.error("Error fetching approved member profiles:", memberResult.reason);
-          setMemberError("Approved member profiles could not be loaded.");
-        }
+      })
+      .then((result) => {
+        if (active) setCreators(result);
+      })
+      .catch((error) => {
+        console.error("Error fetching creators:", error);
+        if (active) setCreatorError("Creator certificates could not be loaded.");
       })
       .finally(() => {
         if (active) setLoading(false);
@@ -129,15 +111,15 @@ function VerifiedCreators() {
 
         {loading ? (
           <p>Loading creators...</p>
-        ) : filteredCreators.length === 0 && filteredMemberAccounts.length === 0 ? (
+        ) : filteredCreators.length === 0 ? (
           <p className="certificate-empty-state">
-            {creatorError || memberError
+            {creatorError
               ? "Verified creator profiles could not be loaded."
               : `No verified ${activeCategoryGroup?.label.toLowerCase() || "creator"} profiles yet.`}
           </p>
         ) : (
           <>
-            {(creatorError || memberError) && (
+            {creatorError && (
               <p role="alert">Some verified creator profiles could not be loaded.</p>
             )}
             <div className="creator-tabs">
@@ -175,29 +157,6 @@ function VerifiedCreators() {
               </div>
                 );
               })}
-              {filteredMemberAccounts.map((member) => (
-                <div className="creator-tab" key={`member-${member.id}`}>
-                  <div className="creator-avatar">
-                    {member.profileImageUrl ? (
-                      <img src={`${API_URL}${member.profileImageUrl}`} alt={`${member.displayName} profile`} className="creator-avatar-img" />
-                    ) : (
-                      member.displayName?.split(" ").map((word) => word[0]).join("")
-                    )}
-                  </div>
-                  <div className="creator-info">
-                    <h4>{member.displayName}</h4>
-                    <p className="creator-category">
-                      {member.category} Certificate
-                      <span> · {getCreatorNiche(member.category)}</span>
-                    </p>
-                    {member.bio && <p>{member.bio}</p>}
-                  </div>
-                  <span className="verified-badge">Verified</span>
-                  <Link to={`/members/${member.id}`}>
-                    <button className="button creator-button">View Profile</button>
-                  </Link>
-                </div>
-              ))}
             </div>
           </>
         )}

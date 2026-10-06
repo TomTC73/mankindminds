@@ -12,6 +12,9 @@ export function resolveCreatorImageUrl(imageUrl) {
   if (imageUrl.startsWith("http://") || imageUrl.startsWith("https://")) {
     return imageUrl;
   }
+  if (imageUrl.startsWith("/api/")) {
+    return encodeURI(`${API_BASE}${imageUrl}`);
+  }
   if (imageUrl.startsWith("/assets") || imageUrl.startsWith("/Artist1work")) {
     return encodeURI(`${API_BASE}${imageUrl}`);
   }
