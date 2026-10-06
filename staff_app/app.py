@@ -320,26 +320,45 @@ def normalize_creator_profile(creator):
 
 
 def creator_page_rows(creators, accounts, selected_category="All categories", query=""):
-    legacy_slugs = {
-        str(creator.get("slug", "")).casefold()
-        for creator in creators
-        if creator.get("slug")
-    }
-    rows = list(creators)
-    account_rows = []
+    approved_accounts = []
+    accounts_by_slug = {}
     for account in accounts:
-        if account.get("status") != "APPROVED" or account.get("claimRequired"):
+        if account.get("status") != "APPROVED":
             continue
-        legacy_slug = str(account.get("legacyCreatorSlug", "")).casefold()
-        account_slug = str(account.get("creatorSlug", "")).casefold()
-        if legacy_slug in legacy_slugs or account_slug in legacy_slugs:
+        approved_accounts.append(account)
+        for slug in (account.get("legacyCreatorSlug"), account.get("creatorSlug")):
+            if slug:
+                accounts_by_slug.setdefault(str(slug).casefold(), account)
+
+    rows = []
+    matched_account_ids = set()
+    for creator in creators:
+        row = {**creator, "_site_profile": True, "_source": "SITE"}
+        creator_slug = str(creator.get("slug", "")).casefold()
+        account = accounts_by_slug.get(creator_slug)
+        if account and account.get("id"):
+            row["_account_id"] = account["id"]
+            row["_account"] = account
+            matched_account_ids.add(account["id"])
+            row["_source"] = (
+                "SITE + CLAIM"
+                if account.get("claimRequired") else "SITE + ACCOUNT"
+            )
+        rows.append(row)
+
+    account_rows = []
+    for account in approved_accounts:
+        account_id = account.get("id")
+        if not account_id or account_id in matched_account_ids:
             continue
         account_rows.append({
             "name": str(account.get("displayName") or ""),
             "category": LEGACY_NICHE_MAP.get(
                 account.get("category"), account.get("category", ""),
             ),
-            "_account_id": account.get("id"),
+            "_account_id": account_id,
+            "_account": account,
+            "_source": "ACCOUNT · CLAIM NEEDED" if account.get("claimRequired") else "ACCOUNT",
         })
     rows.extend(sorted(account_rows, key=lambda row: str(row["name"]).casefold()))
 
@@ -399,6 +418,7 @@ class App(tk.Tk):
         self.ban_rows = {}
         self.creators = []
         self.selected = None
+        self.selected_account_link = None
         self.photo_path = None
         self.gallery_paths = []
         self.gallery_replacements = {}
@@ -533,7 +553,7 @@ class App(tk.Tk):
         self.user_list = ttk.Treeview(left, columns=("category",), show="tree headings", selectmode="browse")
         self.user_list.heading("#0", text="Name")
         self.user_list.heading("category", text="Category")
-        self.user_list.column("#0", width=175)
+        self.user_list.column("#0", width=200)
         self.user_list.column("category", width=95)
         self.user_list.pack(fill="both", expand=True)
         self.user_list.bind("<<TreeviewSelect>>", self.select_user)
@@ -541,6 +561,13 @@ class App(tk.Tk):
         self.new_creator_button.pack(fill="x", pady=(12, 0))
         self.remove_creator_button = ttk.Button(left, text="Remove selected creator", command=self.remove_selected_creator)
         self.remove_creator_button.pack(fill="x", pady=(8, 0))
+        self.open_linked_account_button = ttk.Button(
+            left,
+            text="Open linked account",
+            command=self.open_selected_linked_account,
+            state="disabled",
+        )
+        self.open_linked_account_button.pack(fill="x", pady=(8, 0))
 
         self.canvas = tk.Canvas(right, background=PALETTE["panel"], highlightthickness=0)
         scrollbar = ttk.Scrollbar(right, orient="vertical", command=self.canvas.yview)
@@ -1962,6 +1989,10 @@ class App(tk.Tk):
             self.section_rows[1][2].config(state="disabled", bg="#eeeae3", fg=PALETTE["muted"])
         self.new_creator_button.config(state="normal" if self.client else "disabled")
         self.remove_creator_button.config(state="normal" if enabled and self.selected else "disabled")
+        if hasattr(self, "open_linked_account_button"):
+            self.open_linked_account_button.config(
+                state="normal" if enabled and self.selected_account_link else "disabled",
+            )
 
     def set_studio_editor_enabled(self, enabled):
         self.studio_editor_enabled = enabled
@@ -2139,6 +2170,7 @@ class App(tk.Tk):
 
     def open_creator_in_editor(self, creator):
         self.selected = creator
+        self.selected_account_link = None
         self.set_creator_editor_enabled(True)
         self.fill_form(creator)
         self.tabs.select(0)
@@ -2153,6 +2185,7 @@ class App(tk.Tk):
             messagebox.showinfo("Sign in required", "Sign in with GitHub before creating a tattoo creator profile.")
             return
         self.selected = {"slug": "", "name": "", "category": "Tattooist", "sections": [], "socialLinks": [], "gallery": []}
+        self.selected_account_link = None
         self.set_creator_editor_enabled(True)
         self.fill_form(self.selected)
         self.tabs.select(0)
@@ -2309,7 +2342,10 @@ class App(tk.Tk):
             messagebox.showinfo("No creator selected", "Select a creator before removing it.")
             return
         creator = dict(self.selected)
-        if messagebox.askyesno("Remove creator", f"Remove {creator.get('name', 'this creator')} from the site?"):
+        message = f"Remove {creator.get('name', 'this creator')} from the site?"
+        if creator.get("_account_id"):
+            message += " Their linked Firestore account will remain under Verified accounts."
+        if messagebox.askyesno("Remove creator", message):
             self.remove_creator_button.config(state="disabled")
             self.set_status(f"Removing {creator.get('name', 'creator')} from the published site...", PALETTE["accent"])
             self.publish_creators_data(creator)
@@ -2386,6 +2422,7 @@ class App(tk.Tk):
             for creator in creators
         ]
         self.selected = None
+        self.selected_account_link = None
         self.refresh_list(silent=True)
         self.set_creator_editor_enabled(False)
         self.creators_published(removed)
@@ -3239,14 +3276,11 @@ class App(tk.Tk):
             account_count += is_account
             self.user_list.insert(
                 "", "end", iid=str(index),
-                text=(
-                    f"{creator.get('name', '')} · VERIFIED ACCOUNT"
-                    if is_account else f"{creator.get('name', '')} · VERIFIED"
-                ),
+                text=f"{creator.get('name', '')} · {creator.get('_source', 'SITE')}",
                 values=(creator.get("category", ""),),
             )
         self.count_label.config(
-            text=f"{len(visible)} profiles · {account_count} account-backed",
+            text=f"{len(visible)} profiles · {account_count} with accounts",
         )
         if hasattr(self, "legacy_import_button"):
             self.legacy_import_button.config(
@@ -3255,15 +3289,15 @@ class App(tk.Tk):
         if hasattr(self, "verified_legacy_count"):
             self.verified_legacy_count.config(
                 text=(
-                    f"{len(self.creators)} published pages · "
-                    f"{account_page_count} additional account profiles"
+                    f"{len(self.creators)} site pages · "
+                    f"{account_page_count} account profiles in the directory"
                 ),
             )
         self.refresh_tattoo_creator_list()
         if not silent:
             self.set_status(
                 f"{len(visible)} creator profiles shown, including {account_count} Firestore-backed profiles. "
-                "Refreshes automatically every minute.",
+                "Source identifies the site page, account, or both. Refreshes automatically every minute.",
                 "#46705b",
             )
 
@@ -3280,26 +3314,44 @@ class App(tk.Tk):
         )
         creator = visible[int(selected[0])]
         account_id = creator.get("_account_id")
-        if account_id:
-            self.selected = None
-            self.set_creator_editor_enabled(False)
-            self.tabs.select(0)
-            self.creators_subtabs.select(self.accounts_tab)
-            self.account_category.set("All categories")
-            self.refresh_approved_account_tree()
-            if account_id in self.account_tree.get_children():
-                self.account_tree.selection_set(account_id)
-                self.account_tree.focus(account_id)
-                self.account_tree.see(account_id)
-                self.select_account()
+        if account_id and not creator.get("_site_profile"):
+            self.open_account_from_creator_directory(creator["_account"])
             self.set_status(
-                f"{creator.get('name', 'Creator')} is Firestore-backed. Edit this profile under Verified accounts.",
+                f"{creator.get('name', 'Creator')} is an account-only profile. Manage it under Verified accounts.",
                 "#46705b",
             )
             return
         self.selected = creator
+        self.selected_account_link = creator.get("_account")
         self.set_creator_editor_enabled(True)
         self.fill_form(self.selected)
+
+    def open_selected_linked_account(self):
+        if self.selected_account_link:
+            self.open_account_from_creator_directory(self.selected_account_link)
+
+    def open_account_from_creator_directory(self, account):
+        account_id = account.get("id")
+        if not account_id:
+            messagebox.showerror("Account not available", "This profile does not have a linked account identifier.")
+            return
+        self.selected = None
+        self.selected_account_link = None
+        self.set_creator_editor_enabled(False)
+        self.tabs.select(0)
+        self.creators_subtabs.select(self.accounts_tab)
+        self.account_category.set("All categories")
+        self.refresh_approved_account_tree()
+        if account_id in self.account_tree.get_children():
+            self.account_tree.selection_set(account_id)
+            self.account_tree.focus(account_id)
+            self.account_tree.see(account_id)
+            self.select_account()
+        else:
+            messagebox.showerror(
+                "Account not available",
+                "The linked account is no longer approved. Refresh the account list and try again.",
+            )
 
     def fill_form(self, creator):
         for key in ("name", "slug", "description", "bio"):
@@ -3351,6 +3403,7 @@ class App(tk.Tk):
             messagebox.showinfo("Sign in required", "Sign in with GitHub before creating a creator profile.")
             return
         self.selected = {"slug": "", "name": "", "category": "Tattooist", "sections": [], "socialLinks": [], "gallery": []}
+        self.selected_account_link = None
         self.set_creator_editor_enabled(True)
         self.fill_form(self.selected)
         self.photo_label.config(text="Choose a profile photo before publishing.")
@@ -3551,6 +3604,7 @@ class App(tk.Tk):
             with open(DRAFT_PATH, "r", encoding="utf-8") as draft:
                 creator = json.load(draft)
             self.selected = creator
+            self.selected_account_link = None
             self.set_creator_editor_enabled(True)
             self.fill_form(creator)
             self.set_status("Draft loaded locally. Review it before publishing.")
@@ -3655,6 +3709,7 @@ class App(tk.Tk):
                 # until a full reload (and could not be selected for gallery editing).
                 self.creators = [item for item in creators]
                 self.selected = merged
+                self.selected_account_link = None
                 self.after(0, self.publish_complete)
             except Exception as error:
                 self.after(0, lambda: self.publish_failed(str(error)))
