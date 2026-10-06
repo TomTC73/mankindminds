@@ -5,6 +5,7 @@ import Footer from "./Footer";
 import { useAccount } from "./AccountContext";
 import { API_URL } from "./apiConfig";
 import "./index.css";
+import "./AccountPage.css";
 
 const categories = ["Tattoos", "Music", "Writing", "Videos", "Art"];
 const platforms = ["Instagram", "TikTok", "YouTube", "Website", "Other"];
@@ -12,7 +13,8 @@ const EMPTY_IMAGE_IDS = [];
 
 function AccountPage() {
   const {
-    account, loading, signIn, signUp, sendSignupVerificationCode, signOut, updateProfile,
+    account, loading, signIn, signUp, sendSignupVerificationCode,
+    sendClaimVerificationCode, claimAccount, signOut, updateProfile,
     uploadImage, deleteImage, loadImage,
   } = useAccount();
   const location = useLocation();
@@ -35,6 +37,11 @@ function AccountPage() {
   const [verificationSent, setVerificationSent] = useState(false);
   const [verificationCode, setVerificationCode] = useState("");
   const [resendCooldown, setResendCooldown] = useState(0);
+  const [claimEmail, setClaimEmail] = useState("");
+  const [claimCode, setClaimCode] = useState("");
+  const [claimPassword, setClaimPassword] = useState("");
+  const [claimPasswordConfirmation, setClaimPasswordConfirmation] = useState("");
+  const [claimCodeSent, setClaimCodeSent] = useState(false);
   const tokenFromLink = searchParams.get("token");
   const isResetRoute = location.pathname === "/account/reset-password";
   const requestedApplication = searchParams.get("next");
@@ -72,6 +79,12 @@ function AccountPage() {
   useEffect(() => {
     let active = true;
     const objectUrls = [];
+    if (account?.claimRequired) {
+      setProfilePhotoUrl("");
+      setGalleryPhotos([]);
+      setImageError("");
+      return () => { active = false; };
+    }
     const imageIds = [
       ...(account?.profileImageId ? [account.profileImageId] : []),
       ...galleryImageIds,
@@ -105,7 +118,7 @@ function AccountPage() {
       active = false;
       objectUrls.forEach((url) => URL.revokeObjectURL(url));
     };
-  }, [account?.profileImageId, galleryImageIds, loadImage]);
+  }, [account?.claimRequired, account?.profileImageId, galleryImageIds, loadImage]);
 
   const change = (event) => setForm((previous) => ({
     ...previous,
@@ -118,6 +131,7 @@ function AccountPage() {
     setError("");
     setMessage("");
     try {
+      let signedInAccount;
       if (mode === "signup") {
         if (!verificationSent) {
           if (form.password !== form.passwordConfirmation) {
@@ -132,14 +146,56 @@ function AccountPage() {
         }
         const signupDetails = { ...form };
         delete signupDetails.passwordConfirmation;
-        await signUp({ account: signupDetails, code: verificationCode.trim() });
+        signedInAccount = await signUp({ account: signupDetails, code: verificationCode.trim() });
         setMessage("Your email is verified. Your account is created and pending staff approval; your profile stays private until approval.");
       } else {
-        await signIn({ email: form.email, password: form.password });
-        setMessage("Signed in successfully.");
+        signedInAccount = await signIn({ identifier: form.email, password: form.password });
+        setMessage(signedInAccount.claimRequired ? "" : "Signed in successfully.");
       }
       const next = searchParams.get("next");
-      if (next?.startsWith("/") && !next.startsWith("//")) navigate(next, { replace: true });
+      if (!signedInAccount?.claimRequired && next?.startsWith("/") && !next.startsWith("//")) {
+        navigate(next, { replace: true });
+      }
+    } catch (requestError) {
+      setError(requestError.message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const sendClaimCode = async (event) => {
+    event.preventDefault();
+    setBusy(true);
+    setError("");
+    setMessage("");
+    try {
+      await sendClaimVerificationCode(claimEmail.trim());
+      setClaimCodeSent(true);
+      setResendCooldown(60);
+      setMessage("If this email can be used to claim your account, a verification code is on its way.");
+    } catch (requestError) {
+      setError(requestError.message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const submitClaim = async (event) => {
+    event.preventDefault();
+    if (claimPassword !== claimPasswordConfirmation) {
+      setError("The passwords do not match.");
+      return;
+    }
+    setBusy(true);
+    setError("");
+    setMessage("");
+    try {
+      await claimAccount({
+        email: claimEmail.trim(),
+        code: claimCode.trim(),
+        newPassword: claimPassword,
+      });
+      setMessage("Your account is claimed. Your new email and password are ready to use.");
     } catch (requestError) {
       setError(requestError.message);
     } finally {
@@ -317,6 +373,72 @@ function AccountPage() {
                 </div>
               )}
             </section>
+          ) : account?.claimRequired ? (
+            <section className="account-reset-section">
+              <p className="account-eyebrow">CREATOR ACCOUNT CLAIM</p>
+              <h2>Make this account yours</h2>
+              <p className="account-section-description">
+                You signed in with a one-time username. Verify an email address you control and choose a new password to claim this account.
+              </p>
+              <div className="account-notice account-privacy-notice">
+                <span className="account-notice-icon" aria-hidden="true">i</span>
+                <p><strong>Temporary sign-in:</strong> {account.loginUsername || account.email || "Provided by Mankind Minds staff"}. Your temporary password stops working when you finish this step.</p>
+              </div>
+              {!claimCodeSent ? (
+                <form className="account-form" onSubmit={sendClaimCode}>
+                  <label>Your email address
+                    <input
+                      type="email"
+                      value={claimEmail}
+                      onChange={(event) => setClaimEmail(event.target.value)}
+                      autoComplete="email"
+                      maxLength={254}
+                      required
+                    />
+                  </label>
+                  <button className="button account-primary-action" type="submit" disabled={busy}>
+                    {busy ? "Sending…" : "Send verification code"}
+                  </button>
+                  <button className="account-text-button" type="button" disabled={busy} onClick={handleSignOut}>Sign out</button>
+                </form>
+              ) : (
+                <form className="account-form" onSubmit={submitClaim}>
+                  <label>Your email address
+                    <input type="email" value={claimEmail} readOnly />
+                  </label>
+                  <label>Six-digit email verification code
+                    <input
+                      className="account-verification-code"
+                      type="text"
+                      inputMode="numeric"
+                      autoComplete="one-time-code"
+                      pattern="[0-9]{6}"
+                      maxLength={6}
+                      value={claimCode}
+                      onChange={(event) => setClaimCode(event.target.value.replace(/\D/g, "").slice(0, 6))}
+                      required
+                    />
+                  </label>
+                  <label>Choose a new password (at least 12 characters)
+                    <input type="password" value={claimPassword} onChange={(event) => setClaimPassword(event.target.value)} minLength={12} maxLength={72} autoComplete="new-password" required />
+                  </label>
+                  <label>Confirm your new password
+                    <input type="password" value={claimPasswordConfirmation} onChange={(event) => setClaimPasswordConfirmation(event.target.value)} minLength={12} maxLength={72} autoComplete="new-password" required />
+                  </label>
+                  <button className="button account-primary-action" type="submit" disabled={busy || claimCode.length !== 6}>
+                    {busy ? "Claiming account…" : "Verify email & claim account"}
+                  </button>
+                  <div className="account-verification-actions">
+                    <button className="account-text-button" type="button" disabled={busy || resendCooldown > 0} onClick={sendClaimCode}>
+                      {resendCooldown > 0 ? `Resend code in ${resendCooldown}s` : "Resend code"}
+                    </button>
+                    <button className="account-text-button" type="button" disabled={busy} onClick={() => { setClaimCodeSent(false); setClaimCode(""); }}>
+                      Change email
+                    </button>
+                  </div>
+                </form>
+              )}
+            </section>
           ) : account ? (
             <>
               <div className="account-dashboard-heading">
@@ -466,7 +588,7 @@ function AccountPage() {
                       <div><strong>Your creator profile</strong><small>Start with the details people will see after approval.</small></div>
                     </div>
                     <div className="account-profile-fields account-signup-fields">
-                      <ProfileFields form={form} onChange={change} includeBusiness={false} />
+                      <ProfileFields form={form} onChange={change} includeBusiness={false} includeBio={false} />
                     </div>
                     <div className="account-form-section-label">
                       <span>02</span>
@@ -475,8 +597,8 @@ function AccountPage() {
                   </>
                 )}
                 <div className="account-auth-fields">
-                  <label>Email address
-                    <input type="email" name="email" value={form.email} onChange={change} autoComplete="email" maxLength={254} required />
+                  <label>{mode === "signup" ? "Email address" : "Email address or temporary username"}
+                    <input type={mode === "signup" ? "email" : "text"} name="email" value={form.email} onChange={change} autoComplete={mode === "signup" ? "email" : "username"} maxLength={254} required />
                   </label>
                   <label>Password{mode === "signup" ? " (at least 12 characters)" : ""}
                     <input type={showPassword ? "text" : "password"} name="password" value={form.password} onChange={change} minLength={mode === "signup" ? 12 : undefined} maxLength={72} autoComplete={mode === "signup" ? "new-password" : "current-password"} required />
@@ -519,7 +641,7 @@ function AccountPage() {
   );
 }
 
-function ProfileFields({ form, onChange, includeBusiness }) {
+function ProfileFields({ form, onChange, includeBusiness, includeBio = true }) {
   return (
     <div className="account-profile-fields-inner">
       <label>Display / creator name
@@ -538,9 +660,11 @@ function ProfileFields({ form, onChange, includeBusiness }) {
       <label>Social profile or portfolio link
         <input name="socialHandle" value={form.socialHandle} onChange={onChange} maxLength={2048} />
       </label>
-      <label>Bio
-        <textarea name="bio" value={form.bio} onChange={onChange} maxLength={4000} rows={5} />
-      </label>
+      {includeBio && (
+        <label>Bio
+          <textarea name="bio" value={form.bio || ""} onChange={onChange} maxLength={4000} rows={5} />
+        </label>
+      )}
       {(includeBusiness || form.category === "Tattoos") && form.category === "Tattoos" && (
         <>
           <label>Business / studio name (optional)
