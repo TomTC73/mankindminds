@@ -12,25 +12,36 @@ function CreatorProfile() {
   const navigate = useNavigate();
   const [creator, setCreator] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
+  const [error, setError] = useState("");
+  const [retryAttempt, setRetryAttempt] = useState(0);
   const [visibleCount, setVisibleCount] = useState(TATTOO_GALLERY_PAGE_SIZE);
   const [selectedImage, setSelectedImage] = useState(null);
 
   useEffect(() => {
+    let active = true;
+    setLoading(true);
+    setError("");
+    setCreator(null);
     fetch(`${API_URL}/creators/${encodeURIComponent(slug)}`)
       .then((res) => {
-        if (!res.ok) throw new Error("Creator not found");
+        if (res.status === 404) throw new Error("not-found");
+        if (!res.ok) throw new Error(`Profile request failed (${res.status}).`);
         return res.json();
       })
       .then((data) => {
-        setCreator(data);
-        setLoading(false);
+        if (active) setCreator(data);
       })
-      .catch(() => {
-        setError(true);
-        setLoading(false);
+      .catch((requestError) => {
+        if (requestError.message !== "not-found") {
+          console.error("Could not load creator profile:", requestError);
+        }
+        if (active) setError(requestError.message === "not-found" ? "not-found" : "unavailable");
+      })
+      .finally(() => {
+        if (active) setLoading(false);
       });
-  }, [slug]);
+    return () => { active = false; };
+  }, [slug, retryAttempt]);
 
   const isTattooCreator = creator?.category?.toLowerCase().includes("tattoo");
 
@@ -55,8 +66,19 @@ function CreatorProfile() {
       <div>
         <Header />
         <section className="section" style={{ textAlign: "center", padding: "4rem 1rem" }}>
-          <h2>Creator Not Found</h2>
-          <p style={{ margin: "1rem 0 2rem" }}>We couldn't find a verified profile matching this link.</p>
+          <h2>{error === "not-found" ? "Creator Not Found" : "Creator Profile Unavailable"}</h2>
+          <p style={{ margin: "1rem 0 2rem" }}>
+            {error === "not-found"
+              ? "We couldn't find a verified profile matching this link."
+              : import.meta.env.DEV
+                ? "Could not connect to the local backend at http://localhost:8080. Start the backend, then try again."
+              : "We couldn't load this profile just now. Please check your connection and try again."}
+          </p>
+          {error === "unavailable" && (
+            <button className="button" type="button" onClick={() => setRetryAttempt((attempt) => attempt + 1)}>
+              Try again
+            </button>
+          )}
           <Link to="/certificates" className="button">Back to Creators</Link>
         </section>
         <Footer />
