@@ -40,7 +40,8 @@ function Report() {
       });
 
       if (!res.ok) {
-        throw new Error("Failed to submit report. Please try again.");
+        const result = await res.json().catch(() => null);
+        throw new Error(result?.error || "Failed to submit report. Please try again.");
       }
 
       setSubmitted(true);
