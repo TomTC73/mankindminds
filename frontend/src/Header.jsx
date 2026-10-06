@@ -34,7 +34,6 @@ function Header() {
   const selectedLabel = sections.find(
     (section) => section.path === selectedSection,
   ).label;
-  const isTattooSection = selectedSection === "/tattoos";
   const certificatesPath = `/certificates?category=${selectedLabel.toLowerCase()}`;
 
   useEffect(() => {
@@ -111,9 +110,7 @@ function Header() {
 
       <nav className="nav">
         <Link to={`/process${selectedSection}`}>Process</Link>
-        <Link to={isTattooSection ? "/map" : certificatesPath}>
-          {isTattooSection ? "Map" : "Certificates"}
-        </Link>
+        <Link to={certificatesPath}>Certificates</Link>
         {account || loading ? (
           <Link to="/account" className="contact-link">Profile</Link>
         ) : (

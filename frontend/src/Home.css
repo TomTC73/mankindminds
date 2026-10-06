@@ -55,6 +55,51 @@ body {
   z-index: 1;
 }
 
+.home-featured-creators {
+  overflow: hidden;
+  border-top: 1px solid rgba(0, 0, 0, 0.15);
+  padding: 56px 0 0;
+  background: #ffffff;
+}
+
+.home-featured-creators-heading {
+  max-width: 760px;
+  margin: 0 auto 32px;
+  padding: 0 24px;
+  text-align: center;
+}
+
+.home-featured-creators-heading p:first-child {
+  margin: 0 0 12px;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.home-featured-creators-heading h2 {
+  margin: 0;
+  font: 400 clamp(30px, 4vw, 44px) Georgia, "Times New Roman", serif;
+}
+
+.home-featured-creators-heading p:last-child,
+.home-featured-creators-message {
+  color: #64748b;
+  line-height: 1.6;
+}
+
+.home-featured-creators-heading p:last-child {
+  margin: 16px auto 0;
+  max-width: 620px;
+}
+
+.home-featured-creators-message {
+  margin: 0 auto 52px;
+  padding: 0 24px;
+  text-align: center;
+}
+
 /*
 .home-hero::before {
   content: "";
