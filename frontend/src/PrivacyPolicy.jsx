@@ -44,7 +44,9 @@ function PrivacyPolicy() {
             creator profile information. Your profile is private while pending
             staff approval. Once approved, your display name, category, social
             platform and handle, and business name may appear on the public
-            member directory. Password-reset links are sent by email.
+            member directory. You may also provide a bio, profile picture, and
+            portfolio photos; these remain private until staff approve your
+            account. Password-reset links are sent by email.
           </p>
 
           <h4>3. Information Collected When You Browse</h4>
@@ -113,7 +115,10 @@ function PrivacyPolicy() {
           <h4>7. Sharing and Service Providers</h4>
           <p>
             Application information is processed by our backend and stored in
-            Firestore, a database service provided by Google Cloud. Public
+            Firestore, a database service provided by Google Cloud. Uploaded
+            account profile and portfolio photos are kept in a private Google
+            Cloud Storage bucket and are served publicly only after account
+            approval. Public
             website data is hosted and delivered through our website and
             backend hosting providers. We also send application details by
             email to our team using Gmail to notify them of new submissions.

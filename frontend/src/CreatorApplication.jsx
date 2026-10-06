@@ -119,6 +119,12 @@ function CreatorApplication() {
 
       <section className="section">
         <h3>Apply to Become Verified</h3>
+        {account && (
+          <p className="account-apply-note">
+            Signed in as {account.displayName}.{" "}
+            <Link to="/account">Edit your profile and photos</Link>
+          </p>
+        )}
 
         {submitted ? (
           <div className="application-form" role="status" style={{ textAlign: "center" }}>

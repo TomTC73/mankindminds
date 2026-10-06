@@ -64,14 +64,34 @@ The **Member accounts** tab uses the same GitHub Device Flow sign-in. Configure
 the backend's `STAFF_GITHUB_USERS` environment variable with a comma-separated
 allowlist of GitHub usernames before deploying account management. Only those
 GitHub identities can approve, reject, edit, delete, or request password
-resets for member accounts, or manage email/IP bans. IP bans are stored as
-keyed one-way fingerprints; staff cannot retrieve the original IP from the
-account database. Set `IP_FINGERPRINT_SECRET` to a separate high-entropy
-Secret Manager secret on Cloud Run and keep it unchanged so bans and duplicate
-application checks remain stable.
+resets for member accounts, or manage email/IP bans. Staff can edit member bios,
+upload profile and gallery photos, and remove uploaded photos. Member photos and
+bios remain private until account approval. IP bans are stored as keyed one-way
+fingerprints; staff cannot retrieve the original IP from the account database.
+Set `IP_FINGERPRINT_SECRET` to a separate high-entropy Secret Manager secret on
+Cloud Run and keep it unchanged so bans and duplicate application checks remain
+stable.
 
-For local staff-app development, set `MM_ACCOUNT_API` to
-`http://localhost:8080/api/accounts` before launching `app.py`.
+Account images are stored privately in the `mankind-minds-backend-account-media`
+Cloud Storage bucket. Set `ACCOUNT_MEDIA_BUCKET` to that bucket name in the
+backend service and grant the Cloud Run service account `Storage Object Admin`
+on the bucket. Do not enable public bucket access; the backend only serves
+approved public images after checking the account status.
+
+For local account-photo development, set `ACCOUNT_MEDIA_BUCKET` to
+`mankind-minds-backend-account-media` in the backend environment and authenticate
+Application Default Credentials with `gcloud auth application-default login`.
+The local identity must have object access to that bucket. For local staff-app
+development, set `MM_ACCOUNT_API` to `http://localhost:8080/api/accounts`
+before launching `app.py`.
+
+To build the staff executable from this folder, run:
+
+```powershell
+python -m PyInstaller --noconfirm --clean --onefile --windowed --name MankindMindsStaffManager app.py
+```
+
+The executable is written to `dist/MankindMindsStaffManager.exe`.
 
 ### One-time backend deployment setup
 

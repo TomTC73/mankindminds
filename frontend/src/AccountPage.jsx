@@ -8,9 +8,13 @@ import "./index.css";
 
 const categories = ["Tattoos", "Music", "Writing", "Videos", "Art"];
 const platforms = ["Instagram", "TikTok", "YouTube", "Website", "Other"];
+const EMPTY_IMAGE_IDS = [];
 
 function AccountPage() {
-  const { account, loading, signIn, signUp, signOut, updateProfile } = useAccount();
+  const {
+    account, loading, signIn, signUp, signOut, updateProfile,
+    uploadImage, deleteImage, loadImage,
+  } = useAccount();
   const location = useLocation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -38,11 +42,55 @@ function AccountPage() {
       category: account.category || "Tattoos",
       socialPlatform: account.socialPlatform || "Instagram",
       socialHandle: account.socialHandle || "",
+      bio: account.bio || "",
       businessName: account.businessName || "",
       businessContactName: account.businessContactName || "",
       businessEmail: account.businessEmail || "",
     }));
   }, [account]);
+
+  const [profilePhotoUrl, setProfilePhotoUrl] = useState("");
+  const [galleryPhotos, setGalleryPhotos] = useState([]);
+  const [imageError, setImageError] = useState("");
+  const galleryImageIds = account?.galleryImageIds || EMPTY_IMAGE_IDS;
+
+  useEffect(() => {
+    let active = true;
+    const objectUrls = [];
+    const imageIds = [
+      ...(account?.profileImageId ? [account.profileImageId] : []),
+      ...galleryImageIds,
+    ];
+    Promise.allSettled(imageIds.map((imageId) => loadImage(imageId)))
+      .then((results) => {
+        if (!active) {
+          results.forEach((result) => {
+            if (result.status === "fulfilled") URL.revokeObjectURL(result.value);
+          });
+          return;
+        }
+        const fulfilledUrls = results.map((result) => {
+          if (result.status === "rejected") {
+            console.error("Could not load account photo:", result.reason);
+            return "";
+          }
+          objectUrls.push(result.value);
+          return result.value;
+        });
+        setProfilePhotoUrl(account?.profileImageId ? fulfilledUrls[0] : "");
+        setGalleryPhotos(galleryImageIds.map((id, index) => ({
+          id,
+          url: fulfilledUrls[index + (account?.profileImageId ? 1 : 0)],
+        })));
+        setImageError(results.some((result) => result.status === "rejected")
+          ? "Some photos could not be loaded. Refresh to try again."
+          : "");
+      });
+    return () => {
+      active = false;
+      objectUrls.forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, [account?.profileImageId, galleryImageIds, loadImage]);
 
   const change = (event) => setForm((previous) => ({
     ...previous,
@@ -132,13 +180,50 @@ function AccountPage() {
     try {
       const {
         email, displayName, category, socialPlatform, socialHandle,
-        businessName, businessContactName, businessEmail,
+        businessName, businessContactName, businessEmail, bio,
       } = form;
       await updateProfile({
         email, displayName, category, socialPlatform, socialHandle,
-        businessName, businessContactName, businessEmail,
+        businessName, businessContactName, businessEmail, bio,
       });
       setMessage("Your profile has been saved.");
+    } catch (requestError) {
+      setError(requestError.message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const uploadPhotos = async (event, kind) => {
+    const files = Array.from(event.target.files || []);
+    event.target.value = "";
+    if (!files.length) return;
+    const remainingSlots = 8 - galleryImageIds.length;
+    if (kind === "gallery" && files.length > remainingSlots) {
+      setImageError(`You can add ${remainingSlots} more gallery photo${remainingSlots === 1 ? "" : "s"}.`);
+      return;
+    }
+    setBusy(true);
+    setError("");
+    setMessage("");
+    setImageError("");
+    try {
+      for (const file of files) await uploadImage(file, kind);
+      setMessage(kind === "profile" ? "Your profile photo has been updated." : "Your gallery photo(s) have been added.");
+    } catch (requestError) {
+      setError(requestError.message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const removePhoto = async (imageId) => {
+    setBusy(true);
+    setError("");
+    setMessage("");
+    try {
+      await deleteImage(imageId);
+      setMessage("Photo removed.");
     } catch (requestError) {
       setError(requestError.message);
     } finally {
@@ -185,6 +270,32 @@ function AccountPage() {
                 <ProfileFields form={form} onChange={change} includeBusiness />
                 <button className="button" type="submit" disabled={busy}>{busy ? "Saving…" : "Save profile"}</button>
               </form>
+              <section className="account-media">
+                <h3>Your photos</h3>
+                <p>Choose a JPEG, PNG, or WebP image up to 5 MB. Photos stay private until your account is approved.</p>
+                <div className="account-profile-photo">
+                  {profilePhotoUrl ? <img src={profilePhotoUrl} alt="Your profile" /> : <span>No profile photo</span>}
+                </div>
+                <label className="account-upload-label">
+                  Upload profile picture
+                  <input type="file" accept="image/jpeg,image/png,image/webp" disabled={busy} onChange={(event) => uploadPhotos(event, "profile")} />
+                </label>
+                <label className="account-upload-label">
+                  Add portfolio photos ({Math.max(0, 8 - galleryImageIds.length)} remaining)
+                  <input type="file" accept="image/jpeg,image/png,image/webp" multiple disabled={busy || galleryPhotos.length >= 8} onChange={(event) => uploadPhotos(event, "gallery")} />
+                </label>
+                {galleryPhotos.length > 0 && (
+                  <div className="account-gallery">
+                    {galleryPhotos.map((photo) => (
+                      <div className="account-gallery-item" key={photo.id}>
+                        {photo.url && <img src={photo.url} alt="Your portfolio work" />}
+                        <button className="button account-secondary-action" type="button" disabled={busy} onClick={() => removePhoto(photo.id)}>Remove photo</button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {imageError && <p className="account-error" role="alert">{imageError}</p>}
+              </section>
               <button className="button account-secondary-action" type="button" disabled={busy} onClick={requestReset}>Email me a password reset link</button>
               <button className="button account-secondary-action" type="button" onClick={async () => { await signOut(); setMessage("You have signed out."); }}>Sign out</button>
             </>
@@ -255,6 +366,9 @@ function ProfileFields({ form, onChange, includeBusiness }) {
       </label>
       <label>Social profile or portfolio link
         <input name="socialHandle" value={form.socialHandle} onChange={onChange} maxLength={2048} />
+      </label>
+      <label>Bio
+        <textarea name="bio" value={form.bio} onChange={onChange} maxLength={4000} rows={5} />
       </label>
       {(includeBusiness || form.category === "Tattoos") && form.category === "Tattoos" && (
         <>
