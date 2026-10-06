@@ -15,7 +15,7 @@ function AccountPage() {
   const {
     account, loading, signIn, signUp, sendSignupVerificationCode,
     sendClaimVerificationCode, claimAccount, signOut, updateProfile,
-    uploadImage, deleteImage, loadImage,
+    deleteAccount, uploadImage, deleteImage, loadImage,
   } = useAccount();
   const location = useLocation();
   const navigate = useNavigate();
@@ -404,6 +404,27 @@ function AccountPage() {
     }
   };
 
+  const handleDeleteAccount = async () => {
+    const confirmed = window.confirm(
+      "Permanently delete your account, uploaded photos, and linked applications from our active systems? "
+      + "Some information may need to be retained where law requires; email copies, backups, caches, and older separately published pages may not be removed immediately.",
+    );
+    if (!confirmed) return;
+    setBusy(true);
+    setError("");
+    setMessage("");
+    try {
+      await deleteAccount();
+      setMode("login");
+      setMessage("Your account and linked active records have been deleted.");
+      navigate("/account", { replace: true });
+    } catch (requestError) {
+      setError(requestError.message || "Could not delete your account. Please contact support.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
   if (loading) {
     return <><Header /><main className="account-page account-section"><div className="account-loading" role="status"><span className="account-loading-mark" aria-hidden="true" />Loading your account…</div></main><Footer /></>;
   }
@@ -533,7 +554,7 @@ function AccountPage() {
                   <p><strong>Your profile is private.</strong> It will only appear publicly after staff review and approval. You can edit your details and photos while you wait.</p>
                 </div>
               )}
-              <form className="account-form account-profile-form" onSubmit={saveProfile}>
+              <form id="account-profile-form" className="account-form account-profile-form" onSubmit={saveProfile}>
                 <div className="account-profile-fields">
                   <ProfileFields
                     form={form}
@@ -545,7 +566,6 @@ function AccountPage() {
                     onSocialRemove={removeSocialLink}
                   />
                 </div>
-                <button className="button account-primary-action" type="submit" disabled={busy}>{busy ? "Saving…" : "Save profile"}</button>
               </form>
               <section className="account-media">
                 <div className="account-section-heading">
@@ -591,9 +611,25 @@ function AccountPage() {
                 {galleryPhotos.length === 0 && <p className="account-gallery-empty">Your portfolio photos will appear here. Add up to eight examples of your work.</p>}
                 {imageError && <p className="account-error" role="alert">{imageError}</p>}
               </section>
+              <button
+                className="button account-primary-action"
+                type="submit"
+                form="account-profile-form"
+                disabled={busy}
+              >
+                {busy ? "Saving…" : "Save profile"}
+              </button>
               <div className="account-security-actions">
                 <button className="account-text-button" type="button" disabled={busy} onClick={requestReset}>Email me a password-reset link</button>
                 <button className="account-text-button" type="button" disabled={busy} onClick={handleSignOut}>Sign out</button>
+                <button
+                  className="account-text-button account-delete-action"
+                  type="button"
+                  disabled={busy}
+                  onClick={handleDeleteAccount}
+                >
+                  Delete account
+                </button>
               </div>
             </>
           ) : (

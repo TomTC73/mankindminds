@@ -303,6 +303,44 @@ def normalize_creator_profile(creator):
     return profile
 
 
+def creator_page_rows(creators, accounts, selected_category="All categories", query=""):
+    legacy_slugs = {
+        str(creator.get("slug", "")).casefold()
+        for creator in creators
+        if creator.get("slug")
+    }
+    rows = list(creators)
+    account_rows = []
+    for account in accounts:
+        if account.get("status") != "APPROVED" or account.get("claimRequired"):
+            continue
+        legacy_slug = str(account.get("legacyCreatorSlug", "")).casefold()
+        account_slug = str(account.get("creatorSlug", "")).casefold()
+        if legacy_slug in legacy_slugs or account_slug in legacy_slugs:
+            continue
+        account_rows.append({
+            "name": str(account.get("displayName") or ""),
+            "category": LEGACY_NICHE_MAP.get(
+                account.get("category"), account.get("category", ""),
+            ),
+            "_account_id": account.get("id"),
+        })
+    rows.extend(sorted(account_rows, key=lambda row: str(row["name"]).casefold()))
+
+    normalized_query = query.casefold()
+    return [
+        row for row in rows
+        if (
+            selected_category == "All categories"
+            or LEGACY_NICHE_MAP.get(row.get("category"), row.get("category", "")) == selected_category
+        )
+        and (
+            normalized_query in str(row.get("name", "")).casefold()
+            or normalized_query in str(row.get("category", "")).casefold()
+        )
+    ]
+
+
 def login_device(on_device_code=None):
     if not CLIENT_ID:
         raise GitHubError("No GitHub OAuth client ID is configured.")
@@ -556,7 +594,7 @@ class App(tk.Tk):
         self.account_category.bind("<<ComboboxSelected>>", lambda _event: self.refresh_approved_account_tree())
         self.account_category.grid(row=1, column=0, sticky="w", pady=(10, 0))
         self.verified_legacy_count = ttk.Label(
-            parent, text="Existing site creators are listed as VERIFIED under Creator pages.", style="Muted.TLabel",
+            parent, text="Published pages and approved profiles are listed under Creator pages.", style="Muted.TLabel",
         )
         self.verified_legacy_count.grid(row=1, column=1, sticky="e", pady=(10, 0))
         self.legacy_import_button = ttk.Button(
@@ -923,19 +961,30 @@ class App(tk.Tk):
         account = self.selected_suggested_artist()
         if not account:
             return
-        title = "Approve AI-Free creator" if status == "APPROVED" else "Reject / block creator request"
+        approving = status == "APPROVED"
+        title = "Approve creator" if approving else "Reject creator request"
         message = (
             f"Approve {account.get('displayName', 'this creator')} as AI-Free verified? "
             "Their profile will become public in Verified Creators."
-            if status == "APPROVED"
+            if approving
             else f"Reject {account.get('displayName', 'this creator')}? They will receive an automatic rejection email."
         )
         if not messagebox.askyesno(title, message):
             return
         self.account_admin_action(
-            "Review suggested artist",
+            title,
             lambda: self.account_admin.set_status(account["id"], status),
-            "Creator approved as AI-Free verified." if status == "APPROVED" else "Creator request rejected and rejection email sent.",
+            "Creator approved as AI-Free verified. No website publish is needed."
+            if approving else "Creator request rejected and rejection email sent.",
+            on_success=lambda: messagebox.showinfo(
+                "Creator approved" if approving else "Creator rejected",
+                (
+                    f"{account.get('displayName', 'Creator')} is approved. The website's creator lists "
+                    "will include the profile automatically; do not press Publish changes."
+                    if approving else
+                    f"{account.get('displayName', 'Creator')} was rejected and the rejection email was sent."
+                ),
+            ),
         )
 
     def selected_account(self):
@@ -1057,6 +1106,7 @@ class App(tk.Tk):
                     ),
                 )
         self.refresh_approved_account_tree()
+        self.refresh_list(silent=True)
         self.ban_tree.delete(*self.ban_tree.get_children())
         self.ban_rows = {}
         for ban in bans:
@@ -1294,7 +1344,7 @@ class App(tk.Tk):
         ttk.Button(actions, text="Copy all generated logins", command=copy_all).pack(side="left", padx=(8, 0))
         ttk.Button(actions, text="Close", command=window.destroy).pack(side="right")
 
-    def account_admin_action(self, title, action, success_message):
+    def account_admin_action(self, title, action, success_message, on_success=None):
         if not self.account_admin:
             messagebox.showerror(title, "Sign in with an authorized staff GitHub account first.")
             return
@@ -1305,8 +1355,15 @@ class App(tk.Tk):
                 action()
                 self.after(0, lambda: self.load_account_admin(silent=True))
                 self.after(0, lambda: self.set_status(success_message, "#46705b"))
+                if on_success:
+                    self.after(0, on_success)
             except Exception as error:
-                self.after(0, lambda: messagebox.showerror(title, str(error)))
+                detail = str(error).strip() or repr(error) or "The account service returned an unspecified error."
+                self.after(0, lambda: self.set_status(f"{title} failed.", PALETTE["accent"]))
+                self.after(0, lambda: messagebox.showerror(
+                    f"{title} failed",
+                    f"The creator's status was not confirmed.\n\n{detail}",
+                ))
 
         threading.Thread(target=work, daemon=True).start()
 
@@ -2584,30 +2641,42 @@ class App(tk.Tk):
             query = ""
         self.user_list.delete(*self.user_list.get_children())
         selected_category = self.creator_category.get()
-        visible = [
-            creator for creator in self.creators
-            if (selected_category == "All categories"
-                or LEGACY_NICHE_MAP.get(creator.get("category"), creator.get("category", "")) == selected_category)
-            and (query in creator.get("name", "").lower() or query in creator.get("category", "").lower())
-        ]
+        visible = creator_page_rows(
+            self.creators, self.account_rows.values(), selected_category, query,
+        )
+        all_rows = creator_page_rows(self.creators, self.account_rows.values())
+        account_page_count = sum(1 for row in all_rows if row.get("_account_id"))
+        account_count = 0
         for index, creator in enumerate(visible):
+            is_account = bool(creator.get("_account_id"))
+            account_count += is_account
             self.user_list.insert(
-                "", "end", iid=str(index), text=f"{creator.get('name', '')} · VERIFIED",
+                "", "end", iid=str(index),
+                text=(
+                    f"{creator.get('name', '')} · VERIFIED ACCOUNT"
+                    if is_account else f"{creator.get('name', '')} · VERIFIED"
+                ),
                 values=(creator.get("category", ""),),
             )
-        self.count_label.config(text=f"{len(visible)} VERIFIED")
+        self.count_label.config(
+            text=f"{len(visible)} profiles · {account_count} account-backed",
+        )
         if hasattr(self, "legacy_import_button"):
             self.legacy_import_button.config(
                 state="normal" if self.client and self.creators and self.account_admin else "disabled",
             )
         if hasattr(self, "verified_legacy_count"):
             self.verified_legacy_count.config(
-                text=f"{len(self.creators)} published creator pages · VERIFIED",
+                text=(
+                    f"{len(self.creators)} published pages · "
+                    f"{account_page_count} additional account profiles"
+                ),
             )
         self.refresh_tattoo_creator_list()
         if not silent:
             self.set_status(
-                f"{len(self.creators)} verified creator pages loaded. Refreshes automatically every minute.",
+                f"{len(visible)} creator profiles shown, including {account_count} Firestore-backed profiles. "
+                "Refreshes automatically every minute.",
                 "#46705b",
             )
 
@@ -2619,13 +2688,29 @@ class App(tk.Tk):
         if query == "search creators...":
             query = ""
         selected_category = self.creator_category.get()
-        visible = [
-            creator for creator in self.creators
-            if (selected_category == "All categories"
-                or LEGACY_NICHE_MAP.get(creator.get("category"), creator.get("category", "")) == selected_category)
-            and (query in creator.get("name", "").lower() or query in creator.get("category", "").lower())
-        ]
-        self.selected = visible[int(selected[0])]
+        visible = creator_page_rows(
+            self.creators, self.account_rows.values(), selected_category, query,
+        )
+        creator = visible[int(selected[0])]
+        account_id = creator.get("_account_id")
+        if account_id:
+            self.selected = None
+            self.set_creator_editor_enabled(False)
+            self.tabs.select(0)
+            self.creators_subtabs.select(self.accounts_tab)
+            self.account_category.set("All categories")
+            self.refresh_approved_account_tree()
+            if account_id in self.account_tree.get_children():
+                self.account_tree.selection_set(account_id)
+                self.account_tree.focus(account_id)
+                self.account_tree.see(account_id)
+                self.select_account()
+            self.set_status(
+                f"{creator.get('name', 'Creator')} is Firestore-backed. Edit this profile under Verified accounts.",
+                "#46705b",
+            )
+            return
+        self.selected = creator
         self.set_creator_editor_enabled(True)
         self.fill_form(self.selected)
 
