@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate, useSearchParams } from "react-router-do
 import Header from "./Header";
 import Footer from "./Footer";
 import { useAccount } from "./AccountContext";
-import { API_URL } from "./apiConfig";
+import { API_URL, resolveCreatorImageUrl } from "./apiConfig";
 import "./index.css";
 import "./AccountPage.css";
 
@@ -44,11 +44,6 @@ function AccountPage() {
   const [claimCodeSent, setClaimCodeSent] = useState(false);
   const tokenFromLink = searchParams.get("token");
   const isResetRoute = location.pathname === "/account/reset-password";
-  const requestedApplication = searchParams.get("next");
-  const applicationPath = requestedApplication?.startsWith("/apply") && !requestedApplication.startsWith("//")
-    ? requestedApplication
-    : `/apply?category=${account?.category?.toLowerCase() || "tattoos"}`;
-
   useEffect(() => {
     if (resendCooldown <= 0) return undefined;
     const timer = window.setTimeout(() => setResendCooldown((value) => Math.max(0, value - 1)), 1000);
@@ -79,16 +74,37 @@ function AccountPage() {
   useEffect(() => {
     let active = true;
     const objectUrls = [];
-    if (account?.claimRequired) {
+    const loadLegacyPhoto = async () => {
       setProfilePhotoUrl("");
+      if (!account?.legacyCreatorSlug) {
+        return;
+      }
+      try {
+        const response = await fetch(`${API_URL}/creators/${encodeURIComponent(account.legacyCreatorSlug)}`);
+        if (!response.ok) throw new Error(`Creator profile request failed (${response.status}).`);
+        const creator = await response.json();
+        if (active) setProfilePhotoUrl(resolveCreatorImageUrl(creator.imageUrl));
+      } catch (requestError) {
+        console.error("Could not load the existing creator profile:", requestError);
+        if (active) setImageError("Your existing profile picture could not be loaded. Refresh to try again.");
+      }
+    };
+    if (account?.claimRequired) {
       setGalleryPhotos([]);
       setImageError("");
+      loadLegacyPhoto();
       return () => { active = false; };
     }
     const imageIds = [
       ...(account?.profileImageId ? [account.profileImageId] : []),
       ...galleryImageIds,
     ];
+    if (!imageIds.length) {
+      setGalleryPhotos([]);
+      setImageError("");
+      loadLegacyPhoto();
+      return () => { active = false; };
+    }
     Promise.allSettled(imageIds.map((imageId) => loadImage(imageId)))
       .then((results) => {
         if (!active) {
@@ -106,6 +122,7 @@ function AccountPage() {
           return result.value;
         });
         setProfilePhotoUrl(account?.profileImageId ? fulfilledUrls[0] : "");
+        if (!account?.profileImageId) loadLegacyPhoto();
         setGalleryPhotos(galleryImageIds.map((id, index) => ({
           id,
           url: fulfilledUrls[index + (account?.profileImageId ? 1 : 0)],
@@ -154,7 +171,7 @@ function AccountPage() {
       }
       const next = searchParams.get("next");
       if (!signedInAccount?.claimRequired && next?.startsWith("/") && !next.startsWith("//")) {
-        navigate(next, { replace: true });
+        navigate(next === "/apply" || next.startsWith("/apply?") ? "/account" : next, { replace: true });
       }
     } catch (requestError) {
       setError(requestError.message);
@@ -346,7 +363,7 @@ function AccountPage() {
               ? "Keep your profile up to date, share your work and manage your account."
               : isResetRoute
                 ? "Choose a new password to get back into your account."
-                : "Sign in or create an account to apply and build your creator profile."}</p>
+                : "Sign in or create an account to manage your creator profile."}</p>
           </div>
           <div className={`account-panel ${account ? "account-dashboard" : "account-access-panel"}`}>
           {isResetRoute ? (
@@ -449,8 +466,8 @@ function AccountPage() {
                 <span className={`account-status account-status-${(account.status || "PENDING").toLowerCase()}`}>
                   {account.status || "PENDING"}
                 </span>
-                {account.status === "APPROVED" && account.id && (
-                  <Link className="account-public-profile-link" to={`/members/${encodeURIComponent(account.id)}`}>View public profile ↗</Link>
+                {account.status === "APPROVED" && (account.creatorSlug || account.legacyCreatorSlug) && (
+                  <Link className="account-public-profile-link" to={`/creators/${encodeURIComponent(account.creatorSlug || account.legacyCreatorSlug)}`}>View public profile ↗</Link>
                 )}
               </div>
               {account.status !== "APPROVED" && (
@@ -519,7 +536,7 @@ function AccountPage() {
               <h2>{mode === "signup" ? "Create your account" : "Sign in"}</h2>
               <p>{mode === "signup"
                 ? "Create a private profile. It stays hidden from the public until staff review and approve it."
-                : "Welcome back. Sign in to continue your application or manage your profile."}</p>
+                : "Welcome back. Sign in to update your creator profile."}</p>
               <div className="account-mode-tabs" role="group" aria-label="Account access">
                   <button type="button" aria-pressed={mode === "login"} className={mode === "login" ? "active" : ""} onClick={() => { setMode("login"); setVerificationSent(false); setError(""); setMessage(""); }}>Sign in</button>
                   <button type="button" aria-pressed={mode === "signup"} className={mode === "signup" ? "active" : ""} onClick={() => { setMode("signup"); setVerificationSent(false); setError(""); setMessage(""); }}>Create account</button>
@@ -632,7 +649,6 @@ function AccountPage() {
           {!account && !isResetRoute && searchParams.has("next") && (
             <p className="account-apply-note">After signing in, you’ll be returned to where you left off.</p>
           )}
-          {account && <p className="account-apply-note"><Link to={applicationPath}>Continue to your application</Link></p>}
           </div>
         </div>
       </main>

@@ -21,6 +21,24 @@
 }
 
 @media (min-width: 1000px) {
+  .account-page.account-page-dashboard .account-shell {
+    width: min(100%, 1120px);
+  }
+
+  .account-page.account-page-dashboard .account-page-intro {
+    max-width: 1120px;
+    margin-bottom: 28px;
+    text-align: left;
+  }
+
+  .account-page.account-page-dashboard .account-page-intro > p:last-child {
+    margin-left: 0;
+  }
+
+  .account-page.account-page-dashboard .account-panel {
+    padding: clamp(32px, 4vw, 56px);
+  }
+
   .account-page:not(.account-page-dashboard) {
     box-sizing: border-box;
     min-height: 65vh;

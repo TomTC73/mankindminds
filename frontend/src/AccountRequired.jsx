@@ -1,7 +1,7 @@
 import { Navigate, useLocation } from "react-router-dom";
 import { useAccount } from "./AccountContext";
 
-function AccountRequired({ children }) {
+function AccountRequired() {
   const { account, loading } = useAccount();
   const location = useLocation();
 
@@ -13,7 +13,7 @@ function AccountRequired({ children }) {
     return <Navigate to={`/account?next=${encodeURIComponent(`${location.pathname}${location.search}`)}`} replace />;
   }
 
-  return children;
+  return <Navigate to="/account" replace />;
 }
 
 export default AccountRequired;
