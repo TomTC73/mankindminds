@@ -25,7 +25,7 @@ function AccountPage() {
     email: "", password: "", displayName: "", category: "Tattoos",
     socialPlatform: "Instagram", socialHandle: "", businessName: "",
     businessContactName: "", businessEmail: "", passwordConfirmation: "",
-    termsAgreement: false,
+    description: "", bio: "", socialLinks: [], termsAgreement: false,
   });
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
@@ -59,12 +59,44 @@ function AccountPage() {
       category: account.category || "Tattoos",
       socialPlatform: account.socialPlatform || "Instagram",
       socialHandle: account.socialHandle || "",
+      description: account.description || "",
       bio: account.bio || "",
+      socialLinks: Array.isArray(account.socialLinks)
+        ? account.socialLinks
+        : account.socialPlatform || account.socialHandle
+          ? [{ name: account.socialPlatform || "Other", url: account.socialHandle || "" }]
+          : [],
       businessName: account.businessName || "",
       businessContactName: account.businessContactName || "",
       businessEmail: account.businessEmail || "",
     }));
   }, [account]);
+
+  useEffect(() => {
+    if (!account?.legacyCreatorSlug) return undefined;
+    let active = true;
+    fetch(`${API_URL}/creators/${encodeURIComponent(account.legacyCreatorSlug)}`)
+      .then((response) => {
+        if (!response.ok) throw new Error(`Creator profile request failed (${response.status}).`);
+        return response.json();
+      })
+      .then((creator) => {
+        if (!active) return;
+        setForm((previous) => ({
+          ...previous,
+          description: creator.description || previous.description,
+          bio: creator.bio || previous.bio,
+          socialLinks: creator.socialLinks?.length
+            ? creator.socialLinks
+            : previous.socialLinks,
+        }));
+      })
+      .catch((requestError) => {
+        console.error("Could not load the existing creator details:", requestError);
+        if (active) setError("Your existing profile details could not be loaded. Refresh to try again.");
+      });
+    return () => { active = false; };
+  }, [account?.legacyCreatorSlug]);
 
   const [profilePhotoUrl, setProfilePhotoUrl] = useState("");
   const [galleryPhotos, setGalleryPhotos] = useState([]);
@@ -140,6 +172,24 @@ function AccountPage() {
   const change = (event) => setForm((previous) => ({
     ...previous,
     [event.target.name]: event.target.value,
+  }));
+
+  const changeSocialLink = (index, key, value) => setForm((previous) => ({
+    ...previous,
+    socialLinks: previous.socialLinks.map((link, linkIndex) => (
+      linkIndex === index ? { ...link, [key]: value } : link
+    )),
+  }));
+
+  const addSocialLink = () => setForm((previous) => (
+    previous.socialLinks.length >= 12
+      ? previous
+      : { ...previous, socialLinks: [...previous.socialLinks, { name: "Instagram", url: "" }] }
+  ));
+
+  const removeSocialLink = (index) => setForm((previous) => ({
+    ...previous,
+    socialLinks: previous.socialLinks.filter((_, linkIndex) => linkIndex !== index),
   }));
 
   const submit = async (event) => {
@@ -276,12 +326,19 @@ function AccountPage() {
     setMessage("");
     try {
       const {
-        email, displayName, category, socialPlatform, socialHandle,
-        businessName, businessContactName, businessEmail, bio,
+        email, displayName, category, description, bio, socialLinks,
+        businessName, businessContactName, businessEmail,
       } = form;
+      if (socialLinks.some((link) => !link.name.trim() || !link.url.trim())) {
+        throw new Error("Complete both fields for each social link, or remove the blank link.");
+      }
+      const primarySocial = socialLinks[0] || { name: "Other", url: "" };
       await updateProfile({
-        email, displayName, category, socialPlatform, socialHandle,
-        businessName, businessContactName, businessEmail, bio,
+        email, displayName, category,
+        socialPlatform: primarySocial.name,
+        socialHandle: primarySocial.url,
+        socialLinks,
+        businessName, businessContactName, businessEmail, description, bio,
       });
       setMessage("Your profile has been saved.");
     } catch (requestError) {
@@ -478,7 +535,15 @@ function AccountPage() {
               )}
               <form className="account-form account-profile-form" onSubmit={saveProfile}>
                 <div className="account-profile-fields">
-                  <ProfileFields form={form} onChange={change} includeBusiness />
+                  <ProfileFields
+                    form={form}
+                    onChange={change}
+                    includeBusiness
+                    includeSocials
+                    onSocialChange={changeSocialLink}
+                    onSocialAdd={addSocialLink}
+                    onSocialRemove={removeSocialLink}
+                  />
                 </div>
                 <button className="button account-primary-action" type="submit" disabled={busy}>{busy ? "Saving…" : "Save profile"}</button>
               </form>
@@ -605,7 +670,13 @@ function AccountPage() {
                       <div><strong>Your creator profile</strong><small>Start with the details people will see after approval.</small></div>
                     </div>
                     <div className="account-profile-fields account-signup-fields">
-                      <ProfileFields form={form} onChange={change} includeBusiness={false} includeBio={false} />
+                      <ProfileFields
+                        form={form}
+                        onChange={change}
+                        includeBusiness={false}
+                        includeDescription={false}
+                        includeBio={false}
+                      />
                     </div>
                     <div className="account-form-section-label">
                       <span>02</span>
@@ -657,7 +728,17 @@ function AccountPage() {
   );
 }
 
-function ProfileFields({ form, onChange, includeBusiness, includeBio = true }) {
+function ProfileFields({
+  form,
+  onChange,
+  includeBusiness,
+  includeDescription = true,
+  includeBio = true,
+  includeSocials = false,
+  onSocialChange,
+  onSocialAdd,
+  onSocialRemove,
+}) {
   return (
     <div className="account-profile-fields-inner">
       <label>Display / creator name
@@ -668,17 +749,86 @@ function ProfileFields({ form, onChange, includeBusiness, includeBio = true }) {
           {categories.map((category) => <option key={category}>{category}</option>)}
         </select>
       </label>
-      <label>Primary social or portfolio type
-        <select name="socialPlatform" value={form.socialPlatform} onChange={onChange} required>
-          {platforms.map((platform) => <option key={platform}>{platform}</option>)}
-        </select>
-      </label>
-      <label>Social profile or portfolio link
-        <input name="socialHandle" value={form.socialHandle} onChange={onChange} maxLength={2048} />
-      </label>
+      {includeSocials ? (
+        <div className="account-social-links-field">
+          <p className="account-social-links-label">Social and portfolio links</p>
+          {(form.socialLinks || []).map((link, index) => (
+            <div className="account-social-link-row" key={`social-${index}`}>
+              <label>Platform
+                <input
+                  value={link.name}
+                  maxLength={100}
+                  placeholder="Instagram, SoundCloud, website…"
+                  onChange={(event) => onSocialChange(index, "name", event.target.value)}
+                />
+              </label>
+              <label>Profile link
+                <input
+                  type="text"
+                  value={link.url}
+                  onChange={(event) => onSocialChange(index, "url", event.target.value)}
+                  maxLength={2048}
+                  placeholder="https://"
+                />
+              </label>
+              <button
+                className="account-text-button"
+                type="button"
+                onClick={() => onSocialRemove(index)}
+              >
+                Remove
+              </button>
+            </div>
+          ))}
+          <button
+            className="account-text-button"
+            type="button"
+            disabled={(form.socialLinks || []).length >= 12}
+            onClick={onSocialAdd}
+          >
+            + Add another link
+          </button>
+        </div>
+      ) : (
+        <>
+          <label>Primary social or portfolio type
+            <select name="socialPlatform" value={form.socialPlatform} onChange={onChange} required>
+              {platforms.map((platform) => <option key={platform}>{platform}</option>)}
+            </select>
+          </label>
+          <label>Social profile or portfolio link
+            <input name="socialHandle" value={form.socialHandle} onChange={onChange} maxLength={2048} />
+          </label>
+        </>
+      )}
+      {includeDescription && (
+        <label>Description
+          <textarea
+            name="description"
+            value={form.description || ""}
+            onChange={onChange}
+            maxLength={4000}
+            rows={4}
+            aria-describedby="account-description-help"
+          />
+          <small id="account-description-help" className="account-field-help">
+            Shown on your creator card and at the top of your public page.
+          </small>
+        </label>
+      )}
       {includeBio && (
         <label>Bio
-          <textarea name="bio" value={form.bio || ""} onChange={onChange} maxLength={4000} rows={5} />
+          <textarea
+            name="bio"
+            value={form.bio || ""}
+            onChange={onChange}
+            maxLength={4000}
+            rows={5}
+            aria-describedby="account-bio-help"
+          />
+          <small id="account-bio-help" className="account-field-help">
+            Shown in the About your work section on your public page.
+          </small>
         </label>
       )}
       {(includeBusiness || form.category === "Tattoos") && form.category === "Tattoos" && (

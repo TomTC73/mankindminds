@@ -286,6 +286,22 @@ def request_json(url, payload):
     with urllib.request.urlopen(request, timeout=30) as response:
         return json.loads(response.read())
 
+def normalize_creator_profile(creator):
+    profile = dict(creator)
+    about_section = next(
+        (
+            section for section in profile.get("sections", [])
+            if section.get("title", "").lower().startswith("about ")
+        ),
+        None,
+    )
+    about_bio = about_section.get("content", "") if about_section else ""
+    legacy_intro = profile.get("bio", "")
+    if about_bio and legacy_intro and legacy_intro != about_bio:
+        profile["description"] = legacy_intro
+        profile["bio"] = about_bio
+    return profile
+
 
 def login_device(on_device_code=None):
     if not CLIENT_ID:
@@ -344,6 +360,7 @@ class App(tk.Tk):
         self.ticket_file_sha = None
         self.section_rows = []
         self.social_rows = []
+        self.syncing_creator_bio = False
         self.creator_editor_enabled = False
         self.studio_editor_enabled = False
         self.ticket_editor_enabled = False
@@ -681,7 +698,7 @@ class App(tk.Tk):
         )
         self.suggested_approve_button.pack(side="left", padx=(8, 0))
         self.suggested_reject_button = ttk.Button(
-            actions, text="Reject suggestion", command=lambda: self.set_selected_suggested_status("REJECTED"),
+            actions, text="Reject / block request", command=lambda: self.set_selected_suggested_status("REJECTED"),
         )
         self.suggested_reject_button.pack(side="left", padx=(8, 0))
         self.suggested_delete_button = ttk.Button(
@@ -802,8 +819,6 @@ class App(tk.Tk):
             ("Email", account.get("email", "")),
             ("Email verified", "Yes" if account.get("emailVerified") else "No"),
             ("Category", account.get("category", "")),
-            ("Portfolio type", account.get("socialPlatform", "")),
-            ("Portfolio link", account.get("socialHandle", "")),
             ("Business / studio", account.get("businessName", "")),
             ("Business contact", account.get("businessContactName", "")),
             ("Business email", account.get("businessEmail", "")),
@@ -815,20 +830,34 @@ class App(tk.Tk):
             ttk.Label(body, text=value or "—", wraplength=520).grid(
                 row=row_index, column=1, sticky="nw", pady=4,
             )
-        bio_row = len(rows) + 1
-        ttk.Label(body, text="Bio:", style="Muted.TLabel").grid(
-            row=bio_row, column=0, sticky="nw", padx=(0, 12), pady=4,
+        description_row = len(rows) + 1
+        self.add_readonly_review_text(
+            body, description_row, "Description", account.get("description", ""),
         )
-        bio = tk.Text(body, width=66, height=7, wrap="word", relief="solid", borderwidth=1)
-        bio.insert("1.0", account.get("bio", "") or "")
-        bio.config(state="disabled")
-        bio.grid(row=bio_row, column=1, sticky="ew", pady=4)
+        bio_row = description_row + 1
+        self.add_readonly_review_text(body, bio_row, "Bio / About work", account.get("bio", ""))
+        social_links = account.get("socialLinks") or [{
+            "name": account.get("socialPlatform", ""),
+            "url": account.get("socialHandle", ""),
+        }]
+        social_row = bio_row + 1
+        ttk.Label(body, text="Social links:", style="Muted.TLabel").grid(
+            row=social_row, column=0, sticky="nw", padx=(0, 12), pady=4,
+        )
+        social_text = tk.Text(body, width=66, height=min(5, max(2, len(social_links))), wrap="word",
+                              relief="solid", borderwidth=1)
+        social_text.insert(
+            "1.0",
+            "\n".join(f"{link.get('name', 'Link')}: {link.get('url', '')}" for link in social_links),
+        )
+        social_text.config(state="disabled")
+        social_text.grid(row=social_row, column=1, sticky="ew", pady=4)
         photos = len(account.get("galleryImageIds", [])) + bool(account.get("profileImageId"))
         ttk.Label(body, text=f"Uploaded photos: {photos}").grid(
-            row=bio_row + 1, column=1, sticky="w", pady=(8, 0),
+            row=social_row + 1, column=1, sticky="w", pady=(8, 0),
         )
         dialog_actions = ttk.Frame(body)
-        dialog_actions.grid(row=bio_row + 2, column=0, columnspan=2, sticky="ew", pady=(14, 0))
+        dialog_actions.grid(row=social_row + 2, column=0, columnspan=2, sticky="ew", pady=(14, 0))
         ttk.Button(dialog_actions, text="Close", command=window.destroy).pack(side="right")
         if photos:
             ttk.Button(
@@ -836,6 +865,16 @@ class App(tk.Tk):
                 command=lambda: self.open_suggested_photos(account),
             ).pack(side="right", padx=(0, 8))
         body.columnconfigure(1, weight=1)
+
+    @staticmethod
+    def add_readonly_review_text(parent, row, label, value):
+        ttk.Label(parent, text=label + ":", style="Muted.TLabel").grid(
+            row=row, column=0, sticky="nw", padx=(0, 12), pady=4,
+        )
+        text = tk.Text(parent, width=66, height=5, wrap="word", relief="solid", borderwidth=1)
+        text.insert("1.0", value or "")
+        text.config(state="disabled")
+        text.grid(row=row, column=1, sticky="ew", pady=4)
 
     def open_suggested_photos(self, account):
         images = []
@@ -884,16 +923,19 @@ class App(tk.Tk):
         account = self.selected_suggested_artist()
         if not account:
             return
-        if status == "APPROVED" and not messagebox.askyesno(
-            "Approve AI-Free artist",
+        title = "Approve AI-Free creator" if status == "APPROVED" else "Reject / block creator request"
+        message = (
             f"Approve {account.get('displayName', 'this creator')} as AI-Free verified? "
-            "Their profile will become public in Verified Creators.",
-        ):
+            "Their profile will become public in Verified Creators."
+            if status == "APPROVED"
+            else f"Reject {account.get('displayName', 'this creator')}? They will receive an automatic rejection email."
+        )
+        if not messagebox.askyesno(title, message):
             return
         self.account_admin_action(
             "Review suggested artist",
             lambda: self.account_admin.set_status(account["id"], status),
-            "Artist approved as AI-Free verified." if status == "APPROVED" else "Artist suggestion rejected.",
+            "Creator approved as AI-Free verified." if status == "APPROVED" else "Creator request rejected and rejection email sent.",
         )
 
     def selected_account(self):
@@ -920,13 +962,31 @@ class App(tk.Tk):
         self.account_detail_text.config(state="normal")
         self.account_detail_text.delete("1.0", tk.END)
         if account:
+            legacy_profile = next(
+                (
+                    creator for creator in self.creators
+                    if creator.get("slug") == account.get("legacyCreatorSlug")
+                ),
+                {},
+            )
+            social_links = account.get("socialLinks")
+            if social_links is None:
+                social_links = legacy_profile.get("socialLinks") or [{
+                    "name": account.get("socialPlatform", ""),
+                    "url": account.get("socialHandle", ""),
+                }]
             details = (
                 f"{account.get('displayName', '')} · {account.get('category', '')}\n"
-                f"Email: {account.get('email', '')} · Portfolio: {account.get('socialPlatform', '')} "
-                f"{account.get('socialHandle', '')}\n"
+                f"Email: {account.get('email', '')}\n"
                 f"Business: {account.get('businessName', '')} · Contact: {account.get('businessContactName', '')} "
                 f"{account.get('businessEmail', '')}\n\n"
-                f"{account.get('bio', '')}"
+                f"Description:\n{account.get('description', '')}\n\n"
+                f"Bio:\n{account.get('bio', '')}\n\n"
+                "Social links:\n"
+                + "\n".join(
+                    f"{link.get('name', 'Link')}: {link.get('url', '')}"
+                    for link in social_links
+                )
             )
             self.account_detail_text.insert("1.0", details.strip())
             profile_image_id = account.get("profileImageId")
@@ -1084,7 +1144,9 @@ class App(tk.Tk):
                 "category": category_map.get(creator.get("category"), "Art"),
                 "socialPlatform": primary_link.get("name") or "Other",
                 "socialHandle": primary_link.get("url", ""),
-                "bio": creator.get("bio") or creator.get("description", ""),
+                "description": creator.get("description", ""),
+                "bio": creator.get("bio", ""),
+                "socialLinks": social_links,
                 "businessName": creator.get("studio", ""),
             })
 
@@ -1165,6 +1227,24 @@ class App(tk.Tk):
         table.configure(yscrollcommand=scrollbar.set)
         table.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
+
+        def scroll_results(event):
+            if getattr(event, "num", None) == 4:
+                amount = -1
+            elif getattr(event, "num", None) == 5:
+                amount = 1
+            else:
+                delta = getattr(event, "delta", 0)
+                amount = -int(delta / 120) if abs(delta) >= 120 else (-1 if delta > 0 else 1)
+            table.yview_scroll(amount, "units")
+            return "break"
+
+        for widget in (table, table_frame):
+            widget.bind("<MouseWheel>", scroll_results)
+            widget.bind("<Button-4>", scroll_results)
+            widget.bind("<Button-5>", scroll_results)
+        table.bind("<Enter>", lambda _event: table.focus_set())
+
         for index, item in enumerate(results):
             status = {
                 "CREATED": "Login created",
@@ -1238,8 +1318,6 @@ class App(tk.Tk):
             ("email", "Email address"),
             ("displayName", "Display name"),
             ("category", "Category"),
-            ("socialPlatform", "Social platform"),
-            ("socialHandle", "Social profile URL"),
             ("businessName", "Business name"),
             ("businessContactName", "Business contact"),
             ("businessEmail", "Business email"),
@@ -1255,16 +1333,107 @@ class App(tk.Tk):
             entry.insert(0, account.get(key, "") or "")
             entry.grid(row=row, column=1, sticky="ew", padx=12, pady=5)
             entries[key] = entry
-        bio_row = len(fields)
-        ttk.Label(window, text="Bio").grid(row=bio_row, column=0, sticky="nw", padx=12, pady=5)
-        bio = tk.Text(window, width=48, height=6, wrap="word")
-        bio.insert("1.0", account.get("bio", "") or "")
+        legacy_profile = next(
+            (
+                creator for creator in self.creators
+                if creator.get("slug") == account.get("legacyCreatorSlug")
+            ),
+            {},
+        )
+        sections = legacy_profile.get("sections", [])
+        legacy_about = next(
+            (section.get("content", "") for section in sections
+             if section.get("title", "").lower().startswith("about ")),
+            "",
+        )
+        description_value = account.get("description")
+        bio_value = account.get("bio", "")
+        if not description_value and legacy_profile:
+            description_value = legacy_profile.get("bio") or legacy_profile.get("description", "")
+            bio_value = legacy_about or bio_value
+        description_row = len(fields)
+        ttk.Label(window, text="Description", style="Muted.TLabel").grid(
+            row=description_row, column=0, sticky="nw", padx=12, pady=5,
+        )
+        description = tk.Text(window, width=54, height=4, wrap="word")
+        description.insert("1.0", description_value or "")
+        description.grid(row=description_row, column=1, sticky="ew", padx=12, pady=5)
+        bio_row = description_row + 1
+        ttk.Label(window, text="Bio / About work", style="Muted.TLabel").grid(
+            row=bio_row, column=0, sticky="nw", padx=12, pady=5,
+        )
+        bio = tk.Text(window, width=54, height=6, wrap="word")
+        bio.insert("1.0", bio_value or "")
         bio.grid(row=bio_row, column=1, sticky="ew", padx=12, pady=5)
+
+        social_row = bio_row + 1
+        ttk.Label(window, text="Social links", style="Muted.TLabel").grid(
+            row=social_row, column=0, sticky="nw", padx=12, pady=5,
+        )
+        social_frame = ttk.Frame(window)
+        social_frame.grid(row=social_row, column=1, sticky="ew", padx=12, pady=5)
+        social_frame.columnconfigure(1, weight=1)
+        social_rows = []
+
+        def add_social_row(link=None):
+            row = len(social_rows)
+            row_frame = ttk.Frame(social_frame)
+            row_frame.grid(row=row, column=0, columnspan=3, sticky="ew", pady=3)
+            name = ttk.Entry(row_frame, width=20)
+            name.insert(0, (link or {}).get("name", ""))
+            name.grid(row=0, column=0, padx=(0, 6))
+            url = ttk.Entry(row_frame)
+            url.insert(0, (link or {}).get("url", ""))
+            url.grid(row=0, column=1, sticky="ew")
+            row_frame.columnconfigure(1, weight=1)
+            row_data = {"frame": row_frame, "name": name, "url": url}
+            social_rows.append(row_data)
+
+            def remove_row():
+                social_rows.remove(row_data)
+                row_frame.destroy()
+                for index, item in enumerate(social_rows):
+                    item["frame"].grid_configure(row=index)
+
+            ttk.Button(row_frame, text="Remove", command=remove_row).grid(row=0, column=2, padx=(6, 0))
+
+        account_links = account.get("socialLinks")
+        if account_links is None and legacy_profile:
+            account_links = legacy_profile.get("socialLinks", [])
+        if account_links is None:
+            account_links = [{
+                "name": account.get("socialPlatform", ""),
+                "url": account.get("socialHandle", ""),
+            }]
+        for link in account_links:
+            add_social_row(link)
+        ttk.Button(
+            social_frame, text="+ Add social link", command=lambda: add_social_row(),
+        ).grid(row=len(social_rows), column=0, sticky="w", pady=(4, 0))
         window.columnconfigure(1, weight=1)
 
         def save():
             profile = {key: entry.get().strip() for key, entry in entries.items()}
+            profile["description"] = description.get("1.0", "end-1c").strip()
             profile["bio"] = bio.get("1.0", "end-1c").strip()
+            profile["socialLinks"] = []
+            for item in social_rows:
+                name = item["name"].get().strip()
+                url = item["url"].get().strip()
+                if name or url:
+                    if not name or not url:
+                        messagebox.showerror(
+                            "Incomplete social link",
+                            "Provide both a platform name and link, or remove the blank row.",
+                            parent=window,
+                        )
+                        return
+                    profile["socialLinks"].append({"name": name, "url": url})
+            first_social = profile["socialLinks"][0] if profile["socialLinks"] else {
+                "name": "Other", "url": "",
+            }
+            profile["socialPlatform"] = first_social["name"]
+            profile["socialHandle"] = first_social["url"]
             self.account_admin_action(
                 "Edit member account",
                 lambda: self.account_admin.update_profile(account["id"], profile),
@@ -1273,7 +1442,7 @@ class App(tk.Tk):
             window.destroy()
 
         ttk.Button(window, text="Save account", command=save).grid(
-            row=bio_row + 1, column=1, sticky="e", padx=12, pady=12,
+            row=social_row + 1, column=1, sticky="e", padx=12, pady=12,
         )
 
     def upload_selected_account_photo(self, kind):
@@ -1420,11 +1589,21 @@ class App(tk.Tk):
         fields = [
             ("name", "Name", "Creator's public name"),
             ("slug", "Profile slug", "Used in the profile URL"),
-            ("description", "Short description", "Shown on the creator listing"),
-            ("bio", "Bio", "The longer profile introduction"),
         ]
         for key, label, hint in fields:
             self.add_labeled_entry(key, label, hint)
+        self.add_labeled_text(
+            "description",
+            "Description",
+            "Shown on creator cards and at the top of the public profile",
+            height=4,
+        )
+        self.add_labeled_text(
+            "bio",
+            "Bio",
+            "Shown in the About section of the public profile",
+            height=6,
+        )
         self.add_labeled_combo("category", "Niche", CREATOR_NICHES)
 
         self.add_heading("Tattooist details", "Shown on the map's Artists tab. Only used when Niche is Tattooist.")
@@ -1512,8 +1691,60 @@ class App(tk.Tk):
         ttk.Label(field_frame, text=hint, style="Muted.TLabel").pack(anchor="w")
         self.fields[key] = widget
         widget.bind("<KeyRelease>", lambda _event: self.update_preview())
+        if key == "bio":
+            widget.bind("<KeyRelease>", lambda _event: self.sync_bio_field_to_about())
         if key == "name":
             widget.bind("<KeyRelease>", lambda _event: self.update_standard_section_title())
+
+    def add_labeled_text(self, key, label, hint, height):
+        frame = ttk.Frame(self.form, style="Panel.TFrame")
+        frame.pack(fill="x", pady=4)
+        ttk.Label(frame, text=label, width=19, anchor="nw").pack(side="left")
+        field_frame = ttk.Frame(frame, style="Panel.TFrame")
+        field_frame.pack(side="left", fill="x", expand=True)
+        widget = tk.Text(
+            field_frame, height=height, wrap="word", undo=True,
+            relief="solid", borderwidth=1, padx=8, pady=6,
+        )
+        widget.pack(fill="x")
+        ttk.Label(field_frame, text=hint, style="Muted.TLabel").pack(anchor="w")
+        self.fields[key] = widget
+        widget.bind("<KeyRelease>", lambda _event: self.update_preview())
+
+    @staticmethod
+    def field_value(widget):
+        if isinstance(widget, tk.Text):
+            return widget.get("1.0", "end-1c").strip()
+        return widget.get().strip()
+
+    @staticmethod
+    def set_field_value(widget, value):
+        if isinstance(widget, tk.Text):
+            widget.delete("1.0", tk.END)
+            widget.insert("1.0", value or "")
+        else:
+            widget.delete(0, tk.END)
+            widget.insert(0, value or "")
+
+    def sync_bio_field_to_about(self):
+        if self.syncing_creator_bio or not self.section_rows or not self.fields.get("bio"):
+            self.update_preview()
+            return
+        self.syncing_creator_bio = True
+        about = self.section_rows[0][2]
+        about.delete("1.0", tk.END)
+        about.insert("1.0", self.field_value(self.fields["bio"]))
+        self.syncing_creator_bio = False
+        self.update_preview()
+
+    def sync_about_to_bio(self):
+        if self.syncing_creator_bio or not self.section_rows or not self.fields.get("bio"):
+            self.update_preview()
+            return
+        self.syncing_creator_bio = True
+        self.set_field_value(self.fields["bio"], self.section_rows[0][2].get("1.0", "end-1c").strip())
+        self.syncing_creator_bio = False
+        self.update_preview()
 
     def add_labeled_combo(self, key, label, values):
         frame = ttk.Frame(self.form, style="Panel.TFrame")
@@ -1542,13 +1773,16 @@ class App(tk.Tk):
         self.section_rows.append((row, title, content))
         title.bind("<KeyRelease>", lambda _event: self.update_preview())
         if len(self.section_rows) != 2:
-            content.bind("<KeyRelease>", lambda _event: self.update_preview())
+            if len(self.section_rows) == 0:
+                content.bind("<KeyRelease>", lambda _event: self.sync_about_to_bio())
+            else:
+                content.bind("<KeyRelease>", lambda _event: self.update_preview())
         self.update_preview()
 
     def ensure_standard_sections(self):
         while len(self.section_rows) < 2:
             self.add_section_row()
-        name = self.fields["name"].get().strip() or "[Name]"
+        name = self.field_value(self.fields["name"]) or "[Name]"
         first_name = name.split()[0]
         first_title = f"About {first_name}'s Work"
         self.section_rows[0][1].delete(0, tk.END)
@@ -1585,7 +1819,8 @@ class App(tk.Tk):
     def update_standard_section_title(self):
         if not self.section_rows:
             return
-        name = self.fields["name"].get().strip().split()[0] if self.fields["name"].get().strip() else "[Name]"
+        creator_name = self.field_value(self.fields["name"])
+        name = creator_name.split()[0] if creator_name else "[Name]"
         self.section_rows[0][1].delete(0, tk.END)
         self.section_rows[0][1].insert(0, f"About {name}'s Work")
         self.update_preview()
@@ -1593,10 +1828,10 @@ class App(tk.Tk):
     def update_preview(self):
         if not hasattr(self, "preview_text"):
             return
-        name = self.fields.get("name").get().strip() if self.fields.get("name") else "Creator name"
-        category = self.fields.get("category").get().strip() if self.fields.get("category") else ""
-        description = self.fields.get("description").get().strip() if self.fields.get("description") else ""
-        bio = self.fields.get("bio").get().strip() if self.fields.get("bio") else ""
+        name = self.field_value(self.fields["name"]) if self.fields.get("name") else "Creator name"
+        category = self.field_value(self.fields["category"]) if self.fields.get("category") else ""
+        description = self.field_value(self.fields["description"]) if self.fields.get("description") else ""
+        bio = self.field_value(self.fields["bio"]) if self.fields.get("bio") else ""
         sections = [
             {"title": title.get().strip(), "content": content.get("1.0", tk.END).strip()}
             for _, title, content in self.section_rows
@@ -1611,12 +1846,14 @@ class App(tk.Tk):
         self.preview_text.insert(tk.END, "AI-FREE VERIFICATION\n", "heading")
         self.preview_text.insert(tk.END, STANDARD_CARD["description"] + "\n")
         self.preview_text.insert(tk.END, STANDARD_CARD["status"] + "\n\n", "label")
-        if bio:
-            self.preview_text.insert(tk.END, bio + "\n\n")
         for index, section in enumerate(sections):
             if section["title"] or section["content"]:
                 self.preview_text.insert(tk.END, section["title"] + "\n", "heading")
-                self.preview_text.insert(tk.END, section["content"] + "\n\n")
+                content = bio if index == 0 and bio else section["content"]
+                self.preview_text.insert(tk.END, content + "\n\n")
+        if bio and not sections:
+            self.preview_text.insert(tk.END, "ABOUT " + name.upper() + "'S WORK\n", "heading")
+            self.preview_text.insert(tk.END, bio + "\n\n")
         if links:
             self.preview_text.insert(tk.END, "LINKS\n", "heading")
             for link in links:
@@ -1746,7 +1983,10 @@ class App(tk.Tk):
                 data_file = self.client.file(DATA_PATH, branch)
                 content = base64.b64decode(data_file["content"]).decode("utf-8")
                 self.creators = [
-                    {**creator, "category": LEGACY_NICHE_MAP.get(creator.get("category"), creator.get("category", ""))}
+                    {
+                        **normalize_creator_profile(creator),
+                        "category": LEGACY_NICHE_MAP.get(creator.get("category"), creator.get("category", "")),
+                    }
                     for creator in json.loads(content)
                 ]
                 self.after(0, lambda: self.refresh_list(silent))
@@ -2391,8 +2631,7 @@ class App(tk.Tk):
 
     def fill_form(self, creator):
         for key in ("name", "slug", "description", "bio"):
-            self.fields[key].delete(0, tk.END)
-            self.fields[key].insert(0, creator.get(key, ""))
+            self.set_field_value(self.fields[key], creator.get(key, ""))
         category = LEGACY_NICHE_MAP.get(creator.get("category"), creator.get("category", ""))
         self.fields["category"].set(category if category in CREATOR_NICHES else "Artist")
         self.fields["studio"].delete(0, tk.END)
@@ -2583,7 +2822,7 @@ class App(tk.Tk):
         links = [{"name": name.get().strip(), "url": url.get().strip()} for _, name, url in self.social_rows]
         if len(sections) < 2:
             raise ValueError("The standard About Work and Verification Review sections are required.")
-        creator_name = self.fields["name"].get().strip()
+        creator_name = self.field_value(self.fields["name"])
         first_name = creator_name.split()[0] if creator_name else "[Name]"
         sections[0]["title"] = f"About {first_name}'s Work"
         sections[1]["title"] = "Verification Review"
@@ -2596,7 +2835,8 @@ class App(tk.Tk):
         # this editor. Rebuilding the dict from the form alone could silently drop
         # tattooist metadata (or any newer backend fields) when publishing.
         creator = dict(self.selected or {})
-        creator.update({key: widget.get().strip() for key, widget in self.fields.items()})
+        creator.update({key: self.field_value(widget) for key, widget in self.fields.items()})
+        creator["bio"] = sections[0]["content"]
 
         is_tattooist = creator.get("category") == "Tattooist"
         styles_raw = creator.pop("styles", "")

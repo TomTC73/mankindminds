@@ -65,19 +65,24 @@ filtering, and a separate **Verified accounts** sub-tab for approved member
 profiles. Existing published creator pages are treated as VERIFIED and marked
 in the Creator pages list. From Verified accounts, staff can prepare claim logins
 for all existing pages, edit account details, send a password-reset link, delete
-an account, or issue a temporary claim login. Account deletion is also available
-from the pending and rejected queues. **Approve** lists pending submissions;
-rejecting one sends a styled email automatically. **Rejected** lists rejected
-accounts and allows a failed rejection notice to be resent. **Tools** groups the
+an account, or issue a temporary claim login. Account editing keeps Description
+(creator cards and the top of the page), Bio (the About Work section), and
+multiple social links separate. Account deletion is also available from the
+pending and rejected queues. **Approve** lists pending submissions and opens
+their profile details and submitted photos for review; staff can approve or
+reject/block a request, and rejecting one sends a styled email automatically.
+**Rejected** lists rejected accounts and allows a failed rejection notice to be
+resent. **Tools** groups the
 Tattoo shops, To Do List, and Analytics workspaces away from creator review.
 
 The account tools use the same GitHub Device Flow sign-in. Configure
 the backend's `STAFF_GITHUB_USERS` environment variable with a comma-separated
 allowlist of GitHub usernames before deploying account management. Only those
 GitHub identities can review, edit, delete, or request password resets for
-member accounts, or manage email/IP bans. Staff can edit member bios, upload
-profile and gallery photos, and remove uploaded photos. Member photos and bios
-remain private until account approval. IP bans are stored as keyed one-way
+member accounts, or manage email/IP bans. Staff can edit creator descriptions,
+bios, social links, and profile details, upload profile and gallery photos,
+and remove uploaded photos. Member photos and bios remain private until account
+approval. IP bans are stored as keyed one-way
 fingerprints; staff cannot retrieve the original IP from the account database.
 Set `IP_FINGERPRINT_SECRET` to a separate high-entropy Secret Manager secret on
 Cloud Run and keep it unchanged so bans and duplicate application checks remain
@@ -89,7 +94,7 @@ creator enters the one-time code emailed to their address.
 
 Use **Prepare logins for existing creators** to add approved, claim-required
 accounts for the published creator pages. The existing public pages remain
-published and unchanged. The staff app shows each generated temporary sign-in
+published while their approved account profiles can be edited in place. The staff app shows each generated temporary sign-in
 email and high-entropy password once; the `.invalid` email domain is only a
 login identifier and cannot receive mail. Share the details securely. The
 creator must verify an email address they control and choose a new password
@@ -110,13 +115,13 @@ The local identity must have object access to that bucket. For local staff-app
 development, set `MM_ACCOUNT_API` to `http://localhost:8080/api/accounts`
 before launching `app.py`.
 
-To build the staff executable from this folder, run:
+To rebuild the scroll-enabled staff executable from this folder, run:
 
 ```powershell
-python -m PyInstaller --noconfirm --clean --onefile --windowed --name MankindMindsStaffManager app.py
+python -m PyInstaller --noconfirm --clean MankindMindsStaffManagerScrollable.spec
 ```
 
-The executable is written to `dist/MankindMindsStaffManager.exe`.
+The executable is written to `dist/MankindMindsStaffManagerScrollable.exe`.
 
 ### One-time backend deployment setup
 
