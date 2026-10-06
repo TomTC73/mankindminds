@@ -81,6 +81,22 @@ export function AccountProvider({ children }) {
     return result.account;
   }, [establishSession, request]);
 
+  const sendClaimVerificationCode = useCallback(async (email) => {
+    return request("/accounts/claim/send-code", {
+      method: "POST",
+      body: JSON.stringify({ email }),
+    });
+  }, [request]);
+
+  const claimAccount = useCallback(async (claim) => {
+    const result = await request("/accounts/claim", {
+      method: "POST",
+      body: JSON.stringify(claim),
+    });
+    setAccount(result.account);
+    return result.account;
+  }, [request]);
+
   const signOut = useCallback(async () => {
     try {
       await request("/accounts/logout", { method: "POST" });
@@ -127,9 +143,11 @@ export function AccountProvider({ children }) {
   }, [clearSession, token]);
 
   const value = useMemo(() => ({
-    account, token, loading, request, signIn, signUp, sendSignupVerificationCode, signOut, updateProfile,
+    account, token, loading, request, signIn, signUp, sendSignupVerificationCode,
+    sendClaimVerificationCode, claimAccount, signOut, updateProfile,
     uploadImage, deleteImage, loadImage,
-  }), [account, loading, request, signIn, signUp, sendSignupVerificationCode, signOut, token, updateProfile, uploadImage, deleteImage, loadImage]);
+  }), [account, loading, request, signIn, signUp, sendSignupVerificationCode,
+    sendClaimVerificationCode, claimAccount, signOut, token, updateProfile, uploadImage, deleteImage, loadImage]);
 
   return <AccountContext.Provider value={value}>{children}</AccountContext.Provider>;
 }

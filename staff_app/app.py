@@ -10,6 +10,7 @@ import mimetypes
 import os
 import threading
 import time
+import tempfile
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -197,6 +198,15 @@ class AccountAdminClient:
     def set_status(self, account_id, status):
         return self.request("PUT", f"/staff/{urllib.parse.quote(account_id, safe='')}/status", {"status": status})
 
+    def issue_claim_credentials(self, account_id):
+        return self.request("POST", f"/staff/{urllib.parse.quote(account_id, safe='')}/claim-credentials")
+
+    def import_legacy_claim(self, creator):
+        return self.request("POST", "/staff/legacy-claim", creator)
+
+    def resend_rejection_email(self, account_id):
+        return self.request("POST", f"/staff/{urllib.parse.quote(account_id, safe='')}/rejection-email")
+
     def update_profile(self, account_id, profile):
         return self.request("PUT", f"/staff/{urllib.parse.quote(account_id, safe='')}/profile", profile)
 
@@ -238,6 +248,24 @@ class AccountAdminClient:
             "DELETE",
             f"/staff/{urllib.parse.quote(account_id, safe='')}/images/{urllib.parse.quote(image_id, safe='')}",
         )
+
+    def download_image(self, account_id, image_id):
+        url = self.base_url + (
+            f"/staff/{urllib.parse.quote(account_id, safe='')}/images/"
+            f"{urllib.parse.quote(image_id, safe='')}"
+        )
+        request = urllib.request.Request(url, method="GET")
+        request.add_header("Accept", "image/jpeg,image/png,image/webp")
+        request.add_header("Authorization", "Bearer " + self.token)
+        try:
+            with urllib.request.urlopen(request, timeout=60) as response:
+                content_type = response.headers.get_content_type()
+                if content_type not in ("image/jpeg", "image/png", "image/webp"):
+                    raise RuntimeError("The account service returned an unsupported photo type.")
+                return response.read(), content_type
+        except urllib.error.HTTPError as error:
+            detail = error.read().decode("utf-8", "replace")
+            raise RuntimeError(f"Account API returned {error.code}: {detail}") from error
 
     def reset_password(self, account_id):
         return self.request("POST", f"/staff/{urllib.parse.quote(account_id, safe='')}/password-reset")
@@ -296,6 +324,8 @@ class App(tk.Tk):
         self.account_admin = None
         self.account_rows = {}
         self.suggested_rows = {}
+        self.rejected_rows = {}
+        self.temporary_photo_dirs = []
         self.ban_rows = {}
         self.creators = []
         self.selected = None
@@ -319,7 +349,13 @@ class App(tk.Tk):
         self.ticket_editor_enabled = False
         self.build_styles()
         self.build_ui()
+        self.protocol("WM_DELETE_WINDOW", self.close_app)
         self.after(REFRESH_MS, self.auto_refresh)
+
+    def close_app(self):
+        for temporary_dir in self.temporary_photo_dirs:
+            temporary_dir.cleanup()
+        self.destroy()
 
     def build_styles(self):
         style = ttk.Style(self)
@@ -388,8 +424,14 @@ class App(tk.Tk):
         tabs = ttk.Notebook(self)
         tabs.pack(fill="both", expand=True, padx=22, pady=(0, 16))
         self.tabs = tabs
-        main = ttk.Panedwindow(tabs, orient="horizontal")
-        tabs.add(main, text="Creators")
+        creators_tab = ttk.Frame(tabs, style="Panel.TFrame")
+        tabs.add(creators_tab, text="Creators")
+        self.creators_subtabs = ttk.Notebook(creators_tab)
+        self.creators_subtabs.pack(fill="both", expand=True)
+        main = ttk.Panedwindow(self.creators_subtabs, orient="horizontal")
+        self.creators_subtabs.add(main, text="Creator pages")
+        tattoo_creators_tab = ttk.Frame(self.creators_subtabs, style="Panel.TFrame", padding=20)
+        self.creators_subtabs.add(tattoo_creators_tab, text="Tattoo creators")
         left = ttk.Frame(main, style="Panel.TFrame", padding=16)
         right = ttk.Frame(main, style="Panel.TFrame", padding=20)
         preview = ttk.Frame(main, style="Panel.TFrame", padding=16)
@@ -402,11 +444,17 @@ class App(tk.Tk):
         ttk.Label(list_header, text="Creators", style="Section.TLabel").pack(side="left")
         self.count_label = ttk.Label(list_header, text="0", style="Muted.TLabel")
         self.count_label.pack(side="right")
+        self.creator_category = ttk.Combobox(
+            left, values=("All categories",) + CREATOR_NICHES, state="readonly",
+        )
+        self.creator_category.set("All categories")
+        self.creator_category.bind("<<ComboboxSelected>>", lambda _event: self.refresh_list())
+        self.creator_category.pack(fill="x", pady=(12, 0))
         self.search = ttk.Entry(left)
         self.search.insert(0, "Search creators...")
         self.search.bind("<FocusIn>", self.clear_search_placeholder)
         self.search.bind("<KeyRelease>", lambda _event: self.refresh_list())
-        self.search.pack(fill="x", pady=(12, 10))
+        self.search.pack(fill="x", pady=(8, 10))
         self.user_list = ttk.Treeview(left, columns=("category",), show="tree headings", selectmode="browse")
         self.user_list.heading("#0", text="Name")
         self.user_list.heading("category", text="Category")
@@ -441,58 +489,94 @@ class App(tk.Tk):
         self.preview_text.tag_configure("heading", font=("Georgia", 14), spacing1=12, spacing3=4)
         self.preview_text.tag_configure("label", foreground=PALETTE["accent"], font=("Segoe UI Semibold", 9))
         self.update_preview()
+        self.build_tattoo_creators_panel(tattoo_creators_tab)
+        self.accounts_tab = ttk.Frame(self.creators_subtabs, style="Panel.TFrame", padding=20)
+        self.creators_subtabs.add(self.accounts_tab, text="Verified accounts")
+        self.build_account_admin(self.accounts_tab)
+
         suggested_tab = ttk.Frame(tabs, style="Panel.TFrame", padding=20)
-        tabs.add(suggested_tab, text="Suggested artists")
+        tabs.add(suggested_tab, text="Approve")
         self.build_suggested_artist_queue(suggested_tab)
-        tattoo_tab = ttk.Frame(tabs, style="Panel.TFrame", padding=20)
-        tabs.add(tattoo_tab, text="Tattoo Creators")
-        self.build_tattoo_creators_panel(tattoo_tab)
-        shops_tab = ttk.Frame(tabs, style="Panel.TFrame", padding=20)
-        tabs.add(shops_tab, text="Tattoo shops")
+
+        rejected_tab = ttk.Frame(tabs, style="Panel.TFrame", padding=20)
+        tabs.add(rejected_tab, text="Rejected")
+        self.build_rejected_account_queue(rejected_tab)
+
+        tools_tab = ttk.Frame(tabs, style="Panel.TFrame", padding=20)
+        tabs.add(tools_tab, text="Tools")
+        tool_sections = ttk.Notebook(tools_tab)
+        tool_sections.pack(fill="both", expand=True)
+        shops_tab = ttk.Frame(tool_sections, style="Panel.TFrame", padding=20)
+        tool_sections.add(shops_tab, text="Tattoo shops")
         self.build_studio_editor(shops_tab)
         self.set_studio_editor_enabled(False)
-        tickets_tab = ttk.Frame(tabs, style="Panel.TFrame", padding=20)
-        tabs.add(tickets_tab, text="To Do List")
+        tickets_tab = ttk.Frame(tool_sections, style="Panel.TFrame", padding=20)
+        tool_sections.add(tickets_tab, text="To Do List")
         self.build_ticket_editor(tickets_tab)
         self.set_ticket_editor_enabled(False)
-        analytics_tab = ttk.Frame(tabs, style="Panel.TFrame", padding=20)
-        tabs.add(analytics_tab, text="Analytics")
+        analytics_tab = ttk.Frame(tool_sections, style="Panel.TFrame", padding=20)
+        tool_sections.add(analytics_tab, text="Analytics")
         self.build_analytics_panel(analytics_tab)
-        self.accounts_tab = ttk.Frame(tabs, style="Panel.TFrame", padding=20)
-        tabs.add(self.accounts_tab, text="Member accounts")
-        self.build_account_admin(self.accounts_tab)
 
     def build_account_admin(self, parent):
         parent.columnconfigure(0, weight=1)
-        parent.rowconfigure(1, weight=1)
-        ttk.Label(parent, text="Member accounts", style="Section.TLabel").grid(row=0, column=0, sticky="w")
+        parent.rowconfigure(2, weight=1)
+        parent.rowconfigure(6, weight=1)
+        ttk.Label(parent, text="Verified creator accounts", style="Section.TLabel").grid(row=0, column=0, sticky="w")
         ttk.Label(
             parent,
-            text="Approved accounts are published in the Verified Creators section as AI-Free verified artists.",
+            text="Existing public pages are VERIFIED; creators must verify their own sign-in email.",
             style="Muted.TLabel",
         ).grid(row=0, column=1, sticky="e")
+        self.account_refresh_button = ttk.Button(parent, text="Refresh", command=self.load_account_admin)
+        self.account_refresh_button.grid(row=0, column=2, sticky="e")
 
+        self.account_category = ttk.Combobox(
+            parent, values=("All categories", "Tattoos", "Music", "Writing", "Videos", "Art"),
+            state="readonly", width=20,
+        )
+        self.account_category.set("All categories")
+        self.account_category.bind("<<ComboboxSelected>>", lambda _event: self.refresh_approved_account_tree())
+        self.account_category.grid(row=1, column=0, sticky="w", pady=(10, 0))
+        self.verified_legacy_count = ttk.Label(
+            parent, text="Existing site creators are listed as VERIFIED under Creator pages.", style="Muted.TLabel",
+        )
+        self.verified_legacy_count.grid(row=1, column=1, sticky="e", pady=(10, 0))
+        self.legacy_import_button = ttk.Button(
+            parent, text="Prepare logins for existing creators", command=self.prepare_legacy_claim_logins,
+        )
+        self.legacy_import_button.grid(row=1, column=2, sticky="e", pady=(10, 0))
+        self.legacy_import_button.config(state="disabled")
         self.account_tree = ttk.Treeview(
             parent,
-            columns=("email", "name", "category", "status", "email_verified", "photos"),
+            columns=("email", "username", "name", "category", "verification", "email_verified", "photos"),
             show="headings",
             selectmode="browse",
         )
         for column, title, width in (
-            ("email", "Email", 260),
-            ("name", "Display name", 190),
+            ("email", "Email / temporary login", 220),
+            ("username", "Temporary username", 150),
+            ("name", "Creator", 170),
             ("category", "Category", 120),
-            ("status", "Review", 130),
+            ("verification", "Creator status", 110),
             ("email_verified", "Email verified", 110),
             ("photos", "Photos", 75),
         ):
             self.account_tree.heading(column, text=title)
             self.account_tree.column(column, width=width)
-        self.account_tree.grid(row=1, column=0, columnspan=2, sticky="nsew", pady=(12, 8))
+        self.account_tree.grid(row=2, column=0, columnspan=3, sticky="nsew", pady=(12, 8))
         self.account_tree.bind("<<TreeviewSelect>>", self.select_account)
 
+        detail_frame = ttk.LabelFrame(parent, text="Selected creator page details", padding=10)
+        detail_frame.grid(row=3, column=0, columnspan=2, sticky="ew", pady=(8, 0))
+        self.account_detail_text = tk.Text(
+            detail_frame, height=5, wrap="word", state="disabled",
+            background="#ffffff", foreground=PALETTE["ink"], relief="solid", borderwidth=1,
+        )
+        self.account_detail_text.pack(fill="x", expand=True)
+
         photo_frame = ttk.LabelFrame(parent, text="Member profile photos", padding=10)
-        photo_frame.grid(row=2, column=0, columnspan=2, sticky="ew", pady=(8, 0))
+        photo_frame.grid(row=4, column=0, columnspan=2, sticky="ew", pady=(8, 0))
         photo_frame.columnconfigure(0, weight=1)
         self.account_photo_tree = ttk.Treeview(
             photo_frame,
@@ -523,22 +607,18 @@ class App(tk.Tk):
         self.account_delete_photo_button.pack(side="left", padx=(8, 0))
 
         actions = ttk.Frame(parent, style="Panel.TFrame")
-        actions.grid(row=3, column=0, columnspan=2, sticky="w", pady=(8, 0))
-        self.account_refresh_button = ttk.Button(actions, text="Refresh", command=self.load_account_admin)
-        self.account_refresh_button.pack(side="left")
-        self.account_approve_button = ttk.Button(actions, text="Approve", command=lambda: self.set_selected_account_status("APPROVED"))
-        self.account_approve_button.pack(side="left", padx=(8, 0))
-        self.account_reject_button = ttk.Button(actions, text="Reject", command=lambda: self.set_selected_account_status("REJECTED"))
-        self.account_reject_button.pack(side="left", padx=(8, 0))
+        actions.grid(row=5, column=0, columnspan=2, sticky="w", pady=(8, 0))
         self.account_edit_button = ttk.Button(actions, text="Edit details", command=self.edit_selected_account)
         self.account_edit_button.pack(side="left", padx=(8, 0))
         self.account_reset_button = ttk.Button(actions, text="Send password reset", command=self.reset_selected_account_password)
         self.account_reset_button.pack(side="left", padx=(8, 0))
+        self.account_claim_button = ttk.Button(actions, text="Issue / reset claim login", command=self.issue_selected_claim_credentials)
+        self.account_claim_button.pack(side="left", padx=(8, 0))
         self.account_delete_button = ttk.Button(actions, text="Delete account", command=self.delete_selected_account)
         self.account_delete_button.pack(side="left", padx=(8, 0))
 
         ban_frame = ttk.LabelFrame(parent, text="Banned email addresses and IPs", padding=12)
-        ban_frame.grid(row=4, column=0, columnspan=2, sticky="nsew", pady=(18, 0))
+        ban_frame.grid(row=6, column=0, columnspan=2, sticky="nsew", pady=(18, 0))
         ban_frame.columnconfigure(1, weight=1)
         self.ban_type = ttk.Combobox(ban_frame, values=("email", "ip"), state="readonly", width=10)
         self.ban_type.set("email")
@@ -563,20 +643,20 @@ class App(tk.Tk):
         heading = ttk.Frame(parent, style="Panel.TFrame")
         heading.grid(row=0, column=0, sticky="ew")
         heading.columnconfigure(0, weight=1)
-        ttk.Label(heading, text="Suggested artists", style="Section.TLabel").grid(row=0, column=0, sticky="w")
+        ttk.Label(heading, text="Approve submitted creators", style="Section.TLabel").grid(row=0, column=0, sticky="w")
         ttk.Label(
             heading,
-            text="Review a creator’s profile and portfolio in Member accounts before approving.",
+            text="Review verified-email submissions. Rejections automatically email the creator.",
             style="Muted.TLabel",
         ).grid(row=1, column=0, sticky="w", pady=(4, 0))
         self.suggested_refresh_button = ttk.Button(
-            heading, text="Refresh suggestions", command=self.load_account_admin,
+            heading, text="Refresh", command=self.load_account_admin,
         )
         self.suggested_refresh_button.grid(row=0, column=1, rowspan=2, sticky="e", padx=(16, 0))
 
         self.suggested_artist_tree = ttk.Treeview(
             parent,
-            columns=("name", "category", "email", "email_verified", "photos"),
+            columns=("name", "category", "email", "photos"),
             show="headings",
             selectmode="browse",
         )
@@ -584,7 +664,6 @@ class App(tk.Tk):
             ("name", "Creator", 220),
             ("category", "Category", 150),
             ("email", "Email", 280),
-            ("email_verified", "Email verified", 120),
             ("photos", "Photos", 75),
         ):
             self.suggested_artist_tree.heading(column, text=title)
@@ -605,7 +684,68 @@ class App(tk.Tk):
             actions, text="Reject suggestion", command=lambda: self.set_selected_suggested_status("REJECTED"),
         )
         self.suggested_reject_button.pack(side="left", padx=(8, 0))
+        self.suggested_delete_button = ttk.Button(
+            actions, text="Delete account", command=self.delete_selected_suggested_account,
+        )
+        self.suggested_delete_button.pack(side="left", padx=(8, 0))
         self.select_suggested_artist()
+
+    def build_rejected_account_queue(self, parent):
+        parent.columnconfigure(0, weight=1)
+        parent.rowconfigure(1, weight=1)
+        heading = ttk.Frame(parent, style="Panel.TFrame")
+        heading.grid(row=0, column=0, sticky="ew")
+        heading.columnconfigure(0, weight=1)
+        ttk.Label(heading, text="Rejected creator accounts", style="Section.TLabel").grid(row=0, column=0, sticky="w")
+        ttk.Label(
+            heading, text="Rejections are emailed automatically. Use resend if delivery needs to be retried.",
+            style="Muted.TLabel",
+        ).grid(row=1, column=0, sticky="w", pady=(4, 0))
+        ttk.Button(heading, text="Refresh", command=self.load_account_admin).grid(
+            row=0, column=1, rowspan=2, sticky="e", padx=(16, 0),
+        )
+        self.rejected_artist_tree = ttk.Treeview(
+            parent, columns=("name", "category", "email", "reviewed"), show="headings", selectmode="browse",
+        )
+        for column, title, width in (
+            ("name", "Creator", 220), ("category", "Category", 150),
+            ("email", "Email", 280), ("reviewed", "Reviewed", 180),
+        ):
+            self.rejected_artist_tree.heading(column, text=title)
+            self.rejected_artist_tree.column(column, width=width)
+        self.rejected_artist_tree.grid(row=1, column=0, sticky="nsew", pady=(16, 10))
+        self.rejected_artist_tree.bind("<<TreeviewSelect>>", self.select_rejected_artist)
+        self.resend_rejection_button = ttk.Button(
+            parent, text="Resend rejection email", command=self.resend_selected_rejection,
+        )
+        self.resend_rejection_button.grid(row=2, column=0, sticky="w")
+        self.rejected_delete_button = ttk.Button(
+            parent, text="Delete account", command=self.delete_selected_rejected_account,
+        )
+        self.rejected_delete_button.grid(row=2, column=0, sticky="w", padx=(170, 0))
+        self.select_rejected_artist()
+
+    def select_rejected_artist(self, _event=None):
+        selection = self.rejected_artist_tree.selection()
+        enabled = bool(selection and self.rejected_rows.get(selection[0]) and self.account_admin)
+        self.resend_rejection_button.config(state="normal" if enabled else "disabled")
+        self.rejected_delete_button.config(state="normal" if enabled else "disabled")
+
+    def resend_selected_rejection(self):
+        selection = self.rejected_artist_tree.selection()
+        account = self.rejected_rows.get(selection[0]) if selection else None
+        if not account:
+            return
+        if not messagebox.askyesno(
+            "Resend rejection email",
+            f"Resend the rejection notice to {account.get('email', 'this creator')}?",
+        ):
+            return
+        self.account_admin_action(
+            "Resend rejection email",
+            lambda: self.account_admin.resend_rejection_email(account["id"]),
+            "Rejection email sent.",
+        )
 
     def selected_suggested_artist(self):
         selection = self.suggested_artist_tree.selection()
@@ -618,18 +758,127 @@ class App(tk.Tk):
             self.suggested_review_button,
             self.suggested_approve_button,
             self.suggested_reject_button,
+            self.suggested_delete_button,
         ):
             button.config(state=state)
+
+    def delete_selected_suggested_account(self):
+        account = self.selected_suggested_artist()
+        self.delete_account_record(account)
+
+    def delete_selected_rejected_account(self):
+        selection = self.rejected_artist_tree.selection()
+        account = self.rejected_rows.get(selection[0]) if selection else None
+        self.delete_account_record(account)
+
+    def delete_account_record(self, account):
+        if not account:
+            return
+        if not messagebox.askyesno(
+            "Permanently delete creator account",
+            f"Permanently delete {account.get('email', 'this account')}, including its uploaded photos and sign-in sessions?",
+        ):
+            return
+        self.account_admin_action(
+            "Delete creator account",
+            lambda: self.account_admin.delete_account(account["id"]),
+            "Creator account and uploaded photos deleted.",
+        )
 
     def open_suggested_artist(self):
         account = self.selected_suggested_artist()
         if not account:
             return
-        self.tabs.select(self.accounts_tab)
-        self.account_tree.selection_set(account["id"])
-        self.account_tree.focus(account["id"])
-        self.account_tree.see(account["id"])
-        self.select_account()
+        window = tk.Toplevel(self)
+        window.title("Review creator submission")
+        window.transient(self)
+        window.grab_set()
+        body = ttk.Frame(window, padding=20)
+        body.pack(fill="both", expand=True)
+        ttk.Label(body, text=account.get("displayName", "Creator submission"), style="Section.TLabel").grid(
+            row=0, column=0, columnspan=2, sticky="w", pady=(0, 12),
+        )
+        rows = (
+            ("Email", account.get("email", "")),
+            ("Email verified", "Yes" if account.get("emailVerified") else "No"),
+            ("Category", account.get("category", "")),
+            ("Portfolio type", account.get("socialPlatform", "")),
+            ("Portfolio link", account.get("socialHandle", "")),
+            ("Business / studio", account.get("businessName", "")),
+            ("Business contact", account.get("businessContactName", "")),
+            ("Business email", account.get("businessEmail", "")),
+        )
+        for row_index, (label, value) in enumerate(rows, start=1):
+            ttk.Label(body, text=label + ":", style="Muted.TLabel").grid(
+                row=row_index, column=0, sticky="nw", padx=(0, 12), pady=4,
+            )
+            ttk.Label(body, text=value or "—", wraplength=520).grid(
+                row=row_index, column=1, sticky="nw", pady=4,
+            )
+        bio_row = len(rows) + 1
+        ttk.Label(body, text="Bio:", style="Muted.TLabel").grid(
+            row=bio_row, column=0, sticky="nw", padx=(0, 12), pady=4,
+        )
+        bio = tk.Text(body, width=66, height=7, wrap="word", relief="solid", borderwidth=1)
+        bio.insert("1.0", account.get("bio", "") or "")
+        bio.config(state="disabled")
+        bio.grid(row=bio_row, column=1, sticky="ew", pady=4)
+        photos = len(account.get("galleryImageIds", [])) + bool(account.get("profileImageId"))
+        ttk.Label(body, text=f"Uploaded photos: {photos}").grid(
+            row=bio_row + 1, column=1, sticky="w", pady=(8, 0),
+        )
+        dialog_actions = ttk.Frame(body)
+        dialog_actions.grid(row=bio_row + 2, column=0, columnspan=2, sticky="ew", pady=(14, 0))
+        ttk.Button(dialog_actions, text="Close", command=window.destroy).pack(side="right")
+        if photos:
+            ttk.Button(
+                dialog_actions, text="Open submitted photos",
+                command=lambda: self.open_suggested_photos(account),
+            ).pack(side="right", padx=(0, 8))
+        body.columnconfigure(1, weight=1)
+
+    def open_suggested_photos(self, account):
+        images = []
+        if account.get("profileImageId"):
+            images.append(account["profileImageId"])
+        images.extend(account.get("galleryImageIds", []))
+        if not images:
+            return
+        self.set_status("Downloading private submission photos...", PALETTE["accent"])
+
+        def work():
+            temporary_dir = tempfile.TemporaryDirectory(prefix="mankind-minds-review-")
+            paths = []
+            try:
+                extensions = {"image/jpeg": ".jpg", "image/png": ".png", "image/webp": ".webp"}
+                for index, image_id in enumerate(images, start=1):
+                    content, content_type = self.account_admin.download_image(account["id"], image_id)
+                    path = os.path.join(temporary_dir.name, f"submission-{index}{extensions[content_type]}")
+                    with open(path, "wb") as image_file:
+                        image_file.write(content)
+                    paths.append(path)
+                self.after(0, lambda: self.open_review_image_files(temporary_dir, paths))
+            except Exception as error:
+                temporary_dir.cleanup()
+                self.after(0, lambda message=str(error): messagebox.showerror("Could not open submission photos", message))
+                self.after(0, lambda: self.set_status("Could not load submission photos.", PALETTE["accent"]))
+
+        threading.Thread(target=work, daemon=True).start()
+
+    def open_review_image_files(self, temporary_dir, paths):
+        try:
+            for path in paths:
+                os.startfile(path)
+        except OSError as error:
+            temporary_dir.cleanup()
+            messagebox.showerror("Could not open submission photo", str(error))
+            self.set_status("Could not open submission photo.", PALETTE["accent"])
+            return
+        self.temporary_photo_dirs.append(temporary_dir)
+        self.set_status(
+            "Submission photos opened. Temporary review files will be removed when the staff app closes.",
+            "#46705b",
+        )
 
     def set_selected_suggested_status(self, status):
         account = self.selected_suggested_artist()
@@ -655,24 +904,37 @@ class App(tk.Tk):
         enabled = bool(self.selected_account()) and bool(self.account_admin)
         state = "normal" if enabled else "disabled"
         for button in (
-            self.account_approve_button,
-            self.account_reject_button,
             self.account_edit_button,
-            self.account_reset_button,
+            self.account_claim_button,
             self.account_delete_button,
         ):
             button.config(state=state)
+        self.account_reset_button.config(
+            state="normal" if enabled and not self.selected_account().get("claimRequired") else "disabled",
+        )
         for button in (self.account_upload_profile_button, self.account_upload_gallery_button):
             button.config(state=state)
         self.account_delete_photo_button.config(state="disabled")
         self.account_photo_tree.delete(*self.account_photo_tree.get_children())
         account = self.selected_account()
+        self.account_detail_text.config(state="normal")
+        self.account_detail_text.delete("1.0", tk.END)
         if account:
+            details = (
+                f"{account.get('displayName', '')} · {account.get('category', '')}\n"
+                f"Email: {account.get('email', '')} · Portfolio: {account.get('socialPlatform', '')} "
+                f"{account.get('socialHandle', '')}\n"
+                f"Business: {account.get('businessName', '')} · Contact: {account.get('businessContactName', '')} "
+                f"{account.get('businessEmail', '')}\n\n"
+                f"{account.get('bio', '')}"
+            )
+            self.account_detail_text.insert("1.0", details.strip())
             profile_image_id = account.get("profileImageId")
             if profile_image_id:
                 self.account_photo_tree.insert("", "end", iid=profile_image_id, values=("Profile", profile_image_id))
             for image_id in account.get("galleryImageIds", []):
                 self.account_photo_tree.insert("", "end", iid=image_id, values=("Gallery", image_id))
+        self.account_detail_text.config(state="disabled")
 
     def select_account_photo(self, _event=None):
         enabled = bool(self.selected_account()) and bool(self.account_admin)
@@ -698,28 +960,16 @@ class App(tk.Tk):
         threading.Thread(target=work, daemon=True).start()
 
     def refresh_account_admin(self, rows, bans):
-        self.account_tree.delete(*self.account_tree.get_children())
         self.suggested_artist_tree.delete(*self.suggested_artist_tree.get_children())
+        self.rejected_artist_tree.delete(*self.rejected_artist_tree.get_children())
         self.account_rows = {}
         self.suggested_rows = {}
+        self.rejected_rows = {}
         for account in rows:
             account_id = account.get("id")
             if not account_id:
                 continue
             self.account_rows[account_id] = account
-            self.account_tree.insert(
-                "",
-                "end",
-                iid=account_id,
-                values=(
-                    account.get("email", ""),
-                    account.get("displayName", ""),
-                    account.get("category", ""),
-                    account.get("status", ""),
-                    "Yes" if account.get("emailVerified") else "No",
-                    len(account.get("galleryImageIds", [])) + bool(account.get("profileImageId")),
-                ),
-            )
             if account.get("status") == "PENDING":
                 self.suggested_rows[account_id] = account
                 self.suggested_artist_tree.insert(
@@ -730,10 +980,23 @@ class App(tk.Tk):
                         account.get("displayName", ""),
                         account.get("category", ""),
                         account.get("email", ""),
-                        "Yes" if account.get("emailVerified") else "No",
                         len(account.get("galleryImageIds", [])) + bool(account.get("profileImageId")),
                     ),
                 )
+            elif account.get("status") == "REJECTED":
+                self.rejected_rows[account_id] = account
+                self.rejected_artist_tree.insert(
+                    "",
+                    "end",
+                    iid=account_id,
+                    values=(
+                        account.get("displayName", ""),
+                        account.get("category", ""),
+                        account.get("email", ""),
+                        str(account.get("reviewedAt", ""))[:19].replace("T", " "),
+                    ),
+                )
+        self.refresh_approved_account_tree()
         self.ban_tree.delete(*self.ban_tree.get_children())
         self.ban_rows = {}
         for ban in bans:
@@ -749,8 +1012,207 @@ class App(tk.Tk):
             )
         self.select_account()
         self.select_suggested_artist()
+        self.select_rejected_artist()
         pending_count = sum(1 for account in rows if account.get("status") == "PENDING")
-        self.set_status(f"Loaded {len(rows)} accounts, {pending_count} suggested artists, and {len(bans)} active bans.", "#46705b")
+        rejected_count = len(self.rejected_rows)
+        approved_count = sum(1 for account in rows if account.get("status") == "APPROVED")
+        self.set_status(
+            f"Loaded {approved_count} verified member accounts and {len(self.creators)} existing site pages marked VERIFIED; "
+            f"{pending_count} awaiting review, {rejected_count} rejected, {len(bans)} active bans.",
+            "#46705b",
+        )
+
+    def refresh_approved_account_tree(self):
+        self.account_tree.delete(*self.account_tree.get_children())
+        category = self.account_category.get() if hasattr(self, "account_category") else "All categories"
+        approved = [
+            account for account in self.account_rows.values()
+            if account.get("status") == "APPROVED"
+            and (category == "All categories" or account.get("category") == category)
+        ]
+        approved.sort(key=lambda account: account.get("displayName", "").casefold())
+        for account in approved:
+            account_id = account["id"]
+            self.account_tree.insert(
+                "",
+                "end",
+                iid=account_id,
+                values=(
+                    account.get("email", ""),
+                    account.get("loginUsername", "")
+                    if account.get("loginUsername") != account.get("email") else "",
+                    account.get("displayName", ""),
+                    account.get("category", ""),
+                    "VERIFIED",
+                    "Yes" if account.get("emailVerified") else "No",
+                    len(account.get("galleryImageIds", [])) + bool(account.get("profileImageId")),
+                ),
+            )
+        self.select_account()
+
+    def prepare_legacy_claim_logins(self):
+        if not self.account_admin:
+            messagebox.showerror("Prepare creator logins", "Sign in with an authorized staff GitHub account first.")
+            return
+        if not self.creators:
+            messagebox.showerror("Prepare creator logins", "Load the existing creator pages before preparing logins.")
+            return
+        if not messagebox.askyesno(
+            "Prepare existing creator logins",
+            f"Create missing claim logins for {len(self.creators)} existing public creator pages? "
+            "Their current pages will stay published and marked VERIFIED. Each creator must verify their real email "
+            "and choose a new password before claiming the account.",
+        ):
+            return
+
+        category_map = {
+            "Tattooist": "Tattoos",
+            "Musician": "Music",
+            "Writer": "Writing",
+            "Content Creator": "Videos",
+            "Artist": "Art",
+            "Illustrator": "Art",
+            "Photographer": "Art",
+        }
+        requests = []
+        for creator in self.creators:
+            social_links = creator.get("socialLinks", [])
+            primary_link = social_links[0] if social_links else {}
+            requests.append({
+                "slug": creator.get("slug", ""),
+                "name": creator.get("name", ""),
+                "category": category_map.get(creator.get("category"), "Art"),
+                "socialPlatform": primary_link.get("name") or "Other",
+                "socialHandle": primary_link.get("url", ""),
+                "bio": creator.get("bio") or creator.get("description", ""),
+                "businessName": creator.get("studio", ""),
+            })
+
+        self.legacy_import_button.config(state="disabled")
+        self.set_status("Preparing verified creator claim logins...", PALETTE["accent"])
+
+        def work():
+            results = []
+            for index, creator_request in enumerate(requests, start=1):
+                name = creator_request["name"] or creator_request["slug"]
+                try:
+                    result = self.account_admin.import_legacy_claim(creator_request)
+                    results.append(result)
+                except Exception as error:
+                    results.append({
+                        "name": name,
+                        "slug": creator_request["slug"],
+                        "status": "FAILED",
+                        "error": str(error),
+                    })
+                self.after(
+                    0,
+                    lambda current=index: self.set_status(
+                        f"Preparing creator logins... {current} of {len(requests)}",
+                        PALETTE["accent"],
+                    ),
+                )
+            self.after(0, lambda: self.show_legacy_claim_results(results))
+
+        threading.Thread(target=work, daemon=True).start()
+
+    def show_legacy_claim_results(self, results):
+        self.load_account_admin(silent=True)
+        self.legacy_import_button.config(
+            state="normal" if self.client and self.creators and self.account_admin else "disabled",
+        )
+        generated = sum(1 for item in results if item.get("temporaryPassword"))
+        claimed = sum(1 for item in results if item.get("status") == "ALREADY_CLAIMED")
+        awaiting = sum(1 for item in results if item.get("status") == "AWAITING_CLAIM")
+        failed = sum(1 for item in results if item.get("status") == "FAILED")
+        self.set_status(
+            f"Prepared {generated} creator logins; {awaiting} awaiting claim; "
+            f"{claimed} already claimed; {failed} failed.",
+            "#46705b" if failed == 0 else PALETTE["accent"],
+        )
+
+        window = tk.Toplevel(self)
+        window.title("Existing creator claim logins")
+        window.transient(self)
+        window.geometry("920x520")
+        body = ttk.Frame(window, padding=18)
+        body.pack(fill="both", expand=True)
+        ttk.Label(body, text="Share these one-time login details securely", style="Section.TLabel").pack(anchor="w")
+        ttk.Label(
+            body,
+            text=(
+                f"{generated} logins are shown below. The temporary email ending in mankindminds.invalid "
+                "is a sign-in identifier only and cannot receive email. Creators must enter an email they control, "
+                "verify its code, and set a new password. Passwords are not saved in the staff app or backend."
+            ),
+            style="Muted.TLabel",
+            wraplength=860,
+        ).pack(anchor="w", pady=(6, 12))
+        table = ttk.Treeview(
+            body, columns=("name", "email", "password", "status"), show="headings", selectmode="browse",
+        )
+        for column, heading, width in (
+            ("name", "Creator", 180),
+            ("email", "Temporary sign-in email", 300),
+            ("password", "One-time password", 210),
+            ("status", "Result", 150),
+        ):
+            table.heading(column, text=heading)
+            table.column(column, width=width)
+        table_frame = ttk.Frame(body)
+        table_frame.pack(fill="both", expand=True)
+        scrollbar = ttk.Scrollbar(table_frame, orient="vertical", command=table.yview)
+        table.configure(yscrollcommand=scrollbar.set)
+        table.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+        for index, item in enumerate(results):
+            status = {
+                "CREATED": "Login created",
+                "AWAITING_CLAIM": "Login already issued",
+                "ALREADY_CLAIMED": "Already claimed",
+                "FAILED": "Failed",
+            }.get(item.get("status"), item.get("status", "Unknown"))
+            table.insert(
+                "", "end", iid=str(index),
+                values=(
+                    item.get("name", ""),
+                    item.get("loginEmail", ""),
+                    item.get("temporaryPassword", ""),
+                    status if item.get("status") != "FAILED" else f"Failed: {item.get('error', '')}",
+                ),
+            )
+
+        actions = ttk.Frame(body)
+        actions.pack(fill="x", pady=(12, 0))
+
+        def copy_selected():
+            selection = table.selection()
+            if not selection:
+                messagebox.showinfo("Copy creator login", "Select a login row first.", parent=window)
+                return
+            values = table.item(selection[0], "values")
+            if not values[1] or not values[2]:
+                messagebox.showinfo("Copy creator login", "This creator has no new login details to copy.", parent=window)
+                return
+            self.clipboard_clear()
+            self.clipboard_append(f"{values[1]}\t{values[2]}")
+            self.set_status("Selected temporary login copied to clipboard.", "#46705b")
+
+        def copy_all():
+            credentials = [
+                f"{item.get('name', '')}\t{item.get('loginEmail', '')}\t{item.get('temporaryPassword', '')}"
+                for item in results if item.get("temporaryPassword")
+            ]
+            if not credentials:
+                messagebox.showinfo("Copy creator logins", "No new login details are available to copy.", parent=window)
+                return
+            self.clipboard_clear()
+            self.clipboard_append("Creator\tTemporary sign-in email\tOne-time password\n" + "\n".join(credentials))
+            self.set_status("All temporary logins copied to clipboard.", "#46705b")
+
+        ttk.Button(actions, text="Copy selected login", command=copy_selected).pack(side="left")
+        ttk.Button(actions, text="Copy all generated logins", command=copy_all).pack(side="left", padx=(8, 0))
+        ttk.Button(actions, text="Close", command=window.destroy).pack(side="right")
 
     def account_admin_action(self, title, action, success_message):
         if not self.account_admin:
@@ -767,22 +1229,6 @@ class App(tk.Tk):
                 self.after(0, lambda: messagebox.showerror(title, str(error)))
 
         threading.Thread(target=work, daemon=True).start()
-
-    def set_selected_account_status(self, status):
-        account = self.selected_account()
-        if not account:
-            return
-        if status == "APPROVED" and not messagebox.askyesno(
-            "Approve AI-Free artist",
-            f"Approve {account.get('displayName', 'this creator')} as AI-Free verified? "
-            "Their profile will become public in Verified Creators.",
-        ):
-            return
-        self.account_admin_action(
-            "Update account status",
-            lambda: self.account_admin.set_status(account["id"], status),
-            "Artist approved as AI-Free verified." if status == "APPROVED" else f"Account marked {status.lower()}.",
-        )
 
     def edit_selected_account(self):
         account = self.selected_account()
@@ -875,20 +1321,69 @@ class App(tk.Tk):
             "Password reset email sent.",
         )
 
-    def delete_selected_account(self):
+    def issue_selected_claim_credentials(self):
         account = self.selected_account()
         if not account:
             return
         if not messagebox.askyesno(
-            "Delete account",
-            f"Permanently delete {account.get('email', 'this account')} and its sign-in sessions?",
+            "Issue temporary claim login",
+            f"Issue a one-time login for {account.get('displayName', 'this creator')}? "
+            "Any existing sessions will be restricted until the creator claims the account with a verified email and new password.",
         ):
             return
-        self.account_admin_action(
-            "Delete account",
-            lambda: self.account_admin.delete_account(account["id"]),
-            "Account deleted.",
-        )
+        self.set_status("Issuing temporary login details...", PALETTE["accent"])
+
+        def work():
+            try:
+                credentials = self.account_admin.issue_claim_credentials(account["id"])
+                self.after(0, lambda: self.show_claim_credentials(account, credentials))
+                self.after(0, lambda: self.load_account_admin(silent=True))
+                self.after(0, lambda: self.set_status("Temporary claim login issued. Share it with the creator securely.", "#46705b"))
+            except Exception as error:
+                self.after(0, lambda: messagebox.showerror("Could not issue claim login", str(error)))
+                self.after(0, lambda: self.set_status("Temporary claim login could not be issued.", PALETTE["accent"]))
+
+        threading.Thread(target=work, daemon=True).start()
+
+    def show_claim_credentials(self, account, credentials):
+        window = tk.Toplevel(self)
+        window.title("One-time creator login")
+        window.transient(self)
+        window.grab_set()
+        body = ttk.Frame(window, padding=22)
+        body.pack(fill="both", expand=True)
+        ttk.Label(body, text="Share these details securely", style="Section.TLabel").pack(anchor="w")
+        ttk.Label(
+            body,
+            text=f"One-time details for {account.get('displayName', 'the creator')}. "
+                 "This password is shown once and cannot be retrieved later.",
+            style="Muted.TLabel",
+            wraplength=480,
+        ).pack(anchor="w", pady=(6, 16))
+        for label, key in (("Temporary username", "username"), ("Temporary password", "temporaryPassword")):
+            row = ttk.Frame(body)
+            row.pack(fill="x", pady=5)
+            ttk.Label(row, text=label, width=20).pack(side="left")
+            value = ttk.Entry(row, width=36)
+            value.insert(0, credentials[key])
+            value.config(state="readonly")
+            value.pack(side="left", fill="x", expand=True)
+            ttk.Button(
+                row, text="Copy",
+                command=lambda text=credentials[key]: (self.clipboard_clear(), self.clipboard_append(text)),
+            ).pack(side="left", padx=(8, 0))
+        ttk.Label(
+            body,
+            text="After sign-in, the creator must verify an email address they control and choose a new password. "
+                 "Their profile stays hidden from the public until that claim is complete.",
+            style="Muted.TLabel",
+            wraplength=480,
+        ).pack(anchor="w", pady=(12, 0))
+        ttk.Button(body, text="Close", command=window.destroy).pack(anchor="e", pady=(16, 0))
+
+    def delete_selected_account(self):
+        account = self.selected_account()
+        self.delete_account_record(account)
 
     def add_account_ban(self):
         if not self.account_admin:
@@ -1315,6 +1810,7 @@ class App(tk.Tk):
         self.set_creator_editor_enabled(True)
         self.fill_form(creator)
         self.tabs.select(0)
+        self.creators_subtabs.select(1)
         for iid in self.user_list.get_children():
             if self.user_list.item(iid, "text") == creator.get("name", ""):
                 self.user_list.selection_set(iid)
@@ -1328,6 +1824,7 @@ class App(tk.Tk):
         self.set_creator_editor_enabled(True)
         self.fill_form(self.selected)
         self.tabs.select(0)
+        self.creators_subtabs.select(1)
         self.photo_label.config(text="Choose a profile photo before publishing.")
         self.set_status("New tattoo creator profile ready. Add their photo, portfolio, and description.")
 
@@ -1846,13 +2343,33 @@ class App(tk.Tk):
         if query == "search creators...":
             query = ""
         self.user_list.delete(*self.user_list.get_children())
-        visible = [creator for creator in self.creators if query in creator.get("name", "").lower() or query in creator.get("category", "").lower()]
+        selected_category = self.creator_category.get()
+        visible = [
+            creator for creator in self.creators
+            if (selected_category == "All categories"
+                or LEGACY_NICHE_MAP.get(creator.get("category"), creator.get("category", "")) == selected_category)
+            and (query in creator.get("name", "").lower() or query in creator.get("category", "").lower())
+        ]
         for index, creator in enumerate(visible):
-            self.user_list.insert("", "end", iid=str(index), text=creator.get("name", ""), values=(creator.get("category", ""),))
-        self.count_label.config(text=str(len(self.creators)))
+            self.user_list.insert(
+                "", "end", iid=str(index), text=f"{creator.get('name', '')} · VERIFIED",
+                values=(creator.get("category", ""),),
+            )
+        self.count_label.config(text=f"{len(visible)} VERIFIED")
+        if hasattr(self, "legacy_import_button"):
+            self.legacy_import_button.config(
+                state="normal" if self.client and self.creators and self.account_admin else "disabled",
+            )
+        if hasattr(self, "verified_legacy_count"):
+            self.verified_legacy_count.config(
+                text=f"{len(self.creators)} published creator pages · VERIFIED",
+            )
         self.refresh_tattoo_creator_list()
         if not silent:
-            self.set_status(f"{len(self.creators)} creator records loaded. Refreshes automatically every minute.", "#46705b")
+            self.set_status(
+                f"{len(self.creators)} verified creator pages loaded. Refreshes automatically every minute.",
+                "#46705b",
+            )
 
     def select_user(self, _event=None):
         selected = self.user_list.selection()
@@ -1861,7 +2378,13 @@ class App(tk.Tk):
         query = self.search.get().lower().strip()
         if query == "search creators...":
             query = ""
-        visible = [creator for creator in self.creators if query in creator.get("name", "").lower() or query in creator.get("category", "").lower()]
+        selected_category = self.creator_category.get()
+        visible = [
+            creator for creator in self.creators
+            if (selected_category == "All categories"
+                or LEGACY_NICHE_MAP.get(creator.get("category"), creator.get("category", "")) == selected_category)
+            and (query in creator.get("name", "").lower() or query in creator.get("category", "").lower())
+        ]
         self.selected = visible[int(selected[0])]
         self.set_creator_editor_enabled(True)
         self.fill_form(self.selected)

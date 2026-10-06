@@ -1,0 +1,233 @@
+.account-page:not(.account-page-dashboard) .account-access-panel .account-forgot-password {
+  display: inline-flex;
+  width: auto;
+  margin: 12px 0 0;
+  padding: 6px 0;
+  border: 0;
+  background: transparent;
+  color: #6d6961;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 13px;
+  font-weight: 400;
+  text-align: left;
+  text-decoration: underline;
+  text-decoration-color: #9a3f2f;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.account-page:not(.account-page-dashboard) .account-access-panel .account-forgot-password:hover {
+  color: #9a3f2f;
+}
+
+@media (min-width: 1000px) {
+  .account-page:not(.account-page-dashboard) {
+    box-sizing: border-box;
+    min-height: 65vh;
+    padding: clamp(56px, 7vw, 88px) 24px;
+    border-top: 0;
+  }
+
+  .account-page:not(.account-page-dashboard) .account-shell:has(.account-access-panel) {
+    display: block;
+    width: min(100%, 860px);
+    margin: 0 auto;
+  }
+
+  .account-page:not(.account-page-dashboard) .account-page-intro {
+    max-width: 660px;
+    margin: 0 auto 32px;
+    text-align: center;
+  }
+
+  .account-page:not(.account-page-dashboard) .account-page-intro h1 {
+    margin: 0;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: clamp(36px, 6vw, 58px);
+    font-weight: 400;
+    letter-spacing: -0.045em;
+    line-height: 1.03;
+  }
+
+  .account-page:not(.account-page-dashboard) .account-page-intro > p:last-child {
+    max-width: 540px;
+    margin: 16px auto 0;
+    color: #6d6961;
+    font-size: 16px;
+    line-height: 1.7;
+  }
+
+  .account-page:not(.account-page-dashboard) .account-access-panel {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 650px;
+    margin: 0 auto;
+    padding: clamp(26px, 5vw, 48px);
+    border: 1px solid #d2cbc0;
+    background: #fbfaf7;
+    box-shadow: 10px 10px 0 rgba(36, 35, 33, 0.055);
+  }
+
+  .account-page:not(.account-page-dashboard) .account-access-panel h2 {
+    margin: 0;
+    font-size: clamp(25px, 3vw, 34px);
+    line-height: 1.15;
+  }
+
+  .account-page:not(.account-page-dashboard) .account-access-panel > p {
+    margin: 10px 0 0;
+    color: #6d6961;
+    font-size: 14px;
+    line-height: 1.65;
+  }
+
+  .account-page:not(.account-page-dashboard) .account-mode-tabs {
+    display: flex;
+    gap: 0;
+    margin: 26px 0 0;
+    border-bottom: 1px solid #d2cbc0;
+  }
+
+  .account-page:not(.account-page-dashboard) .account-mode-tabs button {
+    position: relative;
+    min-width: 132px;
+    padding: 13px 18px;
+    border: 1px solid transparent;
+    border-bottom: 0;
+    background: transparent;
+    color: #6d6961;
+    cursor: pointer;
+    font-family: "Courier New", Courier, monospace;
+    font-size: 12px;
+  }
+
+  .account-page:not(.account-page-dashboard) .account-mode-tabs button.active {
+    margin-bottom: -1px;
+    border-color: #d2cbc0;
+    background: #fbfaf7;
+    color: #242321;
+  }
+
+  .account-page:not(.account-page-dashboard) .account-form {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    margin-top: 24px;
+  }
+
+  .account-page:not(.account-page-dashboard) .account-form label {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    color: #242321;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .account-page:not(.account-page-dashboard) .account-form input,
+  .account-page:not(.account-page-dashboard) .account-form select,
+  .account-page:not(.account-page-dashboard) .account-form textarea {
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 48px;
+    padding: 12px 13px;
+    border: 1px solid #d2cbc0;
+    border-radius: 0;
+    background: #fff;
+    color: #242321;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 15px;
+  }
+
+  .account-page:not(.account-page-dashboard) .account-form input:focus,
+  .account-page:not(.account-page-dashboard) .account-form select:focus {
+    border-color: #9a3f2f;
+    outline: 2px solid rgba(154, 63, 47, 0.18);
+    outline-offset: 1px;
+  }
+
+  .account-page:not(.account-page-dashboard) .account-profile-fields-inner,
+  .account-page:not(.account-page-dashboard) .account-auth-fields {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 18px 20px;
+  }
+
+  .account-page:not(.account-page-dashboard) .account-auth-fields > label:first-child {
+    grid-column: 1 / -1;
+  }
+
+  .account-page:not(.account-page-dashboard) .account-form-section-label {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding-top: 16px;
+    border-top: 1px solid #d2cbc0;
+  }
+
+  .account-page:not(.account-page-dashboard) .account-form-section-label > span {
+    color: #9a3f2f;
+    font-family: "Courier New", Courier, monospace;
+    font-size: 12px;
+  }
+
+  .account-page:not(.account-page-dashboard) .account-form-section-label div {
+    display: grid;
+    gap: 3px;
+  }
+
+  .account-page:not(.account-page-dashboard) .account-form-section-label strong {
+    font-size: 14px;
+  }
+
+  .account-page:not(.account-page-dashboard) .account-form-section-label small {
+    color: #6d6961;
+    font-size: 12px;
+    font-weight: 400;
+  }
+
+  .account-page:not(.account-page-dashboard) .account-form label.account-terms,
+  .account-page:not(.account-page-dashboard) .account-form label.account-password-options {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 10px;
+    color: #6d6961;
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 1.5;
+  }
+
+  .account-page:not(.account-page-dashboard) .account-form .account-terms input,
+  .account-page:not(.account-page-dashboard) .account-form .account-password-options input {
+    width: 17px;
+    min-width: 17px;
+    min-height: 17px;
+    height: 17px;
+    margin: 2px 0 0;
+    padding: 0;
+    accent-color: #9a3f2f;
+  }
+
+  .account-page:not(.account-page-dashboard) .account-primary-action {
+    width: 100%;
+    min-height: 50px;
+    margin-top: 2px;
+    padding: 14px 20px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .account-page:not(.account-page-dashboard) .account-text-button {
+    color: #242321;
+    font-size: 12px;
+    text-decoration-color: #9a3f2f;
+    text-underline-offset: 3px;
+  }
+
+}
+
+@media (max-width: 700px) {
+  .account-page:not(.account-page-dashboard) .account-access-panel {
+    background: var(--paper);
+  }
+}
