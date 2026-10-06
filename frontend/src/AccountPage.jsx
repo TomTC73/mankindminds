@@ -12,7 +12,7 @@ const EMPTY_IMAGE_IDS = [];
 
 function AccountPage() {
   const {
-    account, loading, signIn, signUp, signOut, updateProfile,
+    account, loading, signIn, signUp, sendSignupVerificationCode, signOut, updateProfile,
     uploadImage, deleteImage, loadImage,
   } = useAccount();
   const location = useLocation();
@@ -30,8 +30,23 @@ function AccountPage() {
   const [error, setError] = useState("");
   const [resetPassword, setResetPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [verificationSent, setVerificationSent] = useState(false);
+  const [verificationCode, setVerificationCode] = useState("");
+  const [resendCooldown, setResendCooldown] = useState(0);
   const tokenFromLink = searchParams.get("token");
   const isResetRoute = location.pathname === "/account/reset-password";
+  const requestedApplication = searchParams.get("next");
+  const applicationPath = requestedApplication?.startsWith("/apply") && !requestedApplication.startsWith("//")
+    ? requestedApplication
+    : `/apply?category=${account?.category?.toLowerCase() || "tattoos"}`;
+
+  useEffect(() => {
+    if (resendCooldown <= 0) return undefined;
+    const timer = window.setTimeout(() => setResendCooldown((value) => Math.max(0, value - 1)), 1000);
+    return () => window.clearTimeout(timer);
+  }, [resendCooldown]);
 
   useEffect(() => {
     if (!account) return;
@@ -104,12 +119,21 @@ function AccountPage() {
     setMessage("");
     try {
       if (mode === "signup") {
-        if (form.password !== form.passwordConfirmation) {
-          throw new Error("The passwords do not match.");
+        if (!verificationSent) {
+          if (form.password !== form.passwordConfirmation) {
+            throw new Error("The passwords do not match.");
+          }
+          await sendSignupVerificationCode(form.email.trim());
+          setVerificationSent(true);
+          setVerificationCode("");
+          setResendCooldown(60);
+          setMessage("If this email can be used to create an account, a verification code is on its way.");
+          return;
         }
-        const { passwordConfirmation, ...signupDetails } = form;
-        await signUp(signupDetails);
-        setMessage("Your account is created and pending staff approval. Your profile stays private until it is approved.");
+        const signupDetails = { ...form };
+        delete signupDetails.passwordConfirmation;
+        await signUp({ account: signupDetails, code: verificationCode.trim() });
+        setMessage("Your email is verified. Your account is created and pending staff approval; your profile stays private until approval.");
       } else {
         await signIn({ email: form.email, password: form.password });
         setMessage("Signed in successfully.");
@@ -162,9 +186,9 @@ function AccountPage() {
         const result = await response.json().catch(() => null);
         throw new Error(result?.error || "Could not reset the password.");
       }
-      setMessage("Password updated. You can now sign in.");
       navigate("/account", { replace: true });
       setMode("login");
+      setMessage("Password updated. You can now sign in.");
     } catch (requestError) {
       setError(requestError.message);
     } finally {
@@ -198,6 +222,11 @@ function AccountPage() {
     const files = Array.from(event.target.files || []);
     event.target.value = "";
     if (!files.length) return;
+    const oversizedFile = files.find((file) => file.size > 5 * 1024 * 1024);
+    if (oversizedFile) {
+      setImageError(`${oversizedFile.name} is larger than the 5 MB limit. Choose a smaller image.`);
+      return;
+    }
     const remainingSlots = 8 - galleryImageIds.length;
     if (kind === "gallery" && files.length > remainingSlots) {
       setImageError(`You can add ${remainingSlots} more gallery photo${remainingSlots === 1 ? "" : "s"}.`);
@@ -231,118 +260,260 @@ function AccountPage() {
     }
   };
 
+  const handleSignOut = async () => {
+    setBusy(true);
+    setError("");
+    setMessage("");
+    try {
+      await signOut();
+      setMessage("You have signed out.");
+    } catch (requestError) {
+      setError(requestError.message || "Could not sign out. Please try again.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
   if (loading) {
-    return <><Header /><main className="section"><p role="status">Loading your account…</p></main><Footer /></>;
+    return <><Header /><main className="account-page account-section"><div className="account-loading" role="status"><span className="account-loading-mark" aria-hidden="true" />Loading your account…</div></main><Footer /></>;
   }
 
   return (
     <div>
       <Header />
-      <section className="section account-section">
-        <div className="account-panel">
+      <main className={`account-page account-section ${account ? "account-page-dashboard" : ""}`}>
+        <div className="account-shell">
+          <div className="account-page-intro">
+            <p className="account-eyebrow">MEMBER PORTAL</p>
+            <h1>{account ? "Your creator account" : isResetRoute ? "Reset your password" : "A home for your creative work"}</h1>
+            <p>{account
+              ? "Keep your profile up to date, share your work and manage your account."
+              : isResetRoute
+                ? "Choose a new password to get back into your account."
+                : "Sign in or create an account to apply and build your creator profile."}</p>
+          </div>
+          <div className={`account-panel ${account ? "account-dashboard" : "account-access-panel"}`}>
           {isResetRoute ? (
-            <section>
+            <section className="account-reset-section">
               <h2>Set a new password</h2>
+              <p className="account-section-description">Use a new password that you do not use on other sites.</p>
               {tokenFromLink ? (
                 <form className="account-form" onSubmit={confirmReset}>
                   <label>New password (at least 12 characters)
-                    <input type="password" value={resetPassword} onChange={(event) => setResetPassword(event.target.value)} minLength={12} maxLength={128} autoComplete="new-password" required />
+                    <input type={showPassword ? "text" : "password"} value={resetPassword} onChange={(event) => setResetPassword(event.target.value)} minLength={12} maxLength={128} autoComplete="new-password" required />
                   </label>
                   <label>Confirm new password
-                    <input type="password" value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} minLength={12} maxLength={128} autoComplete="new-password" required />
+                    <input type={showConfirmation ? "text" : "password"} value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} minLength={12} maxLength={128} autoComplete="new-password" required />
                   </label>
-                  <button className="button" type="submit" disabled={busy}>{busy ? "Updating…" : "Update password"}</button>
+                  <div className="account-password-options">
+                    <label><input type="checkbox" checked={showPassword && showConfirmation} onChange={(event) => { setShowPassword(event.target.checked); setShowConfirmation(event.target.checked); }} /> Show passwords</label>
+                  </div>
+                  <button className="button account-primary-action" type="submit" disabled={busy}>{busy ? "Updating…" : "Update password"}</button>
                 </form>
               ) : (
-                <p>This reset link is missing its token. Request a fresh link from the sign-in page.</p>
+                <div className="account-notice account-notice-error" role="alert">
+                  <p>This password-reset link is incomplete or invalid. Request a fresh link from the sign-in page.</p>
+                  <Link to="/account" className="account-text-link">Return to sign in</Link>
+                </div>
               )}
             </section>
           ) : account ? (
             <>
-              <h2>Your account</h2>
-              <p className={`account-status account-status-${(account.status || "PENDING").toLowerCase()}`}>
-                Status: {account.status || "PENDING"}
-              </p>
+              <div className="account-dashboard-heading">
+                <div>
+                  <p className="account-eyebrow">ACCOUNT OVERVIEW</p>
+                  <h2>Profile details</h2>
+                </div>
+                <span className={`account-status account-status-${(account.status || "PENDING").toLowerCase()}`}>
+                  {account.status || "PENDING"}
+                </span>
+                {account.status === "APPROVED" && account.id && (
+                  <Link className="account-public-profile-link" to={`/members/${encodeURIComponent(account.id)}`}>View public profile ↗</Link>
+                )}
+              </div>
               {account.status !== "APPROVED" && (
-                <p>Your profile is private until staff approve it. You can still view and edit your account details below.</p>
+                <div className="account-notice account-privacy-notice">
+                  <span className="account-notice-icon" aria-hidden="true">i</span>
+                  <p><strong>Your profile is private.</strong> It will only appear publicly after staff review and approval. You can edit your details and photos while you wait.</p>
+                </div>
               )}
-              <form className="account-form" onSubmit={saveProfile}>
-                <ProfileFields form={form} onChange={change} includeBusiness />
-                <button className="button" type="submit" disabled={busy}>{busy ? "Saving…" : "Save profile"}</button>
+              <form className="account-form account-profile-form" onSubmit={saveProfile}>
+                <div className="account-profile-fields">
+                  <ProfileFields form={form} onChange={change} includeBusiness />
+                </div>
+                <button className="button account-primary-action" type="submit" disabled={busy}>{busy ? "Saving…" : "Save profile"}</button>
               </form>
               <section className="account-media">
-                <h3>Your photos</h3>
-                <p>Choose a JPEG, PNG, or WebP image up to 5 MB. Photos stay private until your account is approved.</p>
-                <div className="account-profile-photo">
-                  {profilePhotoUrl ? <img src={profilePhotoUrl} alt="Your profile" /> : <span>No profile photo</span>}
+                <div className="account-section-heading">
+                  <div>
+                    <p className="account-eyebrow">MAKE IT YOURS</p>
+                    <h2>Your photos</h2>
+                  </div>
+                  <p>JPEG, PNG or WebP · up to 5 MB each</p>
                 </div>
-                <label className="account-upload-label">
-                  Upload profile picture
-                  <input type="file" accept="image/jpeg,image/png,image/webp" disabled={busy} onChange={(event) => uploadPhotos(event, "profile")} />
-                </label>
-                <label className="account-upload-label">
-                  Add portfolio photos ({Math.max(0, 8 - galleryImageIds.length)} remaining)
-                  <input type="file" accept="image/jpeg,image/png,image/webp" multiple disabled={busy || galleryPhotos.length >= 8} onChange={(event) => uploadPhotos(event, "gallery")} />
-                </label>
+                <p className="account-section-description">A clear profile image and a few examples of your work help visitors get to know you.</p>
+                <div className="account-photo-tools">
+                  <div className="account-profile-photo">
+                    {profilePhotoUrl ? <img src={profilePhotoUrl} alt="Your profile" /> : <span className="account-photo-placeholder" aria-hidden="true">{form.displayName?.trim()?.charAt(0)?.toUpperCase() || "＋"}</span>}
+                  </div>
+                  <div className="account-photo-actions">
+                    <label className="account-upload-label">
+                      <span className="account-upload-title">Profile picture</span>
+                      <span className="account-upload-hint">Choose an image that represents you.</span>
+                      <input type="file" accept="image/jpeg,image/png,image/webp" disabled={busy} onChange={(event) => uploadPhotos(event, "profile")} />
+                    </label>
+                  </div>
+                </div>
+                <div className="account-gallery-heading">
+                  <div>
+                    <h3>Portfolio gallery</h3>
+                    <p>{Math.max(0, 8 - galleryImageIds.length)} of 8 photo slots available</p>
+                  </div>
+                  <label className={`button account-upload-button ${busy || galleryPhotos.length >= 8 ? "is-disabled" : ""}`}>
+                    Add photos
+                    <input type="file" accept="image/jpeg,image/png,image/webp" multiple disabled={busy || galleryPhotos.length >= 8} onChange={(event) => uploadPhotos(event, "gallery")} />
+                  </label>
+                </div>
                 {galleryPhotos.length > 0 && (
                   <div className="account-gallery">
                     {galleryPhotos.map((photo) => (
                       <div className="account-gallery-item" key={photo.id}>
-                        {photo.url && <img src={photo.url} alt="Your portfolio work" />}
-                        <button className="button account-secondary-action" type="button" disabled={busy} onClick={() => removePhoto(photo.id)}>Remove photo</button>
+                        {photo.url ? <img src={photo.url} alt={`${form.displayName || "Your"} portfolio work`} /> : <div className="account-gallery-image-error">Photo unavailable</div>}
+                        <button className="account-remove-photo" type="button" disabled={busy} onClick={() => removePhoto(photo.id)}>Remove photo</button>
                       </div>
                     ))}
                   </div>
                 )}
+                {galleryPhotos.length === 0 && <p className="account-gallery-empty">Your portfolio photos will appear here. Add up to eight examples of your work.</p>}
                 {imageError && <p className="account-error" role="alert">{imageError}</p>}
               </section>
-              <button className="button account-secondary-action" type="button" disabled={busy} onClick={requestReset}>Email me a password reset link</button>
-              <button className="button account-secondary-action" type="button" onClick={async () => { await signOut(); setMessage("You have signed out."); }}>Sign out</button>
+              <div className="account-security-actions">
+                <button className="account-text-button" type="button" disabled={busy} onClick={requestReset}>Email me a password-reset link</button>
+                <button className="account-text-button" type="button" disabled={busy} onClick={handleSignOut}>Sign out</button>
+              </div>
             </>
           ) : (
             <>
               <h2>{mode === "signup" ? "Create your account" : "Sign in"}</h2>
               <p>{mode === "signup"
-                ? "Create a private profile. It will remain hidden until staff review and approve it."
-                : "Sign in to manage your profile and apply for verification."}</p>
-              <div className="account-mode-tabs" role="tablist" aria-label="Account access">
-                <button type="button" className={mode === "login" ? "active" : ""} onClick={() => { setMode("login"); setError(""); }}>Sign in</button>
-                <button type="button" className={mode === "signup" ? "active" : ""} onClick={() => { setMode("signup"); setError(""); }}>Create account</button>
+                ? "Create a private profile. It stays hidden from the public until staff review and approve it."
+                : "Welcome back. Sign in to continue your application or manage your profile."}</p>
+              <div className="account-mode-tabs" role="group" aria-label="Account access">
+                  <button type="button" aria-pressed={mode === "login"} className={mode === "login" ? "active" : ""} onClick={() => { setMode("login"); setVerificationSent(false); setError(""); setMessage(""); }}>Sign in</button>
+                  <button type="button" aria-pressed={mode === "signup"} className={mode === "signup" ? "active" : ""} onClick={() => { setMode("signup"); setVerificationSent(false); setError(""); setMessage(""); }}>Create account</button>
               </div>
-              <form className="account-form" onSubmit={submit}>
-                {mode === "signup" && <ProfileFields form={form} onChange={change} includeBusiness={false} />}
-                <label>Email address
-                  <input type="email" name="email" value={form.email} onChange={change} autoComplete="email" required />
-                </label>
-                <label>Password{mode === "signup" ? " (at least 12 characters)" : ""}
-                  <input type="password" name="password" value={form.password} onChange={change} minLength={mode === "signup" ? 12 : undefined} maxLength={72} autoComplete={mode === "signup" ? "new-password" : "current-password"} required />
-                </label>
+                {mode === "signup" && verificationSent ? (
+                  <form className="account-form account-verification-form" onSubmit={submit}>
+                    <div className="account-verification-heading">
+                      <span className="account-verification-icon" aria-hidden="true">✉</span>
+                      <div>
+                        <p className="account-eyebrow">EMAIL CHECK</p>
+                        <h3>Verify your email</h3>
+                        <p>Enter the six-digit code sent to <strong>{form.email}</strong>. It expires in 10 minutes.</p>
+                      </div>
+                    </div>
+                    <label>Verification code
+                      <input
+                        className="account-verification-code"
+                        type="text"
+                        inputMode="numeric"
+                        autoComplete="one-time-code"
+                        pattern="[0-9]{6}"
+                        maxLength={6}
+                        value={verificationCode}
+                        onChange={(event) => setVerificationCode(event.target.value.replace(/\D/g, "").slice(0, 6))}
+                        placeholder="000000"
+                        aria-label="Six-digit email verification code"
+                        required
+                      />
+                    </label>
+                    <button className="button account-primary-action" type="submit" disabled={busy || verificationCode.length !== 6}>
+                      {busy ? "Verifying…" : "Verify email & create account"}
+                    </button>
+                    <div className="account-verification-actions">
+                      <button
+                        className="account-text-button"
+                        type="button"
+                        disabled={busy || resendCooldown > 0}
+                        onClick={async () => {
+                          setBusy(true);
+                          setError("");
+                          setMessage("");
+                          try {
+                            await sendSignupVerificationCode(form.email.trim());
+                            setResendCooldown(60);
+                            setMessage("If this email can be used to create an account, a new verification code is on its way.");
+                          } catch (requestError) {
+                            setError(requestError.message);
+                          } finally {
+                            setBusy(false);
+                          }
+                        }}
+                      >
+                        {resendCooldown > 0 ? `Resend code in ${resendCooldown}s` : "Resend code"}
+                      </button>
+                      <button className="account-text-button" type="button" disabled={busy} onClick={() => { setVerificationSent(false); setVerificationCode(""); setError(""); setMessage(""); }}>
+                        Change details or email
+                      </button>
+                    </div>
+                  </form>
+                ) : (
+                <form className="account-form" onSubmit={submit}>
                 {mode === "signup" && (
                   <>
-                    <label>Confirm password
-                      <input type="password" name="passwordConfirmation" value={form.passwordConfirmation} onChange={change} minLength={12} maxLength={72} autoComplete="new-password" required />
-                    </label>
-                    <label className="account-terms">
-                      <input type="checkbox" checked={form.termsAgreement} onChange={(event) => setForm((previous) => ({ ...previous, termsAgreement: event.target.checked }))} required />
-                      <span>I agree to the <Link to="/terms" target="_blank" rel="noreferrer">Terms & Conditions</Link>.</span>
-                    </label>
+                    <div className="account-form-section-label">
+                      <span>01</span>
+                      <div><strong>Your creator profile</strong><small>Start with the details people will see after approval.</small></div>
+                    </div>
+                    <div className="account-profile-fields account-signup-fields">
+                      <ProfileFields form={form} onChange={change} includeBusiness={false} />
+                    </div>
+                    <div className="account-form-section-label">
+                      <span>02</span>
+                      <div><strong>Sign-in details</strong><small>Use an email address you can access.</small></div>
+                    </div>
                   </>
                 )}
-                <button className="button" type="submit" disabled={busy}>
-                  {busy ? "Please wait…" : mode === "signup" ? "Create account" : "Sign in"}
+                <div className="account-auth-fields">
+                  <label>Email address
+                    <input type="email" name="email" value={form.email} onChange={change} autoComplete="email" maxLength={254} required />
+                  </label>
+                  <label>Password{mode === "signup" ? " (at least 12 characters)" : ""}
+                    <input type={showPassword ? "text" : "password"} name="password" value={form.password} onChange={change} minLength={mode === "signup" ? 12 : undefined} maxLength={72} autoComplete={mode === "signup" ? "new-password" : "current-password"} required />
+                  </label>
+                  {mode === "signup" && (
+                    <label>Confirm password
+                      <input type={showConfirmation ? "text" : "password"} name="passwordConfirmation" value={form.passwordConfirmation} onChange={change} minLength={12} maxLength={72} autoComplete="new-password" required />
+                    </label>
+                  )}
+                </div>
+                {mode === "signup" && (
+                  <>
+                    <label className="account-password-options"><input type="checkbox" checked={showPassword && showConfirmation} onChange={(event) => { setShowPassword(event.target.checked); setShowConfirmation(event.target.checked); }} /> Show passwords while typing</label>
+                    <label className="account-terms">
+                      <input type="checkbox" checked={form.termsAgreement} onChange={(event) => setForm((previous) => ({ ...previous, termsAgreement: event.target.checked }))} required />
+                      <span>I agree to the <Link to="/terms" target="_blank" rel="noreferrer">Terms &amp; Conditions</Link>.</span>
+                    </label>
+                    <p className="account-privacy-note">Your profile stays private while it is reviewed. Your email is used to manage your account and application.</p>
+                  </>
+                )}
+                <button className="button account-primary-action" type="submit" disabled={busy}>
+                  {busy ? "Please wait…" : mode === "signup" ? "Send verification code" : "Sign in"}
                 </button>
               </form>
-              {mode === "login" && <button className="button account-secondary-action" type="button" disabled={busy} onClick={requestReset}>Forgot your password?</button>}
+              )}
+              {mode === "login" && <button className="account-text-button account-forgot-password" type="button" disabled={busy} onClick={requestReset}>Forgot password?</button>}
             </>
           )}
           {error && <p className="account-error" role="alert">{error}</p>}
           {message && <p className="account-message" role="status">{message}</p>}
-          {!account && !isResetRoute && (
-            <p className="account-apply-note">Already signed in? <Link to={`/apply${location.search || "?category=tattoos"}`}>Continue to apply</Link>.</p>
+          {!account && !isResetRoute && searchParams.has("next") && (
+            <p className="account-apply-note">After signing in, you’ll be returned to where you left off.</p>
           )}
-          {account && <p className="account-apply-note"><Link to="/apply?category=tattoos">Continue to a creator application</Link></p>}
+          {account && <p className="account-apply-note"><Link to={applicationPath}>Continue to your application</Link></p>}
+          </div>
         </div>
-      </section>
+      </main>
       <Footer />
     </div>
   );
@@ -350,7 +521,7 @@ function AccountPage() {
 
 function ProfileFields({ form, onChange, includeBusiness }) {
   return (
-    <>
+    <div className="account-profile-fields-inner">
       <label>Display / creator name
         <input name="displayName" value={form.displayName} onChange={onChange} maxLength={200} required />
       </label>
@@ -384,9 +555,10 @@ function ProfileFields({ form, onChange, includeBusiness }) {
         </>
       )}
       {includeBusiness && <label>Email address
-        <input type="email" name="email" value={form.email} onChange={onChange} maxLength={254} required />
+        <input type="email" name="email" value={form.email} maxLength={254} readOnly aria-describedby="account-email-verified-help" required />
+        <small id="account-email-verified-help" className="account-field-help">Email changes require a verification process. Contact support if you need to update this address.</small>
       </label>}
-    </>
+    </div>
   );
 }
 

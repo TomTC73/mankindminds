@@ -295,6 +295,7 @@ class App(tk.Tk):
         self.client = None
         self.account_admin = None
         self.account_rows = {}
+        self.suggested_rows = {}
         self.ban_rows = {}
         self.creators = []
         self.selected = None
@@ -440,6 +441,9 @@ class App(tk.Tk):
         self.preview_text.tag_configure("heading", font=("Georgia", 14), spacing1=12, spacing3=4)
         self.preview_text.tag_configure("label", foreground=PALETTE["accent"], font=("Segoe UI Semibold", 9))
         self.update_preview()
+        suggested_tab = ttk.Frame(tabs, style="Panel.TFrame", padding=20)
+        tabs.add(suggested_tab, text="Suggested artists")
+        self.build_suggested_artist_queue(suggested_tab)
         tattoo_tab = ttk.Frame(tabs, style="Panel.TFrame", padding=20)
         tabs.add(tattoo_tab, text="Tattoo Creators")
         self.build_tattoo_creators_panel(tattoo_tab)
@@ -454,9 +458,9 @@ class App(tk.Tk):
         analytics_tab = ttk.Frame(tabs, style="Panel.TFrame", padding=20)
         tabs.add(analytics_tab, text="Analytics")
         self.build_analytics_panel(analytics_tab)
-        accounts_tab = ttk.Frame(tabs, style="Panel.TFrame", padding=20)
-        tabs.add(accounts_tab, text="Member accounts")
-        self.build_account_admin(accounts_tab)
+        self.accounts_tab = ttk.Frame(tabs, style="Panel.TFrame", padding=20)
+        tabs.add(self.accounts_tab, text="Member accounts")
+        self.build_account_admin(self.accounts_tab)
 
     def build_account_admin(self, parent):
         parent.columnconfigure(0, weight=1)
@@ -464,13 +468,13 @@ class App(tk.Tk):
         ttk.Label(parent, text="Member accounts", style="Section.TLabel").grid(row=0, column=0, sticky="w")
         ttk.Label(
             parent,
-            text="Pending accounts stay private until staff approve them. Profile data and reset links are managed here.",
+            text="Approved accounts are published in the Verified Creators section as AI-Free verified artists.",
             style="Muted.TLabel",
         ).grid(row=0, column=1, sticky="e")
 
         self.account_tree = ttk.Treeview(
             parent,
-            columns=("email", "name", "category", "status", "photos"),
+            columns=("email", "name", "category", "status", "email_verified", "photos"),
             show="headings",
             selectmode="browse",
         )
@@ -478,7 +482,8 @@ class App(tk.Tk):
             ("email", "Email", 260),
             ("name", "Display name", 190),
             ("category", "Category", 120),
-            ("status", "Status", 110),
+            ("status", "Review", 130),
+            ("email_verified", "Email verified", 110),
             ("photos", "Photos", 75),
         ):
             self.account_tree.heading(column, text=title)
@@ -552,6 +557,96 @@ class App(tk.Tk):
         self.unban_button = ttk.Button(ban_frame, text="Remove selected ban", command=self.remove_selected_ban)
         self.unban_button.grid(row=1, column=2, padx=(8, 0), pady=(10, 0), sticky="n")
 
+    def build_suggested_artist_queue(self, parent):
+        parent.columnconfigure(0, weight=1)
+        parent.rowconfigure(1, weight=1)
+        heading = ttk.Frame(parent, style="Panel.TFrame")
+        heading.grid(row=0, column=0, sticky="ew")
+        heading.columnconfigure(0, weight=1)
+        ttk.Label(heading, text="Suggested artists", style="Section.TLabel").grid(row=0, column=0, sticky="w")
+        ttk.Label(
+            heading,
+            text="Review a creator’s profile and portfolio in Member accounts before approving.",
+            style="Muted.TLabel",
+        ).grid(row=1, column=0, sticky="w", pady=(4, 0))
+        self.suggested_refresh_button = ttk.Button(
+            heading, text="Refresh suggestions", command=self.load_account_admin,
+        )
+        self.suggested_refresh_button.grid(row=0, column=1, rowspan=2, sticky="e", padx=(16, 0))
+
+        self.suggested_artist_tree = ttk.Treeview(
+            parent,
+            columns=("name", "category", "email", "email_verified", "photos"),
+            show="headings",
+            selectmode="browse",
+        )
+        for column, title, width in (
+            ("name", "Creator", 220),
+            ("category", "Category", 150),
+            ("email", "Email", 280),
+            ("email_verified", "Email verified", 120),
+            ("photos", "Photos", 75),
+        ):
+            self.suggested_artist_tree.heading(column, text=title)
+            self.suggested_artist_tree.column(column, width=width)
+        self.suggested_artist_tree.grid(row=1, column=0, sticky="nsew", pady=(16, 10))
+        self.suggested_artist_tree.bind("<<TreeviewSelect>>", self.select_suggested_artist)
+        actions = ttk.Frame(parent, style="Panel.TFrame")
+        actions.grid(row=2, column=0, sticky="w")
+        self.suggested_review_button = ttk.Button(
+            actions, text="Review profile & photos", command=self.open_suggested_artist,
+        )
+        self.suggested_review_button.pack(side="left")
+        self.suggested_approve_button = ttk.Button(
+            actions, text="Approve as AI-Free verified", command=lambda: self.set_selected_suggested_status("APPROVED"),
+        )
+        self.suggested_approve_button.pack(side="left", padx=(8, 0))
+        self.suggested_reject_button = ttk.Button(
+            actions, text="Reject suggestion", command=lambda: self.set_selected_suggested_status("REJECTED"),
+        )
+        self.suggested_reject_button.pack(side="left", padx=(8, 0))
+        self.select_suggested_artist()
+
+    def selected_suggested_artist(self):
+        selection = self.suggested_artist_tree.selection()
+        return self.suggested_rows.get(selection[0]) if selection else None
+
+    def select_suggested_artist(self, _event=None):
+        enabled = bool(self.selected_suggested_artist()) and bool(self.account_admin)
+        state = "normal" if enabled else "disabled"
+        for button in (
+            self.suggested_review_button,
+            self.suggested_approve_button,
+            self.suggested_reject_button,
+        ):
+            button.config(state=state)
+
+    def open_suggested_artist(self):
+        account = self.selected_suggested_artist()
+        if not account:
+            return
+        self.tabs.select(self.accounts_tab)
+        self.account_tree.selection_set(account["id"])
+        self.account_tree.focus(account["id"])
+        self.account_tree.see(account["id"])
+        self.select_account()
+
+    def set_selected_suggested_status(self, status):
+        account = self.selected_suggested_artist()
+        if not account:
+            return
+        if status == "APPROVED" and not messagebox.askyesno(
+            "Approve AI-Free artist",
+            f"Approve {account.get('displayName', 'this creator')} as AI-Free verified? "
+            "Their profile will become public in Verified Creators.",
+        ):
+            return
+        self.account_admin_action(
+            "Review suggested artist",
+            lambda: self.account_admin.set_status(account["id"], status),
+            "Artist approved as AI-Free verified." if status == "APPROVED" else "Artist suggestion rejected.",
+        )
+
     def selected_account(self):
         selection = self.account_tree.selection()
         return self.account_rows.get(selection[0]) if selection else None
@@ -604,7 +699,9 @@ class App(tk.Tk):
 
     def refresh_account_admin(self, rows, bans):
         self.account_tree.delete(*self.account_tree.get_children())
+        self.suggested_artist_tree.delete(*self.suggested_artist_tree.get_children())
         self.account_rows = {}
+        self.suggested_rows = {}
         for account in rows:
             account_id = account.get("id")
             if not account_id:
@@ -619,9 +716,24 @@ class App(tk.Tk):
                     account.get("displayName", ""),
                     account.get("category", ""),
                     account.get("status", ""),
+                    "Yes" if account.get("emailVerified") else "No",
                     len(account.get("galleryImageIds", [])) + bool(account.get("profileImageId")),
                 ),
             )
+            if account.get("status") == "PENDING":
+                self.suggested_rows[account_id] = account
+                self.suggested_artist_tree.insert(
+                    "",
+                    "end",
+                    iid=account_id,
+                    values=(
+                        account.get("displayName", ""),
+                        account.get("category", ""),
+                        account.get("email", ""),
+                        "Yes" if account.get("emailVerified") else "No",
+                        len(account.get("galleryImageIds", [])) + bool(account.get("profileImageId")),
+                    ),
+                )
         self.ban_tree.delete(*self.ban_tree.get_children())
         self.ban_rows = {}
         for ban in bans:
@@ -636,7 +748,9 @@ class App(tk.Tk):
                 values=(ban.get("type", ""), ban.get("label", "")),
             )
         self.select_account()
-        self.set_status(f"Loaded {len(rows)} member accounts and {len(bans)} active bans.", "#46705b")
+        self.select_suggested_artist()
+        pending_count = sum(1 for account in rows if account.get("status") == "PENDING")
+        self.set_status(f"Loaded {len(rows)} accounts, {pending_count} suggested artists, and {len(bans)} active bans.", "#46705b")
 
     def account_admin_action(self, title, action, success_message):
         if not self.account_admin:
@@ -658,10 +772,16 @@ class App(tk.Tk):
         account = self.selected_account()
         if not account:
             return
+        if status == "APPROVED" and not messagebox.askyesno(
+            "Approve AI-Free artist",
+            f"Approve {account.get('displayName', 'this creator')} as AI-Free verified? "
+            "Their profile will become public in Verified Creators.",
+        ):
+            return
         self.account_admin_action(
             "Update account status",
             lambda: self.account_admin.set_status(account["id"], status),
-            f"Account marked {status.lower()}.",
+            "Artist approved as AI-Free verified." if status == "APPROVED" else f"Account marked {status.lower()}.",
         )
 
     def edit_selected_account(self):
