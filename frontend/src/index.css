@@ -138,7 +138,8 @@ a {
 }
 
 .account-form input,
-.account-form select {
+.account-form select,
+.account-form textarea {
   width: 100%;
   box-sizing: border-box;
   min-height: 42px;
@@ -148,6 +149,83 @@ a {
   background: #fff;
   color: #111;
   font: inherit;
+}
+
+.account-form textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.account-media {
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid #111;
+}
+
+.account-media h3 {
+  margin: 0 0 8px;
+  font-weight: 400;
+}
+
+.account-media > p {
+  line-height: 1.5;
+}
+
+.account-profile-photo {
+  width: 128px;
+  height: 128px;
+  margin: 16px 0;
+  border: 1px solid #777;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  color: #666;
+  font-size: 13px;
+}
+
+.account-profile-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.account-upload-label {
+  display: block;
+  margin: 14px 0;
+  font-size: 14px;
+}
+
+.account-upload-label input {
+  display: block;
+  width: 100%;
+  margin-top: 7px;
+}
+
+.account-gallery,
+.member-profile-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.account-gallery-item img,
+.member-profile-gallery img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border: 1px solid #777;
+}
+
+.account-gallery-item .button {
+  margin-top: 8px;
+}
+
+.member-profile-bio {
+  white-space: pre-wrap;
+  line-height: 1.65;
 }
 
 .account-mode-tabs {

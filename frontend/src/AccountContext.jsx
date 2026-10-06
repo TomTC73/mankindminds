@@ -17,10 +17,11 @@ export function AccountProvider({ children }) {
   }, []);
 
   const request = useCallback(async (path, options = {}, sessionToken = token) => {
+    const isFormData = options.body instanceof FormData;
     const response = await fetch(`${API_URL}${path}`, {
       ...options,
       headers: {
-        ...(options.body ? { "Content-Type": "application/json" } : {}),
+        ...(options.body && !isFormData ? { "Content-Type": "application/json" } : {}),
         ...(sessionToken ? { Authorization: `Bearer ${sessionToken}` } : {}),
         ...options.headers,
       },
@@ -90,9 +91,38 @@ export function AccountProvider({ children }) {
     return updated;
   }, [request]);
 
+  const uploadImage = useCallback(async (file, kind) => {
+    const body = new FormData();
+    body.append("file", file);
+    body.append("kind", kind);
+    const updated = await request("/accounts/me/images", { method: "POST", body });
+    setAccount(updated);
+    return updated;
+  }, [request]);
+
+  const deleteImage = useCallback(async (imageId) => {
+    const updated = await request(`/accounts/me/images/${encodeURIComponent(imageId)}`, {
+      method: "DELETE",
+    });
+    setAccount(updated);
+    return updated;
+  }, [request]);
+
+  const loadImage = useCallback(async (imageId) => {
+    const response = await fetch(`${API_URL}/accounts/me/images/${encodeURIComponent(imageId)}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!response.ok) {
+      if (response.status === 401) clearSession();
+      throw new Error("Could not load this photo.");
+    }
+    return URL.createObjectURL(await response.blob());
+  }, [clearSession, token]);
+
   const value = useMemo(() => ({
     account, token, loading, request, signIn, signUp, signOut, updateProfile,
-  }), [account, loading, request, signIn, signOut, signUp, token, updateProfile]);
+    uploadImage, deleteImage, loadImage,
+  }), [account, loading, request, signIn, signOut, signUp, token, updateProfile, uploadImage, deleteImage, loadImage]);
 
   return <AccountContext.Provider value={value}>{children}</AccountContext.Provider>;
 }

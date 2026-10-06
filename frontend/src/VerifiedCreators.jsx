@@ -189,7 +189,11 @@ function VerifiedCreators() {
             {filteredMemberAccounts.map((member) => (
               <div className="creator-tab" key={member.id}>
                 <div className="creator-avatar">
-                  {member.displayName?.split(" ").map((word) => word[0]).join("")}
+                  {member.profileImageUrl ? (
+                    <img src={`${API_URL}${member.profileImageUrl}`} alt={`${member.displayName} profile`} className="creator-avatar-img" />
+                  ) : (
+                    member.displayName?.split(" ").map((word) => word[0]).join("")
+                  )}
                 </div>
                 <div className="creator-info">
                   <h4>{member.displayName}</h4>
