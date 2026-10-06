@@ -712,6 +712,7 @@ a {
     flex-direction: column;
     gap: 16px;
   }
+}
 
 /* Shared paper-and-ink treatment */
 :root {
@@ -899,6 +900,7 @@ header.header {
   background: var(--paper-light) !important;
 }
 
+@media (max-width: 700px) {
   .nav a {
     margin: 0 10px;
   }
@@ -955,6 +957,8 @@ header.header {
   .profile-placeholder {
     font-size: 32px;
   }
+}
+
   .custom-leaflet-marker {
   background: transparent !important;
   border: none !important;
@@ -2334,7 +2338,6 @@ header.header {
       transition: none;
     }
   }
-}
 
   /* Shared editorial system */
 
