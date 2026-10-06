@@ -257,7 +257,7 @@ function Process() {
               artists and clients confidence in what they are choosing.
             </p>
             <span>
-              A working belief behind Burchett Verification — with questions,
+              A working belief behind Burchett Verification - with questions,
               contact us by phone, email, or in person where possible.
             </span>
           </section>
