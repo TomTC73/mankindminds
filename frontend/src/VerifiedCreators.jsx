@@ -129,18 +129,22 @@ function VerifiedCreators() {
 
         {loading ? (
           <p>Loading creators...</p>
-        ) : creatorError ? (
-          <p role="alert">{creatorError}</p>
-        ) : filteredCreators.length === 0 ? (
+        ) : filteredCreators.length === 0 && filteredMemberAccounts.length === 0 ? (
           <p className="certificate-empty-state">
-            No verified {activeCategoryGroup?.label.toLowerCase() || "creator"} certificates yet.
+            {creatorError || memberError
+              ? "Verified creator profiles could not be loaded."
+              : `No verified ${activeCategoryGroup?.label.toLowerCase() || "creator"} profiles yet.`}
           </p>
         ) : (
-          <div className="creator-tabs">
-            {filteredCreators.map((creator) => {
-              const creatorCategory = getCreatorCategory(creator.category);
+          <>
+            {(creatorError || memberError) && (
+              <p role="alert">Some verified creator profiles could not be loaded.</p>
+            )}
+            <div className="creator-tabs">
+              {filteredCreators.map((creator) => {
+                const creatorCategory = getCreatorCategory(creator.category);
 
-              return (
+                return (
               <div className="creator-tab" key={creator.slug}>
                 <div className="creator-avatar">
                   {creator.imageUrl ? (
@@ -169,44 +173,33 @@ function VerifiedCreators() {
                   <button className="button creator-button">View Profile</button>
                 </Link>
               </div>
-              );
-            })}
-          </div>
-        )}
-
-        <h3 className="approved-members-heading">Approved Community Members</h3>
-        <p className="approved-members-intro">
-          Profiles appear here only after staff approval. These profiles are separate from AI-Free certificates.
-        </p>
-        {loading ? (
-          <p>Loading approved member profiles...</p>
-        ) : memberError ? (
-          <p role="alert">{memberError}</p>
-        ) : filteredMemberAccounts.length === 0 ? (
-          <p className="certificate-empty-state">No approved member profiles yet.</p>
-        ) : (
-          <div className="creator-tabs">
-            {filteredMemberAccounts.map((member) => (
-              <div className="creator-tab" key={member.id}>
-                <div className="creator-avatar">
-                  {member.profileImageUrl ? (
-                    <img src={`${API_URL}${member.profileImageUrl}`} alt={`${member.displayName} profile`} className="creator-avatar-img" />
-                  ) : (
-                    member.displayName?.split(" ").map((word) => word[0]).join("")
-                  )}
+                );
+              })}
+              {filteredMemberAccounts.map((member) => (
+                <div className="creator-tab" key={`member-${member.id}`}>
+                  <div className="creator-avatar">
+                    {member.profileImageUrl ? (
+                      <img src={`${API_URL}${member.profileImageUrl}`} alt={`${member.displayName} profile`} className="creator-avatar-img" />
+                    ) : (
+                      member.displayName?.split(" ").map((word) => word[0]).join("")
+                    )}
+                  </div>
+                  <div className="creator-info">
+                    <h4>{member.displayName}</h4>
+                    <p className="creator-category">
+                      {member.category} Certificate
+                      <span> · {getCreatorNiche(member.category)}</span>
+                    </p>
+                    {member.bio && <p>{member.bio}</p>}
+                  </div>
+                  <span className="verified-badge">Verified</span>
+                  <Link to={`/members/${member.id}`}>
+                    <button className="button creator-button">View Profile</button>
+                  </Link>
                 </div>
-                <div className="creator-info">
-                  <h4>{member.displayName}</h4>
-                  <p className="creator-category">{member.category} · Approved member</p>
-                  {member.businessName && <p>{member.businessName}</p>}
-                </div>
-                <span className="verified-badge">Approved</span>
-                <Link to={`/members/${member.id}`}>
-                  <button className="button creator-button">View Profile</button>
-                </Link>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          </>
         )}
       </section>
 

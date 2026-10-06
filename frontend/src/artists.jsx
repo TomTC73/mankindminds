@@ -1,56 +1,44 @@
 import React, { useState, useEffect } from "react";
 import { API_URL, resolveCreatorImageUrl } from "./apiConfig";
 
-// Fallback dataset for individual artists if offline
-export const ARTISTS_DATA = [
-  {
-    id: "artist-isabella-sala",
-    slug: "isabella-sala",
-    name: "Isabella Sala",
-    handle: "@isabellasalatattoos",
-    category: "Tattooist",
-    imageUrl: "/Artist1work/shot1_r5_c5.png",
-    instagram: {
-      url: "https://www.instagram.com/isabellasalatattoos/",
-      icon: "/icons/instagram.png",
-      handle: "@isabellasalatattoos"
-    },
-    website: "https://www.isabellasalatattoos.it/",
-    studio: "Isabella Sala Tattoos",
-    location: "Italy",
-    styles: ["Fine Line", "Minimalist", "Delicate Blackwork"],
-    summary: "Italian fine-line tattoo artist known for elegant, minimalist designs with soft detailing and clean precision.",
-    bio: "Italian fine-line tattoo artist known for elegant, minimalist designs with soft detailing and clean precision.",
-    rating: "4.9",
-    verified: true
-  }
-];
-
 export default function Artists() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedStyle, setSelectedStyle] = useState("All");
   const [creators, setCreators] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
+    let active = true;
     fetch(`${API_URL}/creators`)
       .then((res) => {
-        if (!res.ok) throw new Error("Failed to fetch creators");
+        if (!res.ok) throw new Error(`Creators request failed (${res.status}).`);
         return res.json();
       })
       .then((data) => {
-        if (Array.isArray(data) && data.length > 0) {
-          const tattooArtists = data.filter((c) =>
-            c.category?.toLowerCase().includes("tattoo") ||
-            c.category?.toLowerCase().includes("tattooist") ||
-            (c.styles && c.styles.length > 0)
-          );
-          setCreators(tattooArtists.length > 0 ? tattooArtists : data);
+        if (!Array.isArray(data)) throw new Error("The creators response was invalid.");
+        if (!active) return;
+        const tattooArtists = data.filter((creator) =>
+          creator.category?.toLowerCase().includes("tattoo") ||
+          (creator.styles && creator.styles.length > 0)
+        );
+        setCreators(tattooArtists.length > 0 ? tattooArtists : data);
+      })
+      .catch((requestError) => {
+        console.error("Could not load featured artists:", requestError);
+        if (active) {
+          setError(import.meta.env.DEV
+            ? "Could not connect to the local backend at http://localhost:8080. Start the backend, then reload this page."
+            : "Artists could not be loaded right now. Please refresh the page to try again.");
         }
       })
-      .catch(() => {});
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => { active = false; };
   }, []);
 
-  const artistsList = creators.length > 0 ? creators : ARTISTS_DATA;
+  const artistsList = creators;
 
   const stylesList = ["All", "Fine Line", "Micro-realism", "Neo-Traditional", "Blackwork", "Japanese", "Minimalist", "Delicate Blackwork"];
 
@@ -218,7 +206,16 @@ export default function Artists() {
         </div>
       </div>
 
+      {loading ? (
+        <p role="status" style={{ textAlign: "center", color: "#64748b" }}>Loading verified artists…</p>
+      ) : error ? (
+        <p role="alert" style={{ textAlign: "center", color: "#64748b" }}>{error}</p>
+      ) : filteredArtists.length === 0 ? (
+        <p style={{ textAlign: "center", color: "#64748b" }}>No artists match these filters.</p>
+      ) : null}
+
       {/* ARTISTS TABS GRID */}
+      {!loading && !error && (
       <div
         style={{
           display: "grid",
@@ -352,6 +349,7 @@ export default function Artists() {
           );
         })}
       </div>
+      )}
     </div>
   );
 }

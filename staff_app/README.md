@@ -72,6 +72,14 @@ Set `IP_FINGERPRINT_SECRET` to a separate high-entropy Secret Manager secret on
 Cloud Run and keep it unchanged so bans and duplicate application checks remain
 stable.
 
+The **Suggested artists** tab lists pending creator accounts and shows whether
+the email address was verified during signup. Review the profile and portfolio
+from **Member accounts**, then approve or reject the suggestion. Approval
+publishes the artist in the site's existing Verified Creators section and marks
+them as AI-Free verified; approve only after completing that review. New
+accounts are created only after the creator enters the one-time code emailed to
+their address. Verification emails use the configured backend mail settings.
+
 Account images are stored privately in the `mankind-minds-backend-account-media`
 Cloud Storage bucket. Set `ACCOUNT_MEDIA_BUCKET` to that bucket name in the
 backend service and grant the Cloud Run service account `Storage Object Admin`

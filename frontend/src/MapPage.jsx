@@ -647,52 +647,6 @@ const NORWICH_LOCATIONS = [
 ];
 
 // --- FEATURED ARTISTS ---
-// Bundled fallback so the Artists tab still renders if the creators API is briefly
-// unavailable. New tattooist creators added via the staff manager app are fetched
-// from the backend below and merged in automatically — no code changes needed.
-const FALLBACK_ARTISTS_DATA = [
-  {
-    id: "artist-isabella-sala",
-    slug: "isabella-sala",
-    name: "Isabella Sala",
-    creatorSlug: "isabella-sala",
-    handle: "@isabellasalatattoos",
-    category: "Tattooist",
-    imageUrl: "/Artist1work/shot1_r5_c5.png",
-    instagram: {
-      url: "https://www.instagram.com/isabellasalatattoos/",
-      icon: "/icons/instagram.png",
-      handle: "@isabellasalatattoos",
-    },
-    website: "https://www.isabellasalatattoos.it/",
-    studio: "Isabella Sala Tattoos",
-    location: "Italy",
-    styles: ["Fine Line", "Minimalist", "Delicate Blackwork"],
-    summary: "Italian fine-line tattoo artist known for elegant, minimalist designs with soft detailing and clean precision.",
-    bio: "Italian fine-line tattoo artist known for elegant, minimalist designs with soft detailing and clean precision.",
-    rating: "4.9",
-    verified: true,
-    imageUrl: "/Artist1work/3.PNG",
-   portfolio: [
-  { id: 1, type: "image", url: "/Artist1work/3.PNG" },
-  { id: 2, type: "image", url: "/Artist1work/4.PNG" },
-  { id: 3, type: "image", url: "/Artist1work/5.PNG" },
-  { id: 4, type: "image", url: "/Artist1work/6.PNG" },
-  { id: 5, type: "image", url: "/Artist1work/7.PNG" },
-  { id: 6, type: "image", url: "/Artist1work/8.PNG" },
-  { id: 7, type: "image", url: "/Artist1work/9.PNG" },
-  { id: 8, type: "image", url: "/Artist1work/10.PNG" },
-  { id: 9, type: "image", url: "/Artist1work/11.PNG" },
-  { id: 10, type: "image", url: "/Artist1work/12.PNG" },
-  { id: 11, type: "image", url: "/Artist1work/13.PNG" },
-  { id: 12, type: "image", url: "/Artist1work/Capture.PNG" },
-  { id: 13, type: "image", url: "/Artist1work/Capture.PNG1.PNG" },
-  { id: 14, type: "image", url: "/Artist1work/Capture.PNG2.PNG" },
-]
-
-  },
-];
-
 const createCustomPinIcon = () => {
   const iconHtml = `
     <div style="
@@ -788,7 +742,9 @@ export default function MapPage({ embedded = false }) {
   const [artistSearchTerm, setArtistSearchTerm] = useState("");
   const [isArtistDropdownOpen, setIsArtistDropdownOpen] = useState(false);
   const [highlightedArtistId, setHighlightedArtistId] = useState(null);
-  const [artistsData, setArtistsData] = useState(FALLBACK_ARTISTS_DATA);
+  const [artistsData, setArtistsData] = useState([]);
+  const [artistsLoading, setArtistsLoading] = useState(true);
+  const [artistsError, setArtistsError] = useState("");
   const [studioLocations, setStudioLocations] = useState([
     ...LONDON_LOCATIONS.map((studio) => ({ ...studio, city: "London" })),
     ...NORWICH_LOCATIONS.map((studio) => ({ ...studio, city: "Norwich" })),
@@ -859,14 +815,18 @@ export default function MapPage({ embedded = false }) {
               })),
             };
           });
-        setArtistsData((previous) => {
-          const bySlug = new Map(previous.map((artist) => [artist.creatorSlug, artist]));
-          tattooCreators.forEach((artist) => bySlug.set(artist.creatorSlug, artist));
-          return Array.from(bySlug.values());
-        });
+        setArtistsData(tattooCreators);
       })
-      .catch(() => {
-        // Keep the bundled fallback artist(s) available while the API is unavailable.
+      .catch((error) => {
+        console.error("Could not load featured tattoo artists:", error);
+        if (!cancelled) {
+          setArtistsError(import.meta.env.DEV
+            ? "Could not connect to the local backend at http://localhost:8080. Start the backend, then reload this page."
+            : "Featured artists could not be loaded. Please refresh the page to try again.");
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setArtistsLoading(false);
       });
     return () => {
       cancelled = true;
@@ -1579,6 +1539,7 @@ export default function MapPage({ embedded = false }) {
               type="text"
               placeholder="Search artists by name, style, or studio..."
               value={artistSearchTerm}
+              disabled={artistsLoading || Boolean(artistsError)}
               onChange={(e) => {
                 setArtistSearchTerm(e.target.value);
                 setIsArtistDropdownOpen(true);
@@ -1651,7 +1612,22 @@ export default function MapPage({ embedded = false }) {
           </div>
         </div>
 
-        {artistsData.map((artist) => (
+        {artistsLoading && (
+          <p role="status" style={{ textAlign: "center", color: "#64748b" }}>
+            Loading verified artists…
+          </p>
+        )}
+        {artistsError && (
+          <p role="alert" style={{ textAlign: "center", color: "#64748b" }}>
+            {artistsError}
+          </p>
+        )}
+        {!artistsLoading && !artistsError && artistsData.length === 0 && (
+          <p style={{ textAlign: "center", color: "#64748b" }}>
+            No verified tattoo artists are currently listed.
+          </p>
+        )}
+        {!artistsLoading && !artistsError && artistsData.map((artist) => (
           <Link
             key={artist.id}
             to={artist.creatorSlug ? `/creators/${artist.creatorSlug}` : "#"}
