@@ -988,7 +988,8 @@ class App(tk.Tk):
         title = "Approve creator" if approving else "Reject creator request"
         message = (
             f"Approve {account.get('displayName', 'this creator')} as AI-Free verified? "
-            "Their profile will become public in Verified Creators."
+            "Their profile will become public in Verified Creators, and they will receive an acceptance email "
+            "with their page link and downloadable QR code."
             if approving
             else f"Reject {account.get('displayName', 'this creator')}? They will receive an automatic rejection email."
         )
@@ -997,13 +998,14 @@ class App(tk.Tk):
         self.account_admin_action(
             title,
             lambda: self.account_admin.set_status(account["id"], status),
-            "Creator approved as AI-Free verified. No website publish is needed."
+            "Creator approved as AI-Free verified. The acceptance email and custom QR code were sent."
             if approving else "Creator request rejected and rejection email sent.",
             on_success=lambda: messagebox.showinfo(
                 "Creator approved" if approving else "Creator rejected",
                 (
                     f"{account.get('displayName', 'Creator')} is approved. The website's creator lists "
-                    "will include the profile automatically; do not press Publish changes."
+                    "will include the profile automatically; do not press Publish changes. An acceptance "
+                    "email with their page link and downloadable QR code was sent."
                     if approving else
                     f"{account.get('displayName', 'Creator')} was rejected and the rejection email was sent."
                 ),

@@ -97,6 +97,12 @@ section as AI-Free verified artists. For self-service signups, accounts are
 created only after the creator enters the one-time code emailed to their
 address.
 
+When staff approves a pending creator as AI-Free verified, the backend sends
+them a congratulations email with their public profile link, suggested social
+media caption, and a branded downloadable QR code that opens their profile.
+The QR uses the bundled `Logo2` artwork and rounded blob-style modules, so
+staff do not need the local `D:\QRCode` files or Python QR packages.
+
 The **Tools > Do it for them** tab creates a public creator profile with its
 description, bio, social links, profile photo, and gallery, then starts the
 backend deployment and provisions its approved Firestore account. The entered
