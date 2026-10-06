@@ -4,6 +4,7 @@ import { MapContainer, TileLayer, Marker, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "./MapPage.css";
+import CreatorBanner from "./CreatorBanner";
 
 import Header from "./Header";
 import { API_URL, resolveStudioImageUrl, resolveCreatorImageUrl } from "./apiConfig";
@@ -733,7 +734,7 @@ export default function MapPage({ embedded = false }) {
   const artistsSectionRef = useRef(null);
   const artistCardRefs = useRef({});
 
-  const [activeSection, setActiveSection] = useState("studios");
+  const [activeSection, setActiveSection] = useState(embedded ? "artists" : "studios");
   const [activeCity, setActiveCity] = useState("London");
   const [searchTerm, setSearchTerm] = useState("");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -950,18 +951,23 @@ export default function MapPage({ embedded = false }) {
     return () => clearTimeout(timer);
   }, [highlightedArtistId]);
 
-  const scrollToStudios = () => {
-    setActiveSection("studios");
-    if (pageTopRef.current) {
-      pageTopRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+  const showSection = (section) => {
+    setActiveSection(section);
+    if (!embedded) {
+      if (section === "studios") {
+        pageTopRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      } else {
+        artistsSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
     }
   };
 
+  const scrollToStudios = () => {
+    showSection("studios");
+  };
+
   const scrollToArtists = () => {
-    setActiveSection("artists");
-    if (artistsSectionRef.current) {
-      artistsSectionRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
+    showSection("artists");
   };
 
   return (
@@ -1035,6 +1041,8 @@ export default function MapPage({ embedded = false }) {
       </div>
 
       {/* ================= STUDIOS SECTION ================= */}
+      {(!embedded || activeSection === "studios") && (
+      <>
       <div
         className="map-explorer"
         style={{
@@ -1480,11 +1488,20 @@ export default function MapPage({ embedded = false }) {
       </div>
 
       {/* Section divider */}
-      <div style={{ maxWidth: "1000px", margin: "0 auto", padding: "0 20px" }}>
+      <div
+        style={{
+          maxWidth: "1000px",
+          margin: "0 auto",
+          padding: "0 20px",
+        }}
+      >
         <div style={{ height: "1px", backgroundColor: "#e5e7eb" }} />
       </div>
+      </>
+      )}
 
       {/* ================= ARTISTS SECTION ================= */}
+      {(!embedded || activeSection === "artists") && (
       <div
         ref={artistsSectionRef}
         style={{
@@ -1627,7 +1644,13 @@ export default function MapPage({ embedded = false }) {
             No verified tattoo artists are currently listed.
           </p>
         )}
-        {!artistsLoading && !artistsError && artistsData.map((artist) => (
+        {embedded && !artistsLoading && !artistsError && artistsData.length > 0 && (
+          <CreatorBanner
+            creators={artistsData}
+            ariaLabel="Featured verified tattoo artists"
+          />
+        )}
+        {!embedded && !artistsLoading && !artistsError && artistsData.map((artist) => (
           <Link
             key={artist.id}
             to={artist.creatorSlug ? `/creators/${artist.creatorSlug}` : "#"}
@@ -1983,6 +2006,7 @@ export default function MapPage({ embedded = false }) {
 
        
       </div>
+      )}
     </div>
   );
 }

@@ -76,7 +76,8 @@ their profile details and submitted photos for review; staff can approve or
 reject/block a request, and rejecting one sends a styled email automatically.
 **Rejected** lists rejected accounts and allows a failed rejection notice to be
 resent. **Tools** groups the
-Tattoo shops, To Do List, and Analytics workspaces away from creator review.
+Tattoo shops, To Do List, Analytics, and Do it for them workspaces away from
+creator review.
 
 The account tools use the same GitHub Device Flow sign-in. Configure
 the backend's `STAFF_GITHUB_USERS` environment variable with a comma-separated
@@ -92,8 +93,19 @@ Cloud Run and keep it unchanged so bans and duplicate application checks remain
 stable.
 
 Approved member profiles appear in the site's existing Verified Creators
-section as AI-Free verified artists. New accounts are created only after the
-creator enters the one-time code emailed to their address.
+section as AI-Free verified artists. For self-service signups, accounts are
+created only after the creator enters the one-time code emailed to their
+address.
+
+The **Tools > Do it for them** tab creates a public creator profile with its
+description, bio, social links, profile photo, and gallery, then starts the
+backend deployment and provisions its approved Firestore account. The entered
+email is used to deliver the setup message and is not saved as verified account
+email. The creator receives a temporary username and password, signs in at
+`https://www.mankindminds.com/account`, verifies their own email, and chooses
+their permanent password. If profile publishing succeeds but account email
+delivery fails, retrying the same profile URL reuses that profile and issues
+fresh temporary login details.
 
 Use **Prepare logins for existing creators** to add approved, claim-required
 accounts for the published creator pages. The existing public pages remain

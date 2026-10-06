@@ -4,6 +4,7 @@ import { useLocation } from "react-router-dom";
 import Header from "./Header";
 import backgroundImage from "./assets/BackgroundHome.png";
 import MapPage from "./MapPage";
+import HomeFeaturedCreators from "./HomeFeaturedCreators";
 
 function Home() {
   const { pathname } = useLocation();
@@ -34,8 +35,8 @@ function Home() {
                 <button className="button">Process</button>
               </Link>
               {isTattooHome ? (
-                <Link to="/apply?category=tattoos">
-                  <button className="button secondary-button">Apply</button>
+                <Link to="/certificates?category=tattoos">
+                  <button className="button secondary-button">View Creators</button>
                 </Link>
               ) : (
                 <Link to={`/certificates?category=${pathname.slice(1)}`}>
@@ -47,6 +48,10 @@ function Home() {
 
         </div>
       </section>
+
+      {!isTattooHome && (
+        <HomeFeaturedCreators category={pathname.slice(1)} />
+      )}
 
       {isTattooHome && (
         <section className="home-map" aria-label="Tattoo studio map and directory">

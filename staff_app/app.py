@@ -8,6 +8,7 @@ import base64
 import json
 import mimetypes
 import os
+import re
 import threading
 import time
 import tempfile
@@ -41,6 +42,15 @@ LEGACY_NICHE_MAP = {
     "Writing": "Writer",
     "Videos": "Content Creator",
     "Art": "Artist",
+}
+ACCOUNT_CATEGORY_MAP = {
+    "Tattooist": "Tattoos",
+    "Musician": "Music",
+    "Writer": "Writing",
+    "Content Creator": "Videos",
+    "Artist": "Art",
+    "Illustrator": "Art",
+    "Photographer": "Art",
 }
 CLIENT_ID = os.environ.get("MM_GITHUB_CLIENT_ID", "Ov23liZIMcO7043zppb9")
 REFRESH_MS = 60_000
@@ -203,6 +213,12 @@ class AccountAdminClient:
 
     def import_legacy_claim(self, creator):
         return self.request("POST", "/staff/legacy-claim", creator)
+
+    def create_creator_account(self, creator, email):
+        return self.request("POST", "/staff/do-it-for-them", {
+            "creator": creator,
+            "email": email,
+        })
 
     def resend_rejection_email(self, account_id):
         return self.request("POST", f"/staff/{urllib.parse.quote(account_id, safe='')}/rejection-email")
@@ -398,10 +414,14 @@ class App(tk.Tk):
         self.ticket_file_sha = None
         self.section_rows = []
         self.social_rows = []
+        self.creator_records_loaded = False
         self.syncing_creator_bio = False
         self.creator_editor_enabled = False
         self.studio_editor_enabled = False
         self.ticket_editor_enabled = False
+        self.do_it_social_rows = []
+        self.do_it_profile_photo = None
+        self.do_it_gallery_photos = []
         self.build_styles()
         self.build_ui()
         self.protocol("WM_DELETE_WINDOW", self.close_app)
@@ -572,6 +592,9 @@ class App(tk.Tk):
         analytics_tab = ttk.Frame(tool_sections, style="Panel.TFrame", padding=20)
         tool_sections.add(analytics_tab, text="Analytics")
         self.build_analytics_panel(analytics_tab)
+        do_it_tab = ttk.Frame(tool_sections, style="Panel.TFrame", padding=20)
+        tool_sections.add(do_it_tab, text="Do it for them")
+        self.build_do_it_for_them(do_it_tab)
 
     def build_account_admin(self, parent):
         parent.columnconfigure(0, weight=1)
@@ -1056,6 +1079,7 @@ class App(tk.Tk):
                 self.set_status("Sign in with GitHub before managing member accounts.", PALETTE["accent"])
             return
         self.account_admin = AccountAdminClient(self.client.token)
+        self.refresh_do_it_for_them_state()
         self.set_status("Loading member accounts...", PALETTE["accent"])
 
         def work():
@@ -2046,10 +2070,15 @@ class App(tk.Tk):
                     }
                     for creator in json.loads(content)
                 ]
-                self.after(0, lambda: self.refresh_list(silent))
+                self.after(0, lambda: self.creator_records_loaded_complete(silent))
             except Exception as error:
                 self.after(0, lambda: messagebox.showerror("Could not load users", str(error)))
         threading.Thread(target=work, daemon=True).start()
+
+    def creator_records_loaded_complete(self, silent):
+        self.creator_records_loaded = True
+        self.refresh_list(silent)
+        self.refresh_do_it_for_them_state()
 
     def build_tattoo_creators_panel(self, parent):
         parent.columnconfigure(0, weight=1)
@@ -2362,6 +2391,486 @@ class App(tk.Tk):
     def studios_published(self):
         self.set_status("Tattoo shops published to GitHub. Starting deployment...", "#46705b")
         self.deploy_latest(show_success=False)
+
+    def build_do_it_for_them(self, parent):
+        parent.columnconfigure(0, weight=1)
+        parent.rowconfigure(1, weight=1)
+        ttk.Label(
+            parent,
+            text="Create and publish a creator profile, then email them a temporary login to claim it.",
+            style="Muted.TLabel",
+            wraplength=1000,
+        ).grid(row=0, column=0, sticky="w", pady=(0, 14))
+
+        editor = ttk.Panedwindow(parent, orient="horizontal")
+        editor.grid(row=1, column=0, sticky="nsew")
+        profile = ttk.Frame(editor, style="Panel.TFrame", padding=(0, 0, 12, 0))
+        copy = ttk.Frame(editor, style="Panel.TFrame", padding=(12, 0, 0, 0))
+        editor.add(profile, weight=1)
+        editor.add(copy, weight=1)
+        profile.columnconfigure(1, weight=1)
+        copy.columnconfigure(0, weight=1)
+
+        ttk.Label(profile, text="Creator details", style="Section.TLabel").grid(
+            row=0, column=0, columnspan=2, sticky="w", pady=(0, 8),
+        )
+        fields = (
+            ("Creator name", "name"),
+            ("Profile URL slug", "slug"),
+            ("Category", "category"),
+            ("Creator email", "email"),
+            ("Studio / business", "business"),
+            ("Location", "location"),
+            ("Tattoo styles (comma-separated)", "styles"),
+        )
+        self.do_it_fields = {}
+        for row, (label, key) in enumerate(fields, start=1):
+            ttk.Label(profile, text=label).grid(row=row, column=0, sticky="w", padx=(0, 10), pady=4)
+            if key == "category":
+                widget = ttk.Combobox(profile, values=CREATOR_NICHES, state="readonly")
+            else:
+                widget = ttk.Entry(profile)
+            widget.grid(row=row, column=1, sticky="ew", pady=4)
+            self.do_it_fields[key] = widget
+
+        links_row = len(fields) + 1
+        ttk.Label(profile, text="Social / portfolio links", style="Section.TLabel").grid(
+            row=links_row, column=0, columnspan=2, sticky="w", pady=(10, 4),
+        )
+        self.do_it_social_frame = ttk.Frame(profile, style="Panel.TFrame")
+        self.do_it_social_frame.grid(row=links_row + 1, column=0, columnspan=2, sticky="ew")
+        self.do_it_social_frame.columnconfigure(1, weight=1)
+        ttk.Label(self.do_it_social_frame, text="Platform").grid(row=0, column=0, sticky="w", padx=(0, 8))
+        ttk.Label(self.do_it_social_frame, text="URL").grid(row=0, column=1, sticky="w")
+        self.do_it_add_link_button = ttk.Button(
+            profile, text="Add another link", command=self.add_do_it_social_row,
+        )
+        self.do_it_add_link_button.grid(
+            row=links_row + 2, column=0, columnspan=2, sticky="w", pady=(4, 8),
+        )
+        self.add_do_it_social_row()
+
+        photo_row = links_row + 3
+        photo_actions = ttk.Frame(profile, style="Panel.TFrame")
+        photo_actions.grid(row=photo_row, column=0, columnspan=2, sticky="ew", pady=(6, 0))
+        self.do_it_photo_label = ttk.Label(photo_actions, text="No profile photo selected", style="Muted.TLabel")
+        self.do_it_photo_label.pack(side="left", padx=(0, 8))
+        self.do_it_photo_button = ttk.Button(
+            photo_actions, text="Choose profile photo", command=self.choose_do_it_profile_photo,
+        )
+        self.do_it_photo_button.pack(side="left")
+        gallery_actions = ttk.Frame(profile, style="Panel.TFrame")
+        gallery_actions.grid(row=photo_row + 1, column=0, columnspan=2, sticky="ew", pady=(6, 0))
+        self.do_it_gallery_label = ttk.Label(gallery_actions, text="No gallery photos selected", style="Muted.TLabel")
+        self.do_it_gallery_label.pack(side="left", padx=(0, 8))
+        self.do_it_gallery_button = ttk.Button(
+            gallery_actions, text="Choose gallery photos", command=self.choose_do_it_gallery_photos,
+        )
+        self.do_it_gallery_button.pack(side="left")
+
+        ttk.Label(copy, text="Public profile copy", style="Section.TLabel").grid(
+            row=0, column=0, sticky="w", pady=(0, 8),
+        )
+        ttk.Label(copy, text="Description (shown at the top of their public page)").grid(
+            row=1, column=0, sticky="w",
+        )
+        self.do_it_description = tk.Text(
+            copy, height=5, wrap="word", bg="#ffffff", fg=PALETTE["ink"], relief="solid", borderwidth=1,
+        )
+        self.do_it_description.grid(row=2, column=0, sticky="ew", pady=(4, 10))
+        ttk.Label(copy, text="Bio (shown in the About section)").grid(row=3, column=0, sticky="w")
+        self.do_it_bio = tk.Text(
+            copy, height=7, wrap="word", bg="#ffffff", fg=PALETTE["ink"], relief="solid", borderwidth=1,
+        )
+        self.do_it_bio.grid(row=4, column=0, sticky="ew", pady=(4, 10))
+        ttk.Label(
+            copy,
+            text="After publishing, they receive a one-time username and password by email. They sign in, "
+                 "verify this email address, then choose their own password.",
+            style="Muted.TLabel",
+            wraplength=520,
+        ).grid(row=5, column=0, sticky="w", pady=(0, 12))
+        actions = ttk.Frame(copy, style="Panel.TFrame")
+        actions.grid(row=6, column=0, sticky="w")
+        self.do_it_submit_button = ttk.Button(
+            actions,
+            text="Create profile & email login",
+            style="Accent.TButton",
+            command=self.submit_do_it_for_them,
+            state="disabled",
+        )
+        self.do_it_submit_button.pack(side="left")
+        self.do_it_clear_button = ttk.Button(actions, text="Clear form", command=self.clear_do_it_for_them_form)
+        self.do_it_clear_button.pack(
+            side="left", padx=(8, 0),
+        )
+        self.refresh_do_it_for_them_state()
+
+    def refresh_do_it_for_them_state(self, busy=False):
+        if not hasattr(self, "do_it_submit_button"):
+            return
+        if busy:
+            state = "disabled"
+        else:
+            state = (
+                "normal"
+                if self.client and self.account_admin and self.creator_records_loaded
+                else "disabled"
+            )
+        self.do_it_submit_button.config(
+            state=state,
+            text="Publishing..." if busy else "Create profile & email login",
+        )
+        control_state = "disabled" if busy else "normal"
+        self.do_it_add_link_button.config(state=control_state)
+        self.do_it_photo_button.config(state=control_state)
+        self.do_it_gallery_button.config(state=control_state)
+        self.do_it_clear_button.config(state=control_state)
+        for widget in self.do_it_fields.values():
+            widget.config(
+                state=("disabled" if busy else "readonly")
+                if isinstance(widget, ttk.Combobox)
+                else control_state
+            )
+        for widget in (self.do_it_description, self.do_it_bio):
+            widget.config(state=control_state)
+        for platform, url in self.do_it_social_rows:
+            platform.config(state="disabled" if busy else "readonly")
+            url.config(state=control_state)
+
+    def add_do_it_social_row(self):
+        if len(self.do_it_social_rows) >= 12:
+            messagebox.showinfo("Link limit", "A creator can have up to 12 social or portfolio links.")
+            return
+        row = len(self.do_it_social_rows) + 1
+        platform = ttk.Combobox(
+            self.do_it_social_frame,
+            values=("Instagram", "TikTok", "YouTube", "Website", "Other"),
+            state="readonly",
+            width=14,
+        )
+        platform.set("Instagram")
+        platform.grid(row=row, column=0, sticky="ew", padx=(0, 8), pady=2)
+        url = ttk.Entry(self.do_it_social_frame)
+        url.grid(row=row, column=1, sticky="ew", pady=2)
+        self.do_it_social_rows.append((platform, url))
+
+    def choose_do_it_profile_photo(self):
+        path = filedialog.askopenfilename(
+            filetypes=(("Images", "*.jpg *.jpeg *.png *.webp"), ("All files", "*.*")),
+        )
+        if path:
+            self.do_it_profile_photo = path
+            self.do_it_photo_label.config(text=os.path.basename(path))
+
+    def choose_do_it_gallery_photos(self):
+        paths = filedialog.askopenfilenames(
+            filetypes=(("Images", "*.jpg *.jpeg *.png *.webp"), ("All files", "*.*")),
+        )
+        if paths:
+            self.do_it_gallery_photos.extend(paths)
+            self.do_it_gallery_label.config(text=f"{len(self.do_it_gallery_photos)} gallery photos selected")
+
+    def clear_do_it_for_them_form(self):
+        for widget in self.do_it_fields.values():
+            widget.set("") if isinstance(widget, ttk.Combobox) else widget.delete(0, tk.END)
+        self.do_it_description.delete("1.0", tk.END)
+        self.do_it_bio.delete("1.0", tk.END)
+        for platform, url in self.do_it_social_rows:
+            platform.destroy()
+            url.destroy()
+        self.do_it_social_rows = []
+        self.do_it_profile_photo = None
+        self.do_it_gallery_photos = []
+        self.do_it_photo_label.config(text="No profile photo selected")
+        self.do_it_gallery_label.config(text="No gallery photos selected")
+        self.add_do_it_social_row()
+
+    def read_do_it_for_them_form(self):
+        name = self.do_it_fields["name"].get().strip()
+        slug = self.do_it_fields["slug"].get().strip().lower()
+        email = self.do_it_fields["email"].get().strip()
+        category = self.do_it_fields["category"].get().strip()
+        business_name = self.do_it_fields["business"].get().strip()
+        location = self.do_it_fields["location"].get().strip()
+        styles = [
+            style.strip()
+            for style in self.do_it_fields["styles"].get().split(",")
+            if style.strip()
+        ]
+        description = self.do_it_description.get("1.0", tk.END).strip()
+        bio = self.do_it_bio.get("1.0", tk.END).strip()
+        if not name or not category or not email or not description or not bio:
+            raise ValueError("Enter the creator name, category, email, description, and bio.")
+        if len(name) > 200 or len(description) > 4000 or len(bio) > 4000:
+            raise ValueError("Name, description, or bio exceeds the allowed length.")
+        if len(business_name) > 200:
+            raise ValueError("The studio / business name is too long.")
+        if len(email) > 254:
+            raise ValueError("The creator email address is too long.")
+        if "@" not in email or email.startswith("@") or email.endswith("@"):
+            raise ValueError("Enter a valid email address for the creator.")
+        if not slug:
+            slug = re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
+        if not re.fullmatch(r"[a-z0-9][a-z0-9-]{0,119}", slug):
+            raise ValueError("The profile URL slug must use lowercase letters, numbers, and hyphens.")
+        if category not in CREATOR_NICHES:
+            raise ValueError("Select a valid creator category.")
+
+        social_links = []
+        for platform, url_entry in self.do_it_social_rows:
+            link_name = platform.get().strip()
+            link_url = url_entry.get().strip()
+            if link_url:
+                if len(link_name) > 100 or len(link_url) > 2048:
+                    raise ValueError("A social / portfolio link exceeds the allowed length.")
+                social_links.append({"name": link_name, "url": link_url})
+            elif len(self.do_it_social_rows) == 1:
+                continue
+            elif link_name != "Instagram":
+                raise ValueError("Complete or remove every social / portfolio link.")
+        first_link = social_links[0] if social_links else {"name": "Other", "url": ""}
+        category_title = name.split()[0]
+        creator = {
+            "slug": slug,
+            "name": name,
+            "category": category,
+            "description": description,
+            "bio": bio,
+            "badgeText": STANDARD_BADGE,
+            "aiFreeCard": STANDARD_CARD.copy(),
+            "sections": [
+                {"title": f"About {category_title}'s Work", "content": bio},
+                {"title": "Verification Review", "content": STANDARD_REVIEW_CONTENT},
+            ],
+            "socialLinks": social_links,
+            "gallery": [],
+            "studio": business_name,
+            "location": location,
+        }
+        if category == "Tattooist":
+            creator["styles"] = styles
+        return {
+            "creator": creator,
+            "email": email,
+            "businessName": business_name,
+            "socialPlatform": first_link["name"] or "Other",
+            "socialHandle": first_link["url"],
+        }
+
+    def submit_do_it_for_them(self):
+        if not self.client or not self.account_admin or not self.creator_records_loaded:
+            messagebox.showinfo(
+                "Sign in required",
+                "Sign in with GitHub and wait for creator records to load before creating a creator account.",
+            )
+            return
+        try:
+            request = self.read_do_it_for_them_form()
+        except ValueError as error:
+            messagebox.showerror("Creator details incomplete", str(error))
+            return
+
+        existing = next(
+            (item for item in self.creators if item.get("slug") == request["creator"]["slug"]),
+            None,
+        )
+        if existing and (existing.get("name") or "").casefold() != request["creator"]["name"].casefold():
+            messagebox.showerror(
+                "Profile URL already used",
+                f"The profile URL /creators/{request['creator']['slug']} is already used by "
+                f"{existing.get('name', 'another creator')}. Choose a different slug.",
+            )
+            return
+        confirmation = (
+            f"Update {request['creator']['name']}'s existing public profile and issue fresh temporary login details "
+            f"to {request['email']}?"
+            if existing else
+            f"Publish {request['creator']['name']}'s profile and email a temporary account login to "
+            f"{request['email']}? The creator will be added as verified."
+        )
+        if not messagebox.askyesno("Create creator profile and account", confirmation):
+            return
+        profile_photo = self.do_it_profile_photo
+        gallery_photos = tuple(self.do_it_gallery_photos)
+        self.refresh_do_it_for_them_state(busy=True)
+        self.set_status("Publishing the creator profile...", PALETTE["accent"])
+        client = self.client
+        account_admin = self.account_admin
+        state = {"profile_published": False, "deployment_started": False}
+
+        def work():
+            try:
+                existing_accounts = account_admin.accounts()
+                if any(
+                    str(account.get("email", "")).strip().casefold() == request["email"].casefold()
+                    for account in existing_accounts
+                ):
+                    raise ValueError(
+                        "That email address already belongs to an account. Use the existing account instead."
+                    )
+                claimed_profile = next(
+                    (
+                        account for account in existing_accounts
+                        if request["creator"]["slug"] in (
+                            account.get("legacyCreatorSlug"),
+                            account.get("creatorSlug"),
+                        ) and not account.get("claimRequired")
+                    ),
+                    None,
+                )
+                if claimed_profile:
+                    raise ValueError(
+                        "This creator already claimed their account. Manage it under Creators > Verified accounts."
+                    )
+
+                creator = request["creator"]
+                repository = client.repository()
+                branch = repository["default_branch"]
+                data_file = client.file(DATA_PATH, branch)
+                creators = json.loads(base64.b64decode(data_file["content"]).decode("utf-8"))
+                existing = next((item for item in creators if item.get("slug") == creator["slug"]), None)
+                if existing and (existing.get("name") or "").casefold() != creator["name"].casefold():
+                    raise ValueError(
+                        f"The profile URL /creators/{creator['slug']} is already used by "
+                        f"{existing.get('name', 'another creator')}. Choose a different slug."
+                    )
+
+                previous_image = existing.get("imageUrl", "") if existing else ""
+                creator["imageUrl"] = previous_image
+                creator["gallery"] = list(existing.get("gallery", [])) if existing else []
+                if profile_photo:
+                    extension = os.path.splitext(profile_photo)[1].lower() or ".jpg"
+                    filename = f"{creator['slug']}{extension}"
+                    asset_path = f"{ASSET_PATH}/{filename}"
+                    if previous_image and previous_image.lstrip("/") != asset_path.lstrip("/"):
+                        self.delete_asset_if_present(
+                            previous_image, branch, f"Replace profile photo for {creator['name']}",
+                        )
+                    with open(profile_photo, "rb") as photo:
+                        client.put_file(
+                            asset_path,
+                            photo.read(),
+                            branch,
+                            f"Add profile photo for {creator['name']}",
+                            self.existing_asset_sha(asset_path, branch),
+                        )
+                    creator["imageUrl"] = f"/assets/{filename}"
+
+                for index, path in enumerate(gallery_photos):
+                    extension = os.path.splitext(path)[1].lower() or ".jpg"
+                    filename = f"{creator['slug']}-gallery-{time.time_ns()}-{index}{extension}"
+                    asset_path = f"{ASSET_PATH}/{filename}"
+                    with open(path, "rb") as photo:
+                        client.put_file(
+                            asset_path,
+                            photo.read(),
+                            branch,
+                            f"Add gallery photo for {creator['name']}",
+                            self.existing_asset_sha(asset_path, branch),
+                        )
+                    creator["gallery"].append(f"/assets/{filename}")
+
+                merged = dict(existing or {})
+                merged.update(creator)
+                if merged.get("category") != "Tattooist":
+                    for field in ("styles", "rating"):
+                        merged.pop(field, None)
+                creators = [item for item in creators if item.get("slug") != creator["slug"]]
+                creators.append(merged)
+                client.put_file(
+                    DATA_PATH,
+                    json.dumps(creators, indent=2, ensure_ascii=False).encode("utf-8"),
+                    branch,
+                    f"Create creator profile: {creator['name']}",
+                    data_file["sha"],
+                )
+                state["profile_published"] = True
+                self.after(0, self.clear_do_it_uploaded_media)
+                self.creators = [
+                    {
+                        **normalize_creator_profile(item),
+                        "category": LEGACY_NICHE_MAP.get(item.get("category"), item.get("category", "")),
+                    }
+                    for item in creators
+                ]
+
+                client.deployment_workflow(branch)
+                client.trigger_deployment()
+                state["deployment_started"] = True
+
+                account_payload = {
+                    "slug": creator["slug"],
+                    "name": creator["name"],
+                    "category": ACCOUNT_CATEGORY_MAP[creator["category"]],
+                    "socialPlatform": request["socialPlatform"],
+                    "socialHandle": request["socialHandle"],
+                    "description": creator["description"],
+                    "bio": creator["bio"],
+                    "businessName": request["businessName"],
+                    "socialLinks": creator["socialLinks"],
+                }
+                account_result = account_admin.create_creator_account(account_payload, request["email"])
+                self.after(
+                    0,
+                    lambda: self.do_it_for_them_complete(
+                        creator["name"], request["email"], account_result,
+                    ),
+                )
+            except Exception as error:
+                self.after(
+                    0,
+                    lambda message=str(error): self.do_it_for_them_failed(
+                        message, state["profile_published"], state["deployment_started"],
+                    ),
+                )
+
+        threading.Thread(target=work, daemon=True).start()
+
+    def clear_do_it_uploaded_media(self):
+        self.do_it_profile_photo = None
+        self.do_it_gallery_photos = []
+        self.do_it_photo_label.config(text="No profile photo selected")
+        self.do_it_gallery_label.config(text="No gallery photos selected")
+
+    def do_it_for_them_complete(self, creator_name, email, _result):
+        self.refresh_list(silent=True)
+        self.refresh_do_it_for_them_state()
+        self.clear_do_it_for_them_form()
+        self.set_status(
+            f"{creator_name}'s profile was published and the account setup email was sent to {email}.",
+            "#46705b",
+        )
+        messagebox.showinfo(
+            "Creator account set up",
+            f"{creator_name}'s profile is published and an email with temporary sign-in details was sent to {email}.\n\n"
+            "The creator can sign in at mankindminds.com/account, verify their email, and set a permanent password. "
+            "The public profile may take a few minutes to appear while the site update deploys.",
+        )
+
+    def do_it_for_them_failed(self, error, profile_published, deployment_started):
+        self.refresh_do_it_for_them_state()
+        if profile_published:
+            messagebox.showerror(
+                "Account setup incomplete",
+                (
+                    "The creator profile was published and the website deployment was started, but the "
+                    "account/email step did not complete. "
+                    if deployment_started else
+                    "The creator profile was published, but the website deployment and account/email steps "
+                    "did not complete. "
+                )
+                + "Review the error before retrying. If the email could not be delivered, retrying will reuse "
+                  "the profile URL and issue fresh temporary login details.\n\n"
+                + error,
+            )
+            self.set_status(
+                "Profile published; account email was not confirmed. Review the error and retry.",
+                PALETTE["accent"],
+            )
+        else:
+            messagebox.showerror("Could not create creator profile", error)
+            self.set_status("Creator profile was not published.", PALETTE["accent"])
 
     def build_analytics_panel(self, parent):
         parent.columnconfigure(0, weight=1)
