@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import Header from "./Header";
 import Footer from "./Footer";
@@ -42,6 +42,7 @@ function AccountPage() {
   const [claimPassword, setClaimPassword] = useState("");
   const [claimPasswordConfirmation, setClaimPasswordConfirmation] = useState("");
   const [claimCodeSent, setClaimCodeSent] = useState(false);
+  const initializedAccountIdentity = useRef(null);
   const tokenFromLink = searchParams.get("token");
   const isResetRoute = location.pathname === "/account/reset-password";
   useEffect(() => {
@@ -51,7 +52,13 @@ function AccountPage() {
   }, [resendCooldown]);
 
   useEffect(() => {
-    if (!account) return;
+    if (!account) {
+      initializedAccountIdentity.current = null;
+      return;
+    }
+    const accountIdentity = `${account.id || ""}:${account.email || ""}`;
+    if (initializedAccountIdentity.current === accountIdentity) return;
+    initializedAccountIdentity.current = accountIdentity;
     setForm((previous) => ({
       ...previous,
       email: account.email || "",
@@ -84,11 +91,15 @@ function AccountPage() {
         if (!active) return;
         setForm((previous) => ({
           ...previous,
-          description: creator.description || previous.description,
-          bio: creator.bio || previous.bio,
-          socialLinks: creator.socialLinks?.length
-            ? creator.socialLinks
-            : previous.socialLinks,
+          description: previous.description?.trim() || !creator.description
+            ? previous.description
+            : creator.description,
+          bio: previous.bio?.trim() || !creator.bio
+            ? previous.bio
+            : creator.bio,
+          socialLinks: previous.socialLinks?.some((link) => link?.name?.trim() && link?.url?.trim())
+            ? previous.socialLinks
+            : creator.socialLinks?.length ? creator.socialLinks : previous.socialLinks,
         }));
       })
       .catch((requestError) => {
@@ -321,6 +332,19 @@ function AccountPage() {
 
   const saveProfile = async (event) => {
     event.preventDefault();
+    const socialLinks = Array.isArray(form.socialLinks) ? form.socialLinks : [];
+    const hasSocialLink = socialLinks.some((link) => link?.name?.trim() && link?.url?.trim());
+    const missingFields = [
+      !account?.profileImageId && "profile picture",
+      !form.description.trim() && "description",
+      !form.bio.trim() && "bio",
+      !hasSocialLink && "at least one social or portfolio link",
+    ].filter(Boolean);
+    if (missingFields.length) {
+      setMessage("");
+      setError(`Complete your creator profile before saving. Missing: ${missingFields.join(", ")}.`);
+      return;
+    }
     setBusy(true);
     setError("");
     setMessage("");
@@ -329,7 +353,7 @@ function AccountPage() {
         email, displayName, category, description, bio, socialLinks,
         businessName, businessContactName, businessEmail,
       } = form;
-      if (socialLinks.some((link) => !link.name.trim() || !link.url.trim())) {
+      if (socialLinks.some((link) => !link?.name?.trim() || !link?.url?.trim())) {
         throw new Error("Complete both fields for each social link, or remove the blank link.");
       }
       const primarySocial = socialLinks[0] || { name: "Other", url: "" };
@@ -582,9 +606,9 @@ function AccountPage() {
                   </div>
                   <div className="account-photo-actions">
                     <label className="account-upload-label">
-                      <span className="account-upload-title">Profile picture</span>
+                      <span className="account-upload-title">Profile picture <span className="required" aria-hidden="true">*</span></span>
                       <span className="account-upload-hint">Choose an image that represents you.</span>
-                      <input type="file" accept="image/jpeg,image/png,image/webp" disabled={busy} onChange={(event) => uploadPhotos(event, "profile")} />
+                      <input type="file" accept="image/jpeg,image/png,image/webp" aria-required="true" disabled={busy} onChange={(event) => uploadPhotos(event, "profile")} />
                     </label>
                   </div>
                 </div>
@@ -777,34 +801,36 @@ function ProfileFields({
 }) {
   return (
     <div className="account-profile-fields-inner">
-      <label>Display / creator name
+      <label>Display / creator name <span className="required" aria-hidden="true">*</span>
         <input name="displayName" value={form.displayName} onChange={onChange} maxLength={200} required />
       </label>
-      <label>Creator category
+      <label>Creator category <span className="required" aria-hidden="true">*</span>
         <select name="category" value={form.category} onChange={onChange} required>
           {categories.map((category) => <option key={category}>{category}</option>)}
         </select>
       </label>
       {includeSocials ? (
         <div className="account-social-links-field">
-          <p className="account-social-links-label">Social and portfolio links</p>
+          <p className="account-social-links-label">Social and portfolio links <span className="required" aria-hidden="true">*</span></p>
           {(form.socialLinks || []).map((link, index) => (
             <div className="account-social-link-row" key={`social-${index}`}>
-              <label>Platform
+              <label>Platform <span className="required" aria-hidden="true">*</span>
                 <input
                   value={link.name}
                   maxLength={100}
                   placeholder="Instagram, SoundCloud, website…"
                   onChange={(event) => onSocialChange(index, "name", event.target.value)}
+                  required
                 />
               </label>
-              <label>Profile link
+              <label>Profile link <span className="required" aria-hidden="true">*</span>
                 <input
                   type="text"
                   value={link.url}
                   onChange={(event) => onSocialChange(index, "url", event.target.value)}
                   maxLength={2048}
                   placeholder="https://"
+                  required
                 />
               </label>
               <button
@@ -827,18 +853,18 @@ function ProfileFields({
         </div>
       ) : (
         <>
-          <label>Primary social or portfolio type
+          <label>Primary social or portfolio type <span className="required" aria-hidden="true">*</span>
             <select name="socialPlatform" value={form.socialPlatform} onChange={onChange} required>
               {platforms.map((platform) => <option key={platform}>{platform}</option>)}
             </select>
           </label>
-          <label>Social profile or portfolio link
-            <input name="socialHandle" value={form.socialHandle} onChange={onChange} maxLength={2048} />
+          <label>Social profile or portfolio link <span className="required" aria-hidden="true">*</span>
+            <input name="socialHandle" value={form.socialHandle} onChange={onChange} maxLength={2048} required />
           </label>
         </>
       )}
       {includeDescription && (
-        <label>Description
+        <label>Description <span className="required" aria-hidden="true">*</span>
           <textarea
             name="description"
             value={form.description || ""}
@@ -846,6 +872,7 @@ function ProfileFields({
             maxLength={4000}
             rows={4}
             aria-describedby="account-description-help"
+            required
           />
           <small id="account-description-help" className="account-field-help">
             Shown on your creator card and at the top of your public page.
@@ -853,7 +880,7 @@ function ProfileFields({
         </label>
       )}
       {includeBio && (
-        <label>Bio
+        <label>Bio <span className="required" aria-hidden="true">*</span>
           <textarea
             name="bio"
             value={form.bio || ""}
@@ -861,6 +888,7 @@ function ProfileFields({
             maxLength={4000}
             rows={5}
             aria-describedby="account-bio-help"
+            required
           />
           <small id="account-bio-help" className="account-field-help">
             Shown in the About your work section on your public page.
@@ -880,7 +908,7 @@ function ProfileFields({
           </label>
         </>
       )}
-      {includeBusiness && <label>Email address
+      {includeBusiness && <label>Email address <span className="required" aria-hidden="true">*</span>
         <input type="email" name="email" value={form.email} maxLength={254} readOnly aria-describedby="account-email-verified-help" required />
         <small id="account-email-verified-help" className="account-field-help">Email changes require a verification process. Contact support if you need to update this address.</small>
       </label>}
