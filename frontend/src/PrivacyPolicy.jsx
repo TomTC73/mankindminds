@@ -12,7 +12,7 @@ function PrivacyPolicy() {
           <h3>Privacy Policy</h3>
 
           <p>
-            Last updated: September 2026
+            Last updated: October 2026
           </p>
 
           <h4>1. Introduction</h4>
@@ -38,15 +38,20 @@ function PrivacyPolicy() {
             in its Firestore database for review and communication by the
             Mankind Minds team. To prevent duplicate applications, we also
             create a pseudonymous fingerprint of the submitting network's IP
-            address and retain it to enforce the permanent one-application
-            limit. We do not store the raw IP address with the application.
+            address to enforce the one-application limit. We do not store the
+            raw IP address with the application. The fingerprint is removed
+            when an account and its linked application are deleted, unless
+            retention is required for a legal claim or security investigation.
             Account registration also stores your email, password hash, and
             creator profile information. Your profile is private while pending
             staff approval. Once approved, your display name, category, social
             platform and handle, and business name may appear on the public
             member directory. You may also provide a bio, profile picture, and
             portfolio photos; these remain private until staff approve your
-            account. Password-reset links are sent by email.
+            account. Password-reset links are sent by email. You can request
+            deletion of your account from the account page; this removes the
+            account, uploaded photos, and linked application from active
+            systems, subject to information we must retain by law.
           </p>
 
           <h4>3. Information Collected When You Browse</h4>
@@ -120,8 +125,9 @@ function PrivacyPolicy() {
             Cloud Storage bucket and are served publicly only after account
             approval. Public
             website data is hosted and delivered through our website and
-            backend hosting providers. We also send application details by
-            email to our team using Gmail to notify them of new submissions.
+            backend hosting providers. We send a generic application alert by
+            email to our team using Gmail; it does not include your submitted
+            profile details.
             Map requests are handled by CARTO and OpenStreetMap-related
             services. These providers may process technical information such as
             an IP address as part of delivering their services.
@@ -160,9 +166,20 @@ function PrivacyPolicy() {
           </p>
 
           <p>
-            To make a privacy request, contact us using the details below. You
-            may also complain to the Information Commissioner's Office (ICO) or
-            your local data protection authority.
+            You can delete your account from the account page. This removes
+            the account and its linked applications and uploaded photos from
+            active systems. We may retain limited information where required
+            by law or where necessary to establish, exercise, or defend legal
+            claims. Copies already sent by email, provider backups, and
+            third-party search caches may not be removed immediately. Public
+            information copied by others may remain outside our control.
+            Older profiles held in a separate published directory may need an
+            additional removal request. You can also contact us to make
+            another privacy request at{" "}
+            <a href="mailto:admin@mankindminds.com">admin@mankindminds.com</a>,
+            or complain
+            to the Information Commissioner's Office (ICO) or your local data
+            protection authority.
           </p>
 
           <h4>10. Contact</h4>
