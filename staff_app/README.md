@@ -58,27 +58,44 @@ studio with its city, address, contact details, coordinates, artists, and
 public description. **Publish all shops to GitHub** saves the complete map
 dataset and starts the deployment automatically.
 
-### Member account administration
+### Creator and account review
 
-The **Member accounts** tab uses the same GitHub Device Flow sign-in. Configure
+The **Creators** area contains the existing creator-page editors, category
+filtering, and a separate **Verified accounts** sub-tab for approved member
+profiles. Existing published creator pages are treated as VERIFIED and marked
+in the Creator pages list. From Verified accounts, staff can prepare claim logins
+for all existing pages, edit account details, send a password-reset link, delete
+an account, or issue a temporary claim login. Account deletion is also available
+from the pending and rejected queues. **Approve** lists pending submissions;
+rejecting one sends a styled email automatically. **Rejected** lists rejected
+accounts and allows a failed rejection notice to be resent. **Tools** groups the
+Tattoo shops, To Do List, and Analytics workspaces away from creator review.
+
+The account tools use the same GitHub Device Flow sign-in. Configure
 the backend's `STAFF_GITHUB_USERS` environment variable with a comma-separated
 allowlist of GitHub usernames before deploying account management. Only those
-GitHub identities can approve, reject, edit, delete, or request password
-resets for member accounts, or manage email/IP bans. Staff can edit member bios,
-upload profile and gallery photos, and remove uploaded photos. Member photos and
-bios remain private until account approval. IP bans are stored as keyed one-way
+GitHub identities can review, edit, delete, or request password resets for
+member accounts, or manage email/IP bans. Staff can edit member bios, upload
+profile and gallery photos, and remove uploaded photos. Member photos and bios
+remain private until account approval. IP bans are stored as keyed one-way
 fingerprints; staff cannot retrieve the original IP from the account database.
 Set `IP_FINGERPRINT_SECRET` to a separate high-entropy Secret Manager secret on
 Cloud Run and keep it unchanged so bans and duplicate application checks remain
 stable.
 
-The **Suggested artists** tab lists pending creator accounts and shows whether
-the email address was verified during signup. Review the profile and portfolio
-from **Member accounts**, then approve or reject the suggestion. Approval
-publishes the artist in the site's existing Verified Creators section and marks
-them as AI-Free verified; approve only after completing that review. New
-accounts are created only after the creator enters the one-time code emailed to
-their address. Verification emails use the configured backend mail settings.
+Approved member profiles appear in the site's existing Verified Creators
+section as AI-Free verified artists. New accounts are created only after the
+creator enters the one-time code emailed to their address.
+
+Use **Prepare logins for existing creators** to add approved, claim-required
+accounts for the published creator pages. The existing public pages remain
+published and unchanged. The staff app shows each generated temporary sign-in
+email and high-entropy password once; the `.invalid` email domain is only a
+login identifier and cannot receive mail. Share the details securely. The
+creator must verify an email address they control and choose a new password
+before claiming the account. After import, **Issue / reset claim login**
+generates replacement one-time credentials if needed. Closing the staff
+manager removes temporary local photo-review files.
 
 Account images are stored privately in the `mankind-minds-backend-account-media`
 Cloud Storage bucket. Set `ACCOUNT_MEDIA_BUCKET` to that bucket name in the

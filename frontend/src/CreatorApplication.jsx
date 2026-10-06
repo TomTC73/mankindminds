@@ -113,6 +113,24 @@ function CreatorApplication() {
     }
   };
 
+  if (account?.claimRequired) {
+    return (
+      <div>
+        <Header />
+        <main className="section creator-application-page">
+          <div className="creator-application-shell">
+            <header className="creator-application-heading">
+              <p className="account-eyebrow">CREATOR ACCOUNT</p>
+              <h1>Claim your account first</h1>
+              <p>Verify your email address and choose a new password before continuing to the application.</p>
+              <Link className="button" to="/account">Continue account claim</Link>
+            </header>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div>
       <Header />
