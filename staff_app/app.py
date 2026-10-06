@@ -888,7 +888,7 @@ class App(tk.Tk):
             ttk.Label(body, text=label + ":", style="Muted.TLabel").grid(
                 row=row_index, column=0, sticky="nw", padx=(0, 12), pady=4,
             )
-            ttk.Label(body, text=value or "—", wraplength=520).grid(
+            ttk.Label(body, text=value or "-", wraplength=520).grid(
                 row=row_index, column=1, sticky="nw", pady=4,
             )
         description_row = len(rows) + 1
@@ -2289,7 +2289,7 @@ class App(tk.Tk):
             f"{studio.get('hubTitle', 'Building / hub')} · {studio.get('city', 'City')}\n"
             f"{studio.get('address', '')} {studio.get('postcode', '')}\n\n"
             f"{studio.get('description', 'Description')}\n\n"
-            f"Rating: {studio.get('starRating', '—')} / 5\n"
+            f"Rating: {studio.get('starRating', '-')} / 5\n"
             f"Artists: {', '.join(artists) if isinstance(artists, list) else artists}\n"
             f"Photo: {studio.get('image', 'none')}"
         )
