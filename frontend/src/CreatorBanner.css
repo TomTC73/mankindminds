@@ -1,0 +1,120 @@
+.creator-banner {
+  position: relative;
+  left: 50%;
+  width: 100vw;
+  margin: 0 0 52px;
+  overflow: hidden;
+  transform: translateX(-50%);
+  mask-image: linear-gradient(to right, transparent, #000 4%, #000 96%, transparent);
+}
+
+.creator-banner-track {
+  display: flex;
+  width: max-content;
+  padding: 8px 0 18px;
+  animation: creator-banner-loop linear infinite;
+}
+
+.creator-banner:hover .creator-banner-track,
+.creator-banner:focus-within .creator-banner-track {
+  animation-play-state: paused;
+}
+
+.creator-banner-tile {
+  position: relative;
+  display: block;
+  flex: 0 0 clamp(160px, 20vw, 250px);
+  margin-right: 16px;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 4px;
+  background: #e8e5df;
+  color: #ffffff;
+  text-decoration: none;
+}
+
+.creator-banner-tile > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+.creator-banner-tile:hover > img,
+.creator-banner-tile:focus-visible > img {
+  transform: scale(1.06);
+}
+
+.creator-banner-initials {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  place-items: center;
+  color: #475569;
+  font: 400 64px Georgia, serif;
+}
+
+.creator-banner-overlay {
+  position: absolute;
+  inset: 35% 0 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 5px;
+  padding: 16px;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.78));
+}
+
+.creator-banner-verified {
+  align-self: flex-start;
+  padding: 4px 7px;
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.creator-banner-name {
+  overflow: hidden;
+  font: 400 clamp(18px, 2vw, 24px) Georgia, "Times New Roman", serif;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.creator-banner-location {
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@keyframes creator-banner-loop {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .creator-banner {
+    overflow-x: auto;
+    mask-image: none;
+  }
+
+  .creator-banner-track {
+    animation: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .creator-banner-tile {
+    flex-basis: clamp(150px, 42vw, 190px);
+  }
+
+  .creator-banner-overlay {
+    padding: 12px;
+  }
+}
