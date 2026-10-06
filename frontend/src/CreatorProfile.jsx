@@ -44,6 +44,10 @@ function CreatorProfile() {
   }, [slug, retryAttempt]);
 
   const isTattooCreator = creator?.category?.toLowerCase().includes("tattoo");
+  const profileSections = creator?.sections || [];
+  const aboutSectionIndex = profileSections.findIndex((section) => (
+    section.title?.toLowerCase().startsWith("about ")
+  ));
 
   useEffect(() => {
     setVisibleCount(TATTOO_GALLERY_PAGE_SIZE);
@@ -194,7 +198,11 @@ function CreatorProfile() {
             </div>
           </div>
 
-          <p style={{ fontSize: "16px", lineHeight: "1.6", margin: "16px 0" }}>{creator.bio}</p>
+          {(creator.description || creator.bio) && (
+            <p style={{ fontSize: "16px", lineHeight: "1.6", margin: "16px 0" }}>
+              {creator.description || creator.bio}
+            </p>
+          )}
 
           {creator.aiFreeCard && (
             <div className="ai-free-card">
@@ -206,14 +214,24 @@ function CreatorProfile() {
         </div>
       </section>
 
-      {creator.sections?.map((section, idx) => (
+      {profileSections.map((section, idx) => (
         <section className="section" key={idx}>
           <h3>{section.title}</h3>
           <div className="certificate">
-            <p style={{ lineHeight: "1.6", fontSize: "15px" }}>{section.content}</p>
+            <p style={{ lineHeight: "1.6", fontSize: "15px" }}>
+              {idx === aboutSectionIndex && creator.bio ? creator.bio : section.content}
+            </p>
           </div>
         </section>
       ))}
+      {aboutSectionIndex < 0 && creator.bio && (
+        <section className="section">
+          <h3>About {creator.name}'s Work</h3>
+          <div className="certificate">
+            <p style={{ lineHeight: "1.6", fontSize: "15px" }}>{creator.bio}</p>
+          </div>
+        </section>
+      )}
 
       {creator.gallery?.length > 0 && (
         <section className="section creator-gallery-section">
