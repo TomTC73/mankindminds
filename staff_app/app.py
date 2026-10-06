@@ -6,6 +6,7 @@ Run with `python app.py` or package with:
 
 import base64
 import json
+import mimetypes
 import os
 import threading
 import time
@@ -201,6 +202,42 @@ class AccountAdminClient:
 
     def delete_account(self, account_id):
         return self.request("DELETE", f"/staff/{urllib.parse.quote(account_id, safe='')}")
+
+    def upload_image(self, account_id, file_path, kind):
+        with open(file_path, "rb") as image:
+            content = image.read()
+        if not content or len(content) > 5 * 1024 * 1024:
+            raise ValueError("Choose an image no larger than 5 MB.")
+        content_type = mimetypes.guess_type(file_path)[0] or "application/octet-stream"
+        boundary = "----MankindMinds" + os.urandom(16).hex()
+        filename = os.path.basename(file_path).replace('"', "")
+        body = (
+            f"--{boundary}\r\n"
+            f'Content-Disposition: form-data; name="kind"\r\n\r\n{kind}\r\n'
+            f"--{boundary}\r\n"
+            f'Content-Disposition: form-data; name="file"; filename="{filename}"\r\n'
+            f"Content-Type: {content_type}\r\n\r\n"
+        ).encode("utf-8") + content + f"\r\n--{boundary}--\r\n".encode("utf-8")
+        request = urllib.request.Request(
+            self.base_url + f"/staff/{urllib.parse.quote(account_id, safe='')}/images",
+            data=body,
+            method="POST",
+        )
+        request.add_header("Accept", "application/json")
+        request.add_header("Authorization", "Bearer " + self.token)
+        request.add_header("Content-Type", f"multipart/form-data; boundary={boundary}")
+        try:
+            with urllib.request.urlopen(request, timeout=60) as response:
+                return json.loads(response.read())
+        except urllib.error.HTTPError as error:
+            detail = error.read().decode("utf-8", "replace")
+            raise RuntimeError(f"Account API returned {error.code}: {detail}") from error
+
+    def delete_image(self, account_id, image_id):
+        return self.request(
+            "DELETE",
+            f"/staff/{urllib.parse.quote(account_id, safe='')}/images/{urllib.parse.quote(image_id, safe='')}",
+        )
 
     def reset_password(self, account_id):
         return self.request("POST", f"/staff/{urllib.parse.quote(account_id, safe='')}/password-reset")
@@ -433,7 +470,7 @@ class App(tk.Tk):
 
         self.account_tree = ttk.Treeview(
             parent,
-            columns=("email", "name", "category", "status"),
+            columns=("email", "name", "category", "status", "photos"),
             show="headings",
             selectmode="browse",
         )
@@ -442,14 +479,46 @@ class App(tk.Tk):
             ("name", "Display name", 190),
             ("category", "Category", 120),
             ("status", "Status", 110),
+            ("photos", "Photos", 75),
         ):
             self.account_tree.heading(column, text=title)
             self.account_tree.column(column, width=width)
         self.account_tree.grid(row=1, column=0, columnspan=2, sticky="nsew", pady=(12, 8))
         self.account_tree.bind("<<TreeviewSelect>>", self.select_account)
 
+        photo_frame = ttk.LabelFrame(parent, text="Member profile photos", padding=10)
+        photo_frame.grid(row=2, column=0, columnspan=2, sticky="ew", pady=(8, 0))
+        photo_frame.columnconfigure(0, weight=1)
+        self.account_photo_tree = ttk.Treeview(
+            photo_frame,
+            columns=("kind", "id"),
+            show="headings",
+            height=3,
+            selectmode="browse",
+        )
+        self.account_photo_tree.heading("kind", text="Photo")
+        self.account_photo_tree.heading("id", text="Photo identifier")
+        self.account_photo_tree.column("kind", width=110)
+        self.account_photo_tree.column("id", width=330)
+        self.account_photo_tree.bind("<<TreeviewSelect>>", self.select_account_photo)
+        self.account_photo_tree.grid(row=0, column=0, columnspan=3, sticky="ew")
+        photo_actions = ttk.Frame(photo_frame, style="Panel.TFrame")
+        photo_actions.grid(row=1, column=0, columnspan=3, sticky="w", pady=(8, 0))
+        self.account_upload_profile_button = ttk.Button(
+            photo_actions, text="Set profile photo", command=lambda: self.upload_selected_account_photo("profile"),
+        )
+        self.account_upload_profile_button.pack(side="left")
+        self.account_upload_gallery_button = ttk.Button(
+            photo_actions, text="Add gallery photo", command=lambda: self.upload_selected_account_photo("gallery"),
+        )
+        self.account_upload_gallery_button.pack(side="left", padx=(8, 0))
+        self.account_delete_photo_button = ttk.Button(
+            photo_actions, text="Delete selected photo", command=self.delete_selected_account_photo,
+        )
+        self.account_delete_photo_button.pack(side="left", padx=(8, 0))
+
         actions = ttk.Frame(parent, style="Panel.TFrame")
-        actions.grid(row=2, column=0, columnspan=2, sticky="w")
+        actions.grid(row=3, column=0, columnspan=2, sticky="w", pady=(8, 0))
         self.account_refresh_button = ttk.Button(actions, text="Refresh", command=self.load_account_admin)
         self.account_refresh_button.pack(side="left")
         self.account_approve_button = ttk.Button(actions, text="Approve", command=lambda: self.set_selected_account_status("APPROVED"))
@@ -464,7 +533,7 @@ class App(tk.Tk):
         self.account_delete_button.pack(side="left", padx=(8, 0))
 
         ban_frame = ttk.LabelFrame(parent, text="Banned email addresses and IPs", padding=12)
-        ban_frame.grid(row=3, column=0, columnspan=2, sticky="nsew", pady=(18, 0))
+        ban_frame.grid(row=4, column=0, columnspan=2, sticky="nsew", pady=(18, 0))
         ban_frame.columnconfigure(1, weight=1)
         self.ban_type = ttk.Combobox(ban_frame, values=("email", "ip"), state="readonly", width=10)
         self.ban_type.set("email")
@@ -498,6 +567,22 @@ class App(tk.Tk):
             self.account_delete_button,
         ):
             button.config(state=state)
+        for button in (self.account_upload_profile_button, self.account_upload_gallery_button):
+            button.config(state=state)
+        self.account_delete_photo_button.config(state="disabled")
+        self.account_photo_tree.delete(*self.account_photo_tree.get_children())
+        account = self.selected_account()
+        if account:
+            profile_image_id = account.get("profileImageId")
+            if profile_image_id:
+                self.account_photo_tree.insert("", "end", iid=profile_image_id, values=("Profile", profile_image_id))
+            for image_id in account.get("galleryImageIds", []):
+                self.account_photo_tree.insert("", "end", iid=image_id, values=("Gallery", image_id))
+
+    def select_account_photo(self, _event=None):
+        enabled = bool(self.selected_account()) and bool(self.account_admin)
+        selected = bool(self.account_photo_tree.selection()) and enabled
+        self.account_delete_photo_button.config(state="normal" if selected else "disabled")
 
     def load_account_admin(self, silent=False):
         if not self.client:
@@ -534,6 +619,7 @@ class App(tk.Tk):
                     account.get("displayName", ""),
                     account.get("category", ""),
                     account.get("status", ""),
+                    len(account.get("galleryImageIds", [])) + bool(account.get("profileImageId")),
                 ),
             )
         self.ban_tree.delete(*self.ban_tree.get_children())
@@ -603,10 +689,16 @@ class App(tk.Tk):
             entry.insert(0, account.get(key, "") or "")
             entry.grid(row=row, column=1, sticky="ew", padx=12, pady=5)
             entries[key] = entry
+        bio_row = len(fields)
+        ttk.Label(window, text="Bio").grid(row=bio_row, column=0, sticky="nw", padx=12, pady=5)
+        bio = tk.Text(window, width=48, height=6, wrap="word")
+        bio.insert("1.0", account.get("bio", "") or "")
+        bio.grid(row=bio_row, column=1, sticky="ew", padx=12, pady=5)
         window.columnconfigure(1, weight=1)
 
         def save():
             profile = {key: entry.get().strip() for key, entry in entries.items()}
+            profile["bio"] = bio.get("1.0", "end-1c").strip()
             self.account_admin_action(
                 "Edit member account",
                 lambda: self.account_admin.update_profile(account["id"], profile),
@@ -615,7 +707,37 @@ class App(tk.Tk):
             window.destroy()
 
         ttk.Button(window, text="Save account", command=save).grid(
-            row=len(fields), column=1, sticky="e", padx=12, pady=12,
+            row=bio_row + 1, column=1, sticky="e", padx=12, pady=12,
+        )
+
+    def upload_selected_account_photo(self, kind):
+        account = self.selected_account()
+        if not account:
+            return
+        file_path = filedialog.askopenfilename(
+            title="Choose member photo",
+            filetypes=(("Images", "*.jpg *.jpeg *.png *.webp"), ("All files", "*.*")),
+        )
+        if not file_path:
+            return
+        self.account_admin_action(
+            "Upload member photo",
+            lambda: self.account_admin.upload_image(account["id"], file_path, kind),
+            "Member photo uploaded.",
+        )
+
+    def delete_selected_account_photo(self):
+        account = self.selected_account()
+        selection = self.account_photo_tree.selection()
+        if not account or not selection:
+            return
+        image_id = selection[0]
+        if not messagebox.askyesno("Delete member photo", "Permanently remove this profile or gallery photo?"):
+            return
+        self.account_admin_action(
+            "Delete member photo",
+            lambda: self.account_admin.delete_image(account["id"], image_id),
+            "Member photo deleted.",
         )
 
     def reset_selected_account_password(self):
