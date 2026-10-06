@@ -209,6 +209,7 @@ function CreatorApplication() {
             className={`application-form ${applicationType}-application`}
             onSubmit={handleSubmit}
           >
+          <p className="application-required-legend"><span className="required" aria-hidden="true">*</span> Required</p>
 
           {selectedCategory === "Tattoos" && (
             <div className="application-type-tabs" role="group" aria-label="Tattoo application type">
@@ -316,6 +317,7 @@ function CreatorApplication() {
                 name="social_platform"
                 value={selectedPlatform}
                 onChange={(e) => setSelectedPlatform(e.target.value)}
+                required
               >
                 <option value="Instagram">Instagram</option>
                 <option value="TikTok">TikTok</option>
