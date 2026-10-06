@@ -2,6 +2,7 @@ import "./Header.css";
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import logo from "./assets/favicon.png";
+import { useAccount } from "./AccountContext";
 
 const sections = [
   { label: "Tattoos", path: "/tattoos" },
@@ -14,6 +15,7 @@ const sections = [
 function Header() {
   const { pathname } = useLocation();
   const navigate = useNavigate();
+  const { account, loading } = useAccount();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const switcherRef = useRef(null);
   const sectionFromPath = sections.find(
@@ -112,15 +114,19 @@ function Header() {
         <Link to={isTattooSection ? "/map" : certificatesPath}>
           {isTattooSection ? "Map" : "Certificates"}
         </Link>
-        <Link
-          to={{
-            pathname: "/apply",
-            search: `?category=${selectedLabel.toLowerCase()}`,
-          }}
-          className="contact-link"
-        >
-          Apply
-        </Link>
+        {account || loading ? (
+          <Link to="/account" className="contact-link">Profile</Link>
+        ) : (
+          <Link
+            to={{
+              pathname: "/apply",
+              search: `?category=${selectedLabel.toLowerCase()}`,
+            }}
+            className="contact-link"
+          >
+            Apply
+          </Link>
+        )}
       </nav>
     </header>
   );
