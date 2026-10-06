@@ -60,24 +60,26 @@ dataset and starts the deployment automatically.
 
 ### Creator and account review
 
-The **Creators** area contains the existing creator-page editors, category
-filtering, and a separate **Verified accounts** sub-tab for approved member
-profiles. Existing published creator pages are treated as VERIFIED and marked
-in the Creator pages list. Newly approved Firestore-backed profiles also appear
-in that list; selecting one opens its account in **Verified accounts**, where
-staff can edit the live profile without publishing static website data. From
-Verified accounts, staff can prepare claim logins
-for all existing pages, edit account details, send a password-reset link, delete
-an account, or issue a temporary claim login. Account editing keeps Description
-(creator cards and the top of the page), Bio (the About Work section), and
-multiple social links separate. Account deletion is also available from the
-pending and rejected queues. **Approve** lists pending submissions and opens
-their profile details and submitted photos for review; staff can approve or
-reject/block a request, and rejecting one sends a styled email automatically.
-**Rejected** lists rejected accounts and allows a failed rejection notice to be
-resent. **Tools** groups the
-Tattoo shops, To Do List, Analytics, and Do it for them workspaces away from
-creator review.
+The **Creators > Creator pages** list is the unified directory of published
+site pages and approved Firestore accounts. Each row labels its source: `SITE`
+is a static website profile, `ACCOUNT` is a Firestore-backed profile, and
+combined labels identify a page linked to an account. Static pages open in the
+page editor; account-only profiles open in **Verified accounts**. For a page
+linked to an account, **Open linked account** opens its Firestore record while
+the page remains editable in the directory. Removing a site page leaves its
+linked account in **Verified accounts**.
+
+The **Verified accounts** tab manages Firestore profiles: staff can prepare
+claim logins for existing pages, edit account details, send a password-reset
+link, delete an account, or issue a temporary claim login. Account editing
+keeps Description (creator cards and the top of the page), Bio (the About Work
+section), and multiple social links separate. Account deletion is also
+available from the pending and rejected queues. **Approve** lists pending
+submissions and opens their profile details and submitted photos for review;
+staff can approve or reject/block a request, and rejecting one sends a styled
+email automatically. **Rejected** lists rejected accounts and allows a failed
+rejection notice to be resent. **Tools** groups the Tattoo shops, To Do List,
+Analytics, and Do it for them workspaces away from creator review.
 
 Removing a selected creator page updates the latest `creators.json` on GitHub
 before removing its unused assets, then starts the backend deployment. The
