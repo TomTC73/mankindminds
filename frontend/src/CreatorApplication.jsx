@@ -117,19 +117,27 @@ function CreatorApplication() {
     <div>
       <Header />
 
-      <section className="section">
-        <h3>Apply to Become Verified</h3>
+      <main className="section creator-application-page">
+        <div className="creator-application-shell">
+        <header className="creator-application-heading">
+          <p className="account-eyebrow">CREATOR APPLICATION</p>
+          <h1>Apply to become verified</h1>
+          <p>Tell us about your creative work. Our team reviews every application individually.</p>
+        </header>
         {account && (
-          <p className="account-apply-note">
-            Signed in as {account.displayName}.{" "}
-            <Link to="/account">Edit your profile and photos</Link>
-          </p>
+          <div className="application-account-note">
+            <span className="application-account-avatar" aria-hidden="true">{account.displayName?.trim()?.charAt(0)?.toUpperCase() || "M"}</span>
+            <p><strong>Applying as {account.displayName}.</strong><br />Your account email is {account.email}. <Link to="/account">Edit your profile</Link></p>
+          </div>
         )}
 
         {submitted ? (
-          <div className="application-form" role="status" style={{ textAlign: "center" }}>
-            <h3>Application Submitted</h3>
-            <p>Thank you for applying. Our team will review your information shortly.</p>
+          <div className="application-success" role="status">
+            <span className="application-success-mark" aria-hidden="true">✓</span>
+            <p className="account-eyebrow">APPLICATION RECEIVED</p>
+            <h2>Thank you for applying.</h2>
+            <p>Your application has been sent to our team for review. We’ll be in touch using the contact details on your account.</p>
+            <Link className="button" to="/account">Back to your account</Link>
           </div>
         ) : (
           <form
@@ -138,10 +146,11 @@ function CreatorApplication() {
           >
 
           {selectedCategory === "Tattoos" && (
-            <div className="application-type-tabs" role="tablist" aria-label="Tattoo application type">
+            <div className="application-type-tabs" role="group" aria-label="Tattoo application type">
               <button
                 type="button"
                 className={applicationType === "individual" ? "active" : ""}
+                aria-pressed={applicationType === "individual"}
                 onClick={() => setApplicationType("individual")}
               >
                 Apply as an individual
@@ -149,6 +158,7 @@ function CreatorApplication() {
               <button
                 type="button"
                 className={applicationType === "business" ? "active" : ""}
+                aria-pressed={applicationType === "business"}
                 onClick={() => setApplicationType("business")}
               >
                 Apply as a business
@@ -235,27 +245,12 @@ function CreatorApplication() {
             <span>
               Primary Social Media / Portfolio <span className="required">*</span>
             </span>
-            <div
-              style={{
-                display: "flex",
-                flexWrap: "nowrap",
-                gap: "10px",
-                marginTop: "5px",
-                width: "100%",
-                boxSizing: "border-box",
-              }}
-            >
+            <div className="application-social-fields">
               <select
                 className="platform-select"
                 name="social_platform"
                 value={selectedPlatform}
                 onChange={(e) => setSelectedPlatform(e.target.value)}
-                style={{
-                  padding: "8px",
-                  borderRadius: "4px",
-                  minWidth: "120px",
-                  boxSizing: "border-box",
-                }}
               >
                 <option value="Instagram">Instagram</option>
                 <option value="TikTok">TikTok</option>
@@ -271,12 +266,6 @@ function CreatorApplication() {
                 placeholder={getPlaceholder()}
                 onChange={(e) => setPlatformHandle(e.target.value)}
                 required={applicationType === "individual"}
-                style={{
-                  flex: "1 1 200px",
-                  minWidth: "0",
-                  maxWidth: "100%",
-                  boxSizing: "border-box",
-                }}
               />
             </div>
           </label>
@@ -317,18 +306,15 @@ function CreatorApplication() {
             verification.
           </p>
 
-          {errorMsg && (
-            <div role="alert" style={{ color: "var(--accent, #8d2d20)", fontSize: "14px", fontWeight: "600" }}>
-              {errorMsg}
-            </div>
-          )}
+          {errorMsg && <div className="application-error" role="alert">{errorMsg}</div>}
 
           <button className="button" type="submit" disabled={submitting}>
             {submitting ? "Submitting Application..." : "Submit Application"}
           </button>
           </form>
         )}
-      </section>
+        </div>
+      </main>
 
       <footer className="footer">
         <p>
