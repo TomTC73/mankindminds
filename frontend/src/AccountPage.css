@@ -51,6 +51,14 @@
   justify-self: start;
 }
 
+.account-delete-action {
+  color: #8a3028;
+}
+
+.account-delete-action:hover {
+  color: #64211b;
+}
+
 @media (min-width: 1000px) {
   .account-page.account-page-dashboard .account-shell {
     width: min(100%, 1120px);

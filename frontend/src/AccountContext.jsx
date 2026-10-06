@@ -114,6 +114,11 @@ export function AccountProvider({ children }) {
     return updated;
   }, [request]);
 
+  const deleteAccount = useCallback(async () => {
+    await request("/accounts/me", { method: "DELETE" });
+    clearSession();
+  }, [clearSession, request]);
+
   const uploadImage = useCallback(async (file, kind) => {
     const body = new FormData();
     body.append("file", file);
@@ -145,9 +150,10 @@ export function AccountProvider({ children }) {
   const value = useMemo(() => ({
     account, token, loading, request, signIn, signUp, sendSignupVerificationCode,
     sendClaimVerificationCode, claimAccount, signOut, updateProfile,
-    uploadImage, deleteImage, loadImage,
+    deleteAccount, uploadImage, deleteImage, loadImage,
   }), [account, loading, request, signIn, signUp, sendSignupVerificationCode,
-    sendClaimVerificationCode, claimAccount, signOut, token, updateProfile, uploadImage, deleteImage, loadImage]);
+    sendClaimVerificationCode, claimAccount, signOut, token, updateProfile, deleteAccount,
+    uploadImage, deleteImage, loadImage]);
 
   return <AccountContext.Provider value={value}>{children}</AccountContext.Provider>;
 }

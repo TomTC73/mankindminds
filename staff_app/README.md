@@ -63,7 +63,10 @@ dataset and starts the deployment automatically.
 The **Creators** area contains the existing creator-page editors, category
 filtering, and a separate **Verified accounts** sub-tab for approved member
 profiles. Existing published creator pages are treated as VERIFIED and marked
-in the Creator pages list. From Verified accounts, staff can prepare claim logins
+in the Creator pages list. Newly approved Firestore-backed profiles also appear
+in that list; selecting one opens its account in **Verified accounts**, where
+staff can edit the live profile without publishing static website data. From
+Verified accounts, staff can prepare claim logins
 for all existing pages, edit account details, send a password-reset link, delete
 an account, or issue a temporary claim login. Account editing keeps Description
 (creator cards and the top of the page), Bio (the About Work section), and

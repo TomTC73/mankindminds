@@ -15,9 +15,27 @@ const categoryFromSection = {
   "/art": "Art",
 };
 
+function incompleteProfileFields(account) {
+  if (!account) return [];
+  const socialLinks = Array.isArray(account.socialLinks) ? account.socialLinks : [];
+  const hasPlatform = socialLinks.some((link) => (
+    typeof link?.name === "string" && link.name.trim()
+    && typeof link.url === "string" && link.url.trim()
+  )) || (account.socialPlatform?.trim() && account.socialHandle?.trim());
+  return [
+    !account.profileImageId && "profile picture",
+    !account.displayName?.trim() && "name",
+    !account.description?.trim() && "description",
+    !account.bio?.trim() && "bio",
+    !hasPlatform && "at least one platform link",
+    (!account.email?.trim() || !account.emailVerified) && "verified email address",
+  ].filter(Boolean);
+}
+
 function CreatorApplication() {
   const location = useLocation();
-  const { account, token } = useAccount();
+  const { account, token, loading } = useAccount();
+  const profileFieldsNeeded = incompleteProfileFields(account);
   const [selectedPlatform, setSelectedPlatform] = useState("Instagram");
   const [platformHandle, setPlatformHandle] = useState("");
   const [applicationType, setApplicationType] = useState("individual");
@@ -43,6 +61,10 @@ function CreatorApplication() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMsg("");
+    if (!account || profileFieldsNeeded.length > 0) {
+      setErrorMsg("Complete your creator profile before submitting an application.");
+      return;
+    }
 
     if (
       selectedCategory === "Tattoos" &&
@@ -149,7 +171,32 @@ function CreatorApplication() {
           </div>
         )}
 
-        {submitted ? (
+        {loading ? (
+          <div className="application-profile-gate" role="status">
+            <p>Checking your account…</p>
+          </div>
+        ) : !account ? (
+          <div className="account-notice account-privacy-notice application-profile-gate" role="alert">
+            <span className="account-notice-icon" aria-hidden="true">i</span>
+            <div>
+              <h2>Sign in to apply</h2>
+              <p>Sign in and complete your creator profile before submitting an application.</p>
+              <Link className="button" to="/account?next=%2Fapply">Go to your account</Link>
+            </div>
+          </div>
+        ) : profileFieldsNeeded.length > 0 ? (
+          <div className="account-notice account-privacy-notice application-profile-gate" role="alert">
+            <span className="account-notice-icon" aria-hidden="true">i</span>
+            <div>
+              <h2>Complete your profile to apply</h2>
+              <p>Before applying, add the following to your account:</p>
+              <ul>
+                {profileFieldsNeeded.map((field) => <li key={field}>{field}</li>)}
+              </ul>
+              <Link className="button" to="/account">Complete your profile</Link>
+            </div>
+          </div>
+        ) : submitted ? (
           <div className="application-success" role="status">
             <span className="application-success-mark" aria-hidden="true">✓</span>
             <p className="account-eyebrow">APPLICATION RECEIVED</p>
