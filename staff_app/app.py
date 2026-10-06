@@ -2018,8 +2018,12 @@ class App(tk.Tk):
                 self.after(0, lambda: self.sign_in_failed(str(error)))
         threading.Thread(target=work, daemon=True).start()
 
-    def creators_published(self):
-        self.set_status("Creator removed from GitHub. Starting deployment...", "#46705b")
+    def creators_published(self, removed):
+        message = (
+            "Creator removed from GitHub. Starting deployment..."
+            if removed else "Creator was already absent from GitHub. Starting deployment..."
+        )
+        self.set_status(message, "#46705b")
         self.deploy_latest(show_success=False)
 
     def sign_in_complete(self, login):
@@ -2304,27 +2308,99 @@ class App(tk.Tk):
         if not self.selected:
             messagebox.showinfo("No creator selected", "Select a creator before removing it.")
             return
-        if messagebox.askyesno("Remove creator", f"Remove {self.selected.get('name', 'this creator')} from the site?"):
-            creator = self.selected
-            self.creators = [item for item in self.creators if item.get("slug") != creator.get("slug")]
-            self.selected = None
-            self.refresh_list()
-            self.publish_creators_data()
+        creator = dict(self.selected)
+        if messagebox.askyesno("Remove creator", f"Remove {creator.get('name', 'this creator')} from the site?"):
+            self.remove_creator_button.config(state="disabled")
+            self.set_status(f"Removing {creator.get('name', 'creator')} from the published site...", PALETTE["accent"])
+            self.publish_creators_data(creator)
 
-    def publish_creators_data(self):
+    def publish_creators_data(self, creator):
         if not self.client:
+            messagebox.showerror("Not signed in", "Sign in with GitHub before removing a creator.")
             return
+
         def work():
             try:
                 branch = self.client.repository()["default_branch"]
                 data_file = self.client.file(DATA_PATH, branch)
-                for image_url in [self.selected.get("imageUrl", "")] + self.selected.get("gallery", []):
-                    self.delete_asset_if_present(image_url, branch, f"Remove assets for {self.selected.get('name', 'creator')}")
-                self.client.put_file(DATA_PATH, json.dumps(self.creators, indent=2, ensure_ascii=False).encode(), branch, "Remove creator profile", data_file["sha"])
-                self.after(0, self.creators_published)
+                published_creators = json.loads(base64.b64decode(data_file["content"]).decode("utf-8"))
+                if not isinstance(published_creators, list):
+                    raise ValueError("The published creator data is not a list.")
+
+                creator_slug = str(creator.get("slug", "")).casefold()
+                if not creator_slug:
+                    raise ValueError("The selected creator does not have a profile URL slug.")
+                removed_creator = next(
+                    (
+                        item for item in published_creators
+                        if str(item.get("slug", "")).casefold() == creator_slug
+                    ),
+                    None,
+                )
+                remaining_creators = [
+                    item for item in published_creators
+                    if str(item.get("slug", "")).casefold() != creator_slug
+                ]
+                if removed_creator:
+                    self.client.put_file(
+                        DATA_PATH,
+                        json.dumps(remaining_creators, indent=2, ensure_ascii=False).encode("utf-8"),
+                        branch,
+                        f"Remove creator profile: {removed_creator.get('name', creator.get('name', 'creator'))}",
+                        data_file["sha"],
+                    )
+
+                asset_errors = []
+                if removed_creator:
+                    asset_urls = [removed_creator.get("imageUrl", "")]
+                    asset_urls.extend(
+                        image_url for image_url in (removed_creator.get("gallery") or [])
+                        if isinstance(image_url, str)
+                    )
+                    for image_url in asset_urls:
+                        try:
+                            self.delete_asset_if_present(
+                                image_url,
+                                branch,
+                                f"Remove assets for {removed_creator.get('name', 'creator')}",
+                            )
+                        except Exception as error:
+                            asset_errors.append(str(error))
+                self.after(
+                    0,
+                    lambda: self.creator_removal_complete(
+                        remaining_creators, asset_errors, removed_creator is not None,
+                    ),
+                )
             except Exception as error:
-                self.after(0, lambda: messagebox.showerror("Could not remove creator", str(error)))
+                self.after(0, lambda message=str(error): self.creator_removal_failed(message))
+
         threading.Thread(target=work, daemon=True).start()
+
+    def creator_removal_complete(self, creators, asset_errors, removed):
+        self.creators = [
+            {
+                **normalize_creator_profile(creator),
+                "category": LEGACY_NICHE_MAP.get(creator.get("category"), creator.get("category", "")),
+            }
+            for creator in creators
+        ]
+        self.selected = None
+        self.refresh_list(silent=True)
+        self.set_creator_editor_enabled(False)
+        self.creators_published(removed)
+        if asset_errors:
+            messagebox.showwarning(
+                "Creator removed; some photos remain",
+                "The creator profile was removed from the published data and deployment has started, "
+                "but some unused image files could not be deleted:\n\n"
+                + "\n".join(asset_errors),
+            )
+
+    def creator_removal_failed(self, error):
+        self.remove_creator_button.config(state="normal" if self.client and self.selected else "disabled")
+        self.set_status("Creator removal failed; the published profile was not confirmed as removed.", PALETTE["accent"])
+        messagebox.showerror("Could not remove creator", error)
 
     def remove_selected_studio(self):
         if not self.selected_studio:
