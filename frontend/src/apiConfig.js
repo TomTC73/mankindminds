@@ -1,6 +1,9 @@
 // (removed Elastic Beanstalk / AWS reference)
 
-export const API_BASE = "https://mankind-minds-api-151580998157.europe-west2.run.app";
+const productionApiBase = "https://mankind-minds-api-151580998157.europe-west2.run.app";
+
+export const API_BASE = import.meta.env.VITE_API_BASE
+  || (import.meta.env.DEV ? "http://localhost:8080" : productionApiBase);
 
 export const API_URL = `${API_BASE}/api`;
 

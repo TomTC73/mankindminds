@@ -58,6 +58,21 @@ studio with its city, address, contact details, coordinates, artists, and
 public description. **Publish all shops to GitHub** saves the complete map
 dataset and starts the deployment automatically.
 
+### Member account administration
+
+The **Member accounts** tab uses the same GitHub Device Flow sign-in. Configure
+the backend's `STAFF_GITHUB_USERS` environment variable with a comma-separated
+allowlist of GitHub usernames before deploying account management. Only those
+GitHub identities can approve, reject, edit, delete, or request password
+resets for member accounts, or manage email/IP bans. IP bans are stored as
+keyed one-way fingerprints; staff cannot retrieve the original IP from the
+account database. Set `IP_FINGERPRINT_SECRET` to a separate high-entropy
+Secret Manager secret on Cloud Run and keep it unchanged so bans and duplicate
+application checks remain stable.
+
+For local staff-app development, set `MM_ACCOUNT_API` to
+`http://localhost:8080/api/accounts` before launching `app.py`.
+
 ### One-time backend deployment setup
 
 The workflow file must be on the backend repository's default branch. In

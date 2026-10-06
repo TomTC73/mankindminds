@@ -121,6 +121,7 @@ function Header() {
         >
           Apply
         </Link>
+        <Link to="/account" className="account-link">Account</Link>
       </nav>
     </header>
   );

@@ -16,6 +16,11 @@ import PrivacyPolicy from "./PrivacyPolicy";
 import Terms from "./Terms";
 import AnalyticsTracker from "./AnalyticsTracker";
 import Artists from "./artists";
+import Report from "./Report";
+import AccountPage from "./AccountPage";
+import { AccountProvider } from "./AccountContext";
+import AccountRequired from "./AccountRequired";
+import MemberProfile from "./MemberProfile";
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -32,7 +37,8 @@ function App() {
     <BrowserRouter>
       <ScrollToTop />
       <AnalyticsTracker />
-      <Routes>
+      <AccountProvider>
+       <Routes>
         <Route path="/" element={<Navigate to="/tattoos" replace />} />
         <Route path="/tattoos" element={<Home />} />
         <Route path="/music" element={<Home />} />
@@ -44,6 +50,7 @@ function App() {
         <Route path="/process/:section" element={<Process />} />
         <Route path="/about" element={<Navigate to="/process/tattoos" replace />} />
         <Route path="/certificates" element={<VerifiedCreators />} />
+        <Route path="/members/:id" element={<MemberProfile />} />
 
         {/* Added route for Artists page */}
         <Route path="/artists" element={<Artists />} />
@@ -51,10 +58,16 @@ function App() {
         {/* Dynamic Route to handle ALL creators */}
         <Route path="/creators/:slug" element={<CreatorProfile />} />
 
-        <Route path="/apply" element={<CreatorApplication />} />
+        {/* Route for reporting creators */}
+        <Route path="/report" element={<Report />} />
+
+        <Route path="/apply" element={<AccountRequired><CreatorApplication /></AccountRequired>} />
+        <Route path="/account" element={<AccountPage />} />
+        <Route path="/account/reset-password" element={<AccountPage />} />
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         <Route path="/terms" element={<Terms />} />
-      </Routes>
+       </Routes>
+      </AccountProvider>
     </BrowserRouter>
   );
 }
