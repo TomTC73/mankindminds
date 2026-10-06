@@ -48,8 +48,16 @@ function MemberProfile() {
           ) : (
             <>
               <p className="account-status account-status-approved">Approved member</p>
+              {member.profileImageUrl && (
+                <img
+                  className="profile-image"
+                  src={`${API_URL}${member.profileImageUrl}`}
+                  alt={`${member.displayName} profile`}
+                />
+              )}
               <h2>{member.displayName}</h2>
               <p className="creator-category">{member.category}</p>
+              {member.bio && <p className="member-profile-bio">{member.bio}</p>}
               {member.businessName && <p>{member.businessName}</p>}
               {member.socialPlatform && <p>{member.socialPlatform}</p>}
               {member.socialHandle && (
@@ -62,6 +70,13 @@ function MemberProfile() {
                     member.socialHandle
                   )}
                 </p>
+              )}
+              {member.galleryImageUrls?.length > 0 && (
+                <div className="member-profile-gallery">
+                  {member.galleryImageUrls.map((imageUrl) => (
+                    <img key={imageUrl} src={`${API_URL}${imageUrl}`} alt={`${member.displayName} portfolio`} loading="lazy" />
+                  ))}
+                </div>
               )}
               <Link to="/certificates" className="button">Back to creators</Link>
             </>
