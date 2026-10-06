@@ -79,6 +79,10 @@ resent. **Tools** groups the
 Tattoo shops, To Do List, Analytics, and Do it for them workspaces away from
 creator review.
 
+Removing a selected creator page updates the latest `creators.json` on GitHub
+before removing its unused assets, then starts the backend deployment. The
+creator remains in the editor if the GitHub update fails so staff can retry.
+
 The account tools use the same GitHub Device Flow sign-in. Configure
 the backend's `STAFF_GITHUB_USERS` environment variable with a comma-separated
 allowlist of GitHub usernames before deploying account management. Only those
