@@ -34,11 +34,17 @@ function PrivacyPolicy() {
           </p>
 
           <p>
-            The form is submitted through Web3Forms, a third-party form
-            delivery provider. The information is sent to that provider and
-            delivered to the Mankind Minds team for review and communication.
-            Please read the provider's own privacy information for details of
-            its processing and retention.
+            Applications are submitted to the Mankind Minds backend and stored
+            in its Firestore database for review and communication by the
+            Mankind Minds team. To prevent duplicate applications, we also
+            create a pseudonymous fingerprint of the submitting network's IP
+            address and retain it to enforce the permanent one-application
+            limit. We do not store the raw IP address with the application.
+            Account registration also stores your email, password hash, and
+            creator profile information. Your profile is private while pending
+            staff approval. Once approved, your display name, category, social
+            platform and handle, and business name may appear on the public
+            member directory. Password-reset links are sent by email.
           </p>
 
           <h4>3. Information Collected When You Browse</h4>
@@ -85,8 +91,9 @@ function PrivacyPolicy() {
           <p>
             We use application information to review applications, assess
             submitted work and linked public content, contact applicants,
-            manage verification records, and consider tattoo businesses for
-            inclusion on the map. We do not sell application information.
+            manage verification records, prevent duplicate applications from
+            the same IP address, and consider tattoo businesses for inclusion
+            on the map. We do not sell application information.
           </p>
 
           <h4>6. Legal Basis</h4>
@@ -105,9 +112,11 @@ function PrivacyPolicy() {
 
           <h4>7. Sharing and Service Providers</h4>
           <p>
-            Application information is shared with Web3Forms as needed to
-            transmit and deliver the form. Public website data is hosted and
-            delivered through our website and backend hosting providers.
+            Application information is processed by our backend and stored in
+            Firestore, a database service provided by Google Cloud. Public
+            website data is hosted and delivered through our website and
+            backend hosting providers. We also send application details by
+            email to our team using Gmail to notify them of new submissions.
             Map requests are handled by CARTO and OpenStreetMap-related
             services. These providers may process technical information such as
             an IP address as part of delivering their services.
@@ -132,10 +141,9 @@ function PrivacyPolicy() {
           <p>
             We keep application and verification information only for as long
             as reasonably necessary to review applications, maintain accurate
-            records, handle disputes, and meet legal obligations. Retention by
-            Web3Forms and other providers is governed by their own policies.
-            Public listings may remain online while they are relevant or until
-            they are updated or removed.
+            records, handle disputes, and meet legal obligations. Public
+            listings may remain online while they are relevant or until they
+            are updated or removed.
           </p>
 
           <h4>9. Your Rights</h4>

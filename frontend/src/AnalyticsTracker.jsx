@@ -24,7 +24,7 @@ function AnalyticsTracker() {
     const controller = new AbortController();
     const payload = {
       sessionId: getAnonymousVisitorId(),
-      path: `${pathname}${search}`,
+      path: pathname === "/account/reset-password" ? pathname : `${pathname}${search}`,
       referrer: document.referrer || "",
       screenWidth: window.screen.width,
     };
