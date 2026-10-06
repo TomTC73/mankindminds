@@ -1086,7 +1086,7 @@ export default function MapPage({ embedded = false }) {
             lineHeight: "1.6",
           }}
         >
-          Every studio on this map has been vetted for quality, hygiene, and authenticity —
+          Every studio on this map has been vetted for quality, hygiene, and authenticity -
           so you can book with confidence.
         </p>
 
