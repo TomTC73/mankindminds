@@ -21,7 +21,10 @@ function AccountPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [mode, setMode] = useState("login");
-  const accountStatus = account?.status?.toUpperCase() || "PENDING";
+  const [previewStatus, setPreviewStatus] = useState("PENDING");
+  const accountStatus = previewOnly
+    ? previewStatus
+    : account?.status?.toUpperCase() || "PENDING";
   const accountStatusLabel = {
     PENDING: "Under review",
     APPROVED: "Approved",
@@ -617,7 +620,28 @@ function AccountPage() {
               {previewOnly && (
                 <div className="account-notice account-preview-notice" role="status">
                   <span className="account-notice-icon" aria-hidden="true">D</span>
-                  <p><strong>Local preview account.</strong> This sample is read-only; changes and account actions are disabled.</p>
+                  <div className="account-preview-notice-content">
+                    <p><strong>Local preview account.</strong> This sample is read-only; changes and account actions are disabled.</p>
+                    {import.meta.env.DEV && (
+                      <div className="account-preview-status-toggle" role="group" aria-label="Developer preview profile status">
+                        <span>Preview status</span>
+                        <button
+                          type="button"
+                          aria-pressed={previewStatus === "PENDING"}
+                          onClick={() => setPreviewStatus("PENDING")}
+                        >
+                          Under review
+                        </button>
+                        <button
+                          type="button"
+                          aria-pressed={previewStatus === "APPROVED"}
+                          onClick={() => setPreviewStatus("APPROVED")}
+                        >
+                          Approved
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
               <form id="account-profile-form" className="account-form account-profile-form" onSubmit={saveProfile}>

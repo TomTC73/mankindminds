@@ -121,6 +121,56 @@
   font-weight: 700;
 }
 
+.account-preview-notice-content {
+  display: grid;
+  flex: 1;
+  gap: 12px;
+  min-width: 0;
+}
+
+.account-preview-status-toggle {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px;
+}
+
+.account-preview-status-toggle > span {
+  margin-right: 4px;
+  color: #6d6961;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.account-preview-status-toggle button {
+  padding: 7px 10px;
+  border: 1px solid #b9b1a5;
+  background: #fbfaf7;
+  color: #4e4a44;
+  cursor: pointer;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 10px;
+}
+
+.account-preview-status-toggle button[aria-pressed="true"] {
+  border-color: #9a3f2f;
+  background: #9a3f2f;
+  color: #fff;
+}
+
+.account-preview-status-toggle button:last-child[aria-pressed="true"] {
+  border-color: #2f6847;
+  background: #2f6847;
+}
+
+.account-preview-status-toggle button:focus-visible {
+  outline: 2px solid #242321;
+  outline-offset: 2px;
+}
+
 .account-preview-fieldset {
   min-width: 0;
   margin: 0;
