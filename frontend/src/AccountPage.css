@@ -20,6 +20,14 @@
   color: #9a3f2f;
 }
 
+/* Required field asterisk */
+.required {
+  display: inline;
+  margin-left: 2px;
+  color: #9a3f2f;
+  font-weight: 700;
+}
+
 .account-social-links-field {
   display: grid;
   grid-column: 1 / -1;
@@ -750,13 +758,27 @@
     margin-top: 24px;
   }
 
+  /*
+   * Labels use block layout here instead of column flex.
+   * This keeps:
+   *
+   * Display / creator name *
+   * [ input                    ]
+   *
+   * rather than putting the * on its own line.
+   */
   .account-page:not(.account-page-dashboard) .account-form label {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+    display: block;
     color: #242321;
     font-size: 13px;
     font-weight: 600;
+  }
+
+  .account-page:not(.account-page-dashboard) .account-form label > input,
+  .account-page:not(.account-page-dashboard) .account-form label > select,
+  .account-page:not(.account-page-dashboard) .account-form label > textarea {
+    display: block;
+    margin-top: 8px;
   }
 
   .account-page:not(.account-page-dashboard) .account-form input,
@@ -775,7 +797,8 @@
   }
 
   .account-page:not(.account-page-dashboard) .account-form input:focus,
-  .account-page:not(.account-page-dashboard) .account-form select:focus {
+  .account-page:not(.account-page-dashboard) .account-form select:focus,
+  .account-page:not(.account-page-dashboard) .account-form textarea:focus {
     border-color: #9a3f2f;
     outline: 2px solid rgba(154, 63, 47, 0.18);
     outline-offset: 1px;
@@ -823,6 +846,7 @@
 
   .account-page:not(.account-page-dashboard) .account-form label.account-terms,
   .account-page:not(.account-page-dashboard) .account-form label.account-password-options {
+    display: flex;
     flex-direction: row;
     align-items: flex-start;
     gap: 10px;
@@ -834,6 +858,7 @@
 
   .account-page:not(.account-page-dashboard) .account-form .account-terms input,
   .account-page:not(.account-page-dashboard) .account-form .account-password-options input {
+    display: block;
     width: 17px;
     min-width: 17px;
     min-height: 17px;
@@ -858,7 +883,6 @@
     text-decoration-color: #9a3f2f;
     text-underline-offset: 3px;
   }
-
 }
 
 @media (max-width: 700px) {
@@ -962,4 +986,50 @@
     justify-self: start;
     margin: 0;
   }
+}
+
+/* Field label + required asterisk */
+.account-field-label {
+  display: inline;
+}
+
+.required {
+  display: inline;
+  margin-left: 2px;
+  color: #9a3f2f;
+  font-weight: 700;
+}
+
+/* Optional business details */
+.account-optional-business {
+  display: grid;
+  grid-column: 1 / -1;
+  gap: 16px;
+  padding: 20px;
+  border: 1px solid #ddd8cf;
+  background: #f5f4f1;
+}
+
+.account-optional-business-heading {
+  display: grid;
+  gap: 3px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #ddd8cf;
+}
+
+.account-optional-business-heading > span {
+  color: #4f4c47;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.account-optional-business-heading > small {
+  color: #817d76;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+.account-optional-business label {
+  color: #5f5b55;
 }
