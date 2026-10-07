@@ -825,8 +825,8 @@ function AccountPage() {
                     </div>
                   </>
                 )}
-                <div className="account-auth-fields">
-                  <label>{mode === "signup" ? "Email address" : "Email address or temporary username"}
+                <div className={`account-auth-fields${mode === "login" ? " account-login-fields" : ""}`}>
+                  <label>Email address
                     <input type={mode === "signup" ? "email" : "text"} name="email" value={form.email} onChange={change} autoComplete={mode === "signup" ? "email" : "username"} maxLength={254} required />
                   </label>
                   <label>Password{mode === "signup" ? " (at least 12 characters)" : ""}
