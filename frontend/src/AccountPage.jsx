@@ -6,9 +6,11 @@ import { useAccount } from "./AccountContext";
 import { API_URL, resolveCreatorImageUrl } from "./apiConfig";
 import "./index.css";
 import "./AccountPage.css";
+
 const categories = ["Tattoos", "Music", "Writing", "Videos", "Art"];
 const platforms = ["Instagram", "TikTok", "YouTube", "Website", "Other"];
 const EMPTY_IMAGE_IDS = [];
+
 function AccountPage() {
   const {
     account, loading, signIn, signUp, sendSignupVerificationCode,
@@ -20,7 +22,7 @@ function AccountPage() {
   const [searchParams] = useSearchParams();
   const [mode, setMode] = useState("login");
   const [form, setForm] = useState({
-    email: "", password: "", displayName: "", category: "",
+    email: "", password: "", displayName: "", category: "Tattoos",
     socialPlatform: "Instagram", socialHandle: "", businessName: "",
     businessContactName: "", businessEmail: "", passwordConfirmation: "",
     description: "", bio: "", socialLinks: [], termsAgreement: false,
@@ -48,6 +50,7 @@ function AccountPage() {
     const timer = window.setTimeout(() => setResendCooldown((value) => Math.max(0, value - 1)), 1000);
     return () => window.clearTimeout(timer);
   }, [resendCooldown]);
+
   useEffect(() => {
     if (!account) {
       initializedAccountIdentity.current = null;
@@ -75,6 +78,7 @@ function AccountPage() {
       businessEmail: account.businessEmail || "",
     }));
   }, [account]);
+
   useEffect(() => {
     if (!account?.legacyCreatorSlug) return undefined;
     let active = true;
@@ -104,10 +108,12 @@ function AccountPage() {
       });
     return () => { active = false; };
   }, [account?.legacyCreatorSlug]);
+
   const [profilePhotoUrl, setProfilePhotoUrl] = useState("");
   const [galleryPhotos, setGalleryPhotos] = useState([]);
   const [imageError, setImageError] = useState("");
   const galleryImageIds = account?.galleryImageIds || EMPTY_IMAGE_IDS;
+
   useEffect(() => {
     let active = true;
     const objectUrls = [];
@@ -173,25 +179,30 @@ function AccountPage() {
       objectUrls.forEach((url) => URL.revokeObjectURL(url));
     };
   }, [account?.claimRequired, account?.profileImageId, galleryImageIds, loadImage]);
+
   const change = (event) => setForm((previous) => ({
     ...previous,
     [event.target.name]: event.target.value,
   }));
+
   const changeSocialLink = (index, key, value) => setForm((previous) => ({
     ...previous,
     socialLinks: previous.socialLinks.map((link, linkIndex) => (
       linkIndex === index ? { ...link, [key]: value } : link
     )),
   }));
+
   const addSocialLink = () => setForm((previous) => (
     previous.socialLinks.length >= 12
       ? previous
       : { ...previous, socialLinks: [...previous.socialLinks, { name: "Instagram", url: "" }] }
   ));
+
   const removeSocialLink = (index) => setForm((previous) => ({
     ...previous,
     socialLinks: previous.socialLinks.filter((_, linkIndex) => linkIndex !== index),
   }));
+
   const submit = async (event) => {
     event.preventDefault();
     setBusy(true);
@@ -229,6 +240,7 @@ function AccountPage() {
       setBusy(false);
     }
   };
+
   const sendClaimCode = async (event) => {
     event.preventDefault();
     setBusy(true);
@@ -245,6 +257,7 @@ function AccountPage() {
       setBusy(false);
     }
   };
+
   const submitClaim = async (event) => {
     event.preventDefault();
     if (claimPassword !== claimPasswordConfirmation) {
@@ -267,6 +280,7 @@ function AccountPage() {
       setBusy(false);
     }
   };
+
   const requestReset = async () => {
     setBusy(true);
     setError("");
@@ -286,6 +300,7 @@ function AccountPage() {
       setBusy(false);
     }
   };
+
   const confirmReset = async (event) => {
     event.preventDefault();
     if (resetPassword !== confirmPassword) {
@@ -314,6 +329,7 @@ function AccountPage() {
       setBusy(false);
     }
   };
+
   const saveProfile = async (event) => {
     event.preventDefault();
     const socialLinks = Array.isArray(form.socialLinks) ? form.socialLinks : [];
@@ -355,6 +371,7 @@ function AccountPage() {
       setBusy(false);
     }
   };
+
   const uploadPhotos = async (event, kind) => {
     const files = Array.from(event.target.files || []);
     event.target.value = "";
@@ -382,6 +399,7 @@ function AccountPage() {
       setBusy(false);
     }
   };
+
   const removePhoto = async (imageId) => {
     setBusy(true);
     setError("");
@@ -395,6 +413,7 @@ function AccountPage() {
       setBusy(false);
     }
   };
+
   const handleSignOut = async () => {
     setBusy(true);
     setError("");
@@ -408,6 +427,7 @@ function AccountPage() {
       setBusy(false);
     }
   };
+
   const handleDeleteAccount = async () => {
     const confirmed = window.confirm(
       "Permanently delete your account, uploaded photos, and linked applications from our active systems? "
@@ -428,9 +448,11 @@ function AccountPage() {
       setBusy(false);
     }
   };
+
   if (loading) {
     return <><Header /><main className="account-page account-section"><div className="account-loading" role="status"><span className="account-loading-mark" aria-hidden="true" />Loading your account…</div></main><Footer /></>;
   }
+
   return (
     <div>
       <Header />
@@ -765,6 +787,7 @@ function AccountPage() {
     </div>
   );
 }
+
 function ProfileFields({
   form,
   onChange,
@@ -783,8 +806,7 @@ function ProfileFields({
       </label>
       <label>Creator category <span className="required" aria-hidden="true">*</span>
         <select name="category" value={form.category} onChange={onChange} required>
-          <option value="" disabled>Select a creator category</option>
-          {categories.map((category) => <option key={category} value={category}>{category}</option>)}
+          {categories.map((category) => <option key={category}>{category}</option>)}
         </select>
       </label>
       {includeSocials ? (
@@ -874,21 +896,17 @@ function ProfileFields({
         </label>
       )}
       {(includeBusiness || form.category === "Tattoos") && form.category === "Tattoos" && (
-        <div className="account-optional-business">
-          <div className="account-optional-business-heading">
-            <span>Optional business details</span>
-            <small>Only complete these if they apply to you.</small>
-          </div>
-          <label>Business / studio name
+        <>
+          <label>Business / studio name (optional)
             <input name="businessName" value={form.businessName} onChange={onChange} maxLength={200} />
           </label>
-          <label>Business contact name
+          <label>Business contact name (optional)
             <input name="businessContactName" value={form.businessContactName} onChange={onChange} maxLength={200} />
           </label>
-          <label>Business email
+          <label>Business email (optional)
             <input type="email" name="businessEmail" value={form.businessEmail} onChange={onChange} maxLength={254} />
           </label>
-        </div>
+        </>
       )}
       {includeBusiness && <label>Email address <span className="required" aria-hidden="true">*</span>
         <input type="email" name="email" value={form.email} maxLength={254} readOnly aria-describedby="account-email-verified-help" required />
@@ -897,4 +915,5 @@ function ProfileFields({
     </div>
   );
 }
+
 export default AccountPage;
