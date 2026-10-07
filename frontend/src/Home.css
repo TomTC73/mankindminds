@@ -641,12 +641,35 @@ font-size:34px;
 }
 
 .hero-actions {
- gap: 8px;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.hero-actions > a {
+  display: flex;
+  flex: 1 1 0;
+  max-width: 180px;
+  text-decoration: none;
 }
 
 .hero-actions .button {
- padding-left: 18px;
- padding-right: 18px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 48px;
+  margin: 0;
+  padding: 12px 14px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.hero-actions .secondary-button {
+  margin: 0;
 }
 
 .certificate{
