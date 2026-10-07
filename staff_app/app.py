@@ -2512,7 +2512,7 @@ class App(tk.Tk):
         parent.rowconfigure(1, weight=1)
         ttk.Label(
             parent,
-            text="Create and publish a creator profile, then email them a temporary login to claim it.",
+            text="Set up a private creator profile and email a temporary login. They can complete their details and submit it for staff review.",
             style="Muted.TLabel",
             wraplength=1000,
         ).grid(row=0, column=0, sticky="w", pady=(0, 14))
@@ -2535,8 +2535,6 @@ class App(tk.Tk):
             ("Category", "category"),
             ("Creator email", "email"),
             ("Studio / business", "business"),
-            ("Location", "location"),
-            ("Tattoo styles (comma-separated)", "styles"),
         )
         self.do_it_fields = {}
         for row, (label, key) in enumerate(fields, start=1):
@@ -2568,10 +2566,10 @@ class App(tk.Tk):
         photo_row = links_row + 3
         photo_actions = ttk.Frame(profile, style="Panel.TFrame")
         photo_actions.grid(row=photo_row, column=0, columnspan=2, sticky="ew", pady=(6, 0))
-        self.do_it_photo_label = ttk.Label(photo_actions, text="No profile photo selected", style="Muted.TLabel")
+        self.do_it_photo_label = ttk.Label(photo_actions, text="Profile photo is optional", style="Muted.TLabel")
         self.do_it_photo_label.pack(side="left", padx=(0, 8))
         self.do_it_photo_button = ttk.Button(
-            photo_actions, text="Choose profile photo", command=self.choose_do_it_profile_photo,
+            photo_actions, text="Choose optional profile photo", command=self.choose_do_it_profile_photo,
         )
         self.do_it_photo_button.pack(side="left")
         gallery_actions = ttk.Frame(profile, style="Panel.TFrame")
@@ -2583,10 +2581,10 @@ class App(tk.Tk):
         )
         self.do_it_gallery_button.pack(side="left")
 
-        ttk.Label(copy, text="Public profile copy", style="Section.TLabel").grid(
+        ttk.Label(copy, text="Profile details", style="Section.TLabel").grid(
             row=0, column=0, sticky="w", pady=(0, 8),
         )
-        ttk.Label(copy, text="Description (shown at the top of their public page)").grid(
+        ttk.Label(copy, text="Description (shown at the top of their profile)").grid(
             row=1, column=0, sticky="w",
         )
         self.do_it_description = tk.Text(
@@ -2600,8 +2598,9 @@ class App(tk.Tk):
         self.do_it_bio.grid(row=4, column=0, sticky="ew", pady=(4, 10))
         ttk.Label(
             copy,
-            text="After publishing, they receive a one-time username and password by email. They sign in, "
-                 "verify this email address, then choose their own password.",
+            text="Their profile stays private and unverified. They receive a one-time username and password, "
+                 "claim the account, complete their details, and submit it for staff review. They can add their "
+                 "own profile photo after claiming the account; a photo is required before they can save the profile.",
             style="Muted.TLabel",
             wraplength=520,
         ).grid(row=5, column=0, sticky="w", pady=(0, 12))
@@ -2609,7 +2608,7 @@ class App(tk.Tk):
         actions.grid(row=6, column=0, sticky="w")
         self.do_it_submit_button = ttk.Button(
             actions,
-            text="Create profile & email login",
+            text="Set up private profile & email login",
             style="Accent.TButton",
             command=self.submit_do_it_for_them,
             state="disabled",
@@ -2634,7 +2633,7 @@ class App(tk.Tk):
             )
         self.do_it_submit_button.config(
             state=state,
-            text="Publishing..." if busy else "Create profile & email login",
+                text="Setting up..." if busy else "Set up private profile & email login",
         )
         control_state = "disabled" if busy else "normal"
         self.do_it_add_link_button.config(state=control_state)
@@ -2697,7 +2696,7 @@ class App(tk.Tk):
         self.do_it_social_rows = []
         self.do_it_profile_photo = None
         self.do_it_gallery_photos = []
-        self.do_it_photo_label.config(text="No profile photo selected")
+        self.do_it_photo_label.config(text="Profile photo is optional")
         self.do_it_gallery_label.config(text="No gallery photos selected")
         self.add_do_it_social_row()
 
@@ -2707,16 +2706,12 @@ class App(tk.Tk):
         email = self.do_it_fields["email"].get().strip()
         category = self.do_it_fields["category"].get().strip()
         business_name = self.do_it_fields["business"].get().strip()
-        location = self.do_it_fields["location"].get().strip()
-        styles = [
-            style.strip()
-            for style in self.do_it_fields["styles"].get().split(",")
-            if style.strip()
-        ]
         description = self.do_it_description.get("1.0", tk.END).strip()
         bio = self.do_it_bio.get("1.0", tk.END).strip()
         if not name or not category or not email or not description or not bio:
             raise ValueError("Enter the creator name, category, email, description, and bio.")
+        if len(self.do_it_gallery_photos) > 8:
+            raise ValueError("Choose no more than 8 gallery photos.")
         if len(name) > 200 or len(description) > 4000 or len(bio) > 4000:
             raise ValueError("Name, description, or bio exceeds the allowed length.")
         if len(business_name) > 200:
@@ -2736,35 +2731,24 @@ class App(tk.Tk):
         for platform, url_entry in self.do_it_social_rows:
             link_name = platform.get().strip()
             link_url = url_entry.get().strip()
-            if link_url:
-                if len(link_name) > 100 or len(link_url) > 2048:
-                    raise ValueError("A social / portfolio link exceeds the allowed length.")
-                social_links.append({"name": link_name, "url": link_url})
-            elif len(self.do_it_social_rows) == 1:
+            if not link_name and not link_url:
                 continue
-            elif link_name != "Instagram":
-                raise ValueError("Complete or remove every social / portfolio link.")
-        first_link = social_links[0] if social_links else {"name": "Other", "url": ""}
-        category_title = name.split()[0]
+            if not link_name or not link_url:
+                raise ValueError("Complete both fields for every social / portfolio link, or leave both blank.")
+            if len(link_name) > 100 or len(link_url) > 2048:
+                raise ValueError("A social / portfolio link exceeds the allowed length.")
+            social_links.append({"name": link_name, "url": link_url})
+        if not social_links:
+            raise ValueError("Add at least one social or portfolio link before setting up the account.")
+        first_link = social_links[0]
         creator = {
             "slug": slug,
             "name": name,
             "category": category,
             "description": description,
             "bio": bio,
-            "badgeText": STANDARD_BADGE,
-            "aiFreeCard": STANDARD_CARD.copy(),
-            "sections": [
-                {"title": f"About {category_title}'s Work", "content": bio},
-                {"title": "Verification Review", "content": STANDARD_REVIEW_CONTENT},
-            ],
             "socialLinks": social_links,
-            "gallery": [],
-            "studio": business_name,
-            "location": location,
         }
-        if category == "Tattooist":
-            creator["styles"] = styles
         return {
             "creator": creator,
             "email": email,
@@ -2790,29 +2774,26 @@ class App(tk.Tk):
             (item for item in self.creators if item.get("slug") == request["creator"]["slug"]),
             None,
         )
-        if existing and (existing.get("name") or "").casefold() != request["creator"]["name"].casefold():
+        if existing:
             messagebox.showerror(
                 "Profile URL already used",
-                f"The profile URL /creators/{request['creator']['slug']} is already used by "
-                f"{existing.get('name', 'another creator')}. Choose a different slug.",
+                f"The profile URL /creators/{request['creator']['slug']} is already published for "
+                f"{existing.get('name', 'another creator')}. Use the existing creator tools or choose a different slug.",
             )
             return
         confirmation = (
-            f"Update {request['creator']['name']}'s existing public profile and issue fresh temporary login details "
-            f"to {request['email']}?"
-            if existing else
-            f"Publish {request['creator']['name']}'s profile and email a temporary account login to "
-            f"{request['email']}? The creator will be added as verified."
+            f"Set up a private, unverified account for {request['creator']['name']} and email temporary login details "
+            f"to {request['email']}? Their profile will not be public until it is submitted and approved."
         )
-        if not messagebox.askyesno("Create creator profile and account", confirmation):
+        if not messagebox.askyesno("Set up private creator profile", confirmation):
             return
         profile_photo = self.do_it_profile_photo
         gallery_photos = tuple(self.do_it_gallery_photos)
         self.refresh_do_it_for_them_state(busy=True)
-        self.set_status("Publishing the creator profile...", PALETTE["accent"])
+        self.set_status("Setting up the private creator profile...", PALETTE["accent"])
         client = self.client
         account_admin = self.account_admin
-        state = {"profile_published": False, "deployment_started": False}
+        state = {"account_created": False}
 
         def work():
             try:
@@ -2844,75 +2825,11 @@ class App(tk.Tk):
                 branch = repository["default_branch"]
                 data_file = client.file(DATA_PATH, branch)
                 creators = json.loads(base64.b64decode(data_file["content"]).decode("utf-8"))
-                existing = next((item for item in creators if item.get("slug") == creator["slug"]), None)
-                if existing and (existing.get("name") or "").casefold() != creator["name"].casefold():
+                if any(item.get("slug") == creator["slug"] for item in creators):
                     raise ValueError(
-                        f"The profile URL /creators/{creator['slug']} is already used by "
-                        f"{existing.get('name', 'another creator')}. Choose a different slug."
+                        f"The profile URL /creators/{creator['slug']} is already published. "
+                        "Choose a different slug or use the existing creator tools."
                     )
-
-                previous_image = existing.get("imageUrl", "") if existing else ""
-                creator["imageUrl"] = previous_image
-                creator["gallery"] = list(existing.get("gallery", [])) if existing else []
-                if profile_photo:
-                    extension = os.path.splitext(profile_photo)[1].lower() or ".jpg"
-                    filename = f"{creator['slug']}{extension}"
-                    asset_path = f"{ASSET_PATH}/{filename}"
-                    if previous_image and previous_image.lstrip("/") != asset_path.lstrip("/"):
-                        self.delete_asset_if_present(
-                            previous_image, branch, f"Replace profile photo for {creator['name']}",
-                        )
-                    with open(profile_photo, "rb") as photo:
-                        client.put_file(
-                            asset_path,
-                            photo.read(),
-                            branch,
-                            f"Add profile photo for {creator['name']}",
-                            self.existing_asset_sha(asset_path, branch),
-                        )
-                    creator["imageUrl"] = f"/assets/{filename}"
-
-                for index, path in enumerate(gallery_photos):
-                    extension = os.path.splitext(path)[1].lower() or ".jpg"
-                    filename = f"{creator['slug']}-gallery-{time.time_ns()}-{index}{extension}"
-                    asset_path = f"{ASSET_PATH}/{filename}"
-                    with open(path, "rb") as photo:
-                        client.put_file(
-                            asset_path,
-                            photo.read(),
-                            branch,
-                            f"Add gallery photo for {creator['name']}",
-                            self.existing_asset_sha(asset_path, branch),
-                        )
-                    creator["gallery"].append(f"/assets/{filename}")
-
-                merged = dict(existing or {})
-                merged.update(creator)
-                if merged.get("category") != "Tattooist":
-                    for field in ("styles", "rating"):
-                        merged.pop(field, None)
-                creators = [item for item in creators if item.get("slug") != creator["slug"]]
-                creators.append(merged)
-                client.put_file(
-                    DATA_PATH,
-                    json.dumps(creators, indent=2, ensure_ascii=False).encode("utf-8"),
-                    branch,
-                    f"Create creator profile: {creator['name']}",
-                    data_file["sha"],
-                )
-                state["profile_published"] = True
-                self.after(0, self.clear_do_it_uploaded_media)
-                self.creators = [
-                    {
-                        **normalize_creator_profile(item),
-                        "category": LEGACY_NICHE_MAP.get(item.get("category"), item.get("category", "")),
-                    }
-                    for item in creators
-                ]
-
-                client.deployment_workflow(branch)
-                client.trigger_deployment()
-                state["deployment_started"] = True
 
                 account_payload = {
                     "slug": creator["slug"],
@@ -2926,6 +2843,14 @@ class App(tk.Tk):
                     "socialLinks": creator["socialLinks"],
                 }
                 account_result = account_admin.create_creator_account(account_payload, request["email"])
+                state["account_created"] = True
+                account_id = account_result.get("accountId")
+                if not account_id:
+                    raise RuntimeError("The account was created, but its photo upload ID was not returned.")
+                if profile_photo:
+                    account_admin.upload_image(account_id, profile_photo, "profile")
+                for path in gallery_photos:
+                    account_admin.upload_image(account_id, path, "gallery")
                 self.after(
                     0,
                     lambda: self.do_it_for_them_complete(
@@ -2936,7 +2861,7 @@ class App(tk.Tk):
                 self.after(
                     0,
                     lambda message=str(error): self.do_it_for_them_failed(
-                        message, state["profile_published"], state["deployment_started"],
+                        message, state["account_created"],
                     ),
                 )
 
@@ -2945,47 +2870,48 @@ class App(tk.Tk):
     def clear_do_it_uploaded_media(self):
         self.do_it_profile_photo = None
         self.do_it_gallery_photos = []
-        self.do_it_photo_label.config(text="No profile photo selected")
+        self.do_it_photo_label.config(text="Profile photo is optional")
         self.do_it_gallery_label.config(text="No gallery photos selected")
 
     def do_it_for_them_complete(self, creator_name, email, _result):
-        self.refresh_list(silent=True)
         self.refresh_do_it_for_them_state()
         self.clear_do_it_for_them_form()
         self.set_status(
-            f"{creator_name}'s profile was published and the account setup email was sent to {email}.",
+            f"{creator_name}'s private profile was set up and the account email was sent to {email}.",
             "#46705b",
         )
         messagebox.showinfo(
             "Creator account set up",
-            f"{creator_name}'s profile is published and an email with temporary sign-in details was sent to {email}.\n\n"
-            "The creator can sign in at mankindminds.com/account, verify their email, and set a permanent password. "
-            "The public profile may take a few minutes to appear while the site update deploys.",
+            f"{creator_name}'s profile is private and unverified. An email with temporary sign-in details was sent to "
+            f"{email}.\n\nThe creator can sign in at mankindminds.com/account, claim the account, complete their "
+            "profile, and submit it for staff review. It will not appear publicly until approved.",
         )
 
-    def do_it_for_them_failed(self, error, profile_published, deployment_started):
+    def do_it_for_them_failed(self, error, account_created):
         self.refresh_do_it_for_them_state()
-        if profile_published:
+        if account_created:
             messagebox.showerror(
-                "Account setup incomplete",
+                "Profile setup incomplete",
                 (
-                    "The creator profile was published and the website deployment was started, but the "
-                    "account/email step did not complete. "
-                    if deployment_started else
-                    "The creator profile was published, but the website deployment and account/email steps "
-                    "did not complete. "
+                    "The private account was created and the setup email was sent, but one or more photos could "
+                    "not be uploaded. The creator can still sign in and add photos, or you can retry the setup. "
                 )
-                + "Review the error before retrying. If the email could not be delivered, retrying will reuse "
-                  "the profile URL and issue fresh temporary login details.\n\n"
+                + "Review the error before retrying.\n\n"
                 + error,
             )
             self.set_status(
-                "Profile published; account email was not confirmed. Review the error and retry.",
+                "Private account created; photo upload needs attention.",
                 PALETTE["accent"],
             )
         else:
-            messagebox.showerror("Could not create creator profile", error)
-            self.set_status("Creator profile was not published.", PALETTE["accent"])
+            messagebox.showerror(
+                "Could not confirm private creator profile setup",
+                "The account setup or email could not be confirmed. No public profile was created. "
+                "If account creation completed before an email error, the profile remains private and pending; "
+                "retrying the same slug will issue fresh temporary login details.\n\n"
+                + error,
+            )
+            self.set_status("Private creator profile setup needs attention.", PALETTE["accent"])
 
     def build_analytics_panel(self, parent):
         parent.columnconfigure(0, weight=1)

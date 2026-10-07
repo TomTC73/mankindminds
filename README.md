@@ -25,6 +25,9 @@ npm run dev
 ```
 
 Open `http://localhost:5173/`. The root route redirects to the Tattoos section.
+To preview the signed-in account editor without a backend, open
+`http://localhost:5173/account` and choose **Open sample profile**. This
+development-only preview is read-only and is not available in production.
 
 To create a production build:
 
