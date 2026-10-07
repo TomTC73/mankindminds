@@ -109,15 +109,17 @@ media caption, and a branded downloadable QR code that opens their profile.
 The QR uses the bundled `Logo2` artwork and rounded blob-style modules, so
 staff do not need the local `D:\QRCode` files or Python QR packages.
 
-The **Tools > Do it for them** tab creates a public creator profile with its
-description, bio, social links, profile photo, and gallery, then starts the
-backend deployment and provisions its approved Firestore account. The entered
-email is used to deliver the setup message and is not saved as verified account
-email. The creator receives a temporary username and password, signs in at
-`https://www.mankindminds.com/account`, verifies their own email, and chooses
-their permanent password. If profile publishing succeeds but account email
-delivery fails, retrying the same profile URL reuses that profile and issues
-fresh temporary login details.
+The **Tools > Do it for them** tab creates a private, unverified Firestore
+profile with its description, bio, social links, profile photo, and gallery.
+It does not publish a static website page or approve the account. The profile
+starts in the pending review queue and appears publicly only after staff
+approval. The entered email is used to deliver the setup message and is not
+saved as a verified account email. The creator receives a temporary username
+and password, signs in at `https://www.mankindminds.com/account`, claims the
+account by verifying their own email, and chooses their permanent password.
+They can then update their profile while it is pending review. If email
+delivery fails after the account is created, retrying the same profile slug
+issues fresh temporary login details.
 
 Use **Prepare logins for existing creators** to add approved, claim-required
 accounts for the published creator pages. The existing public pages remain
