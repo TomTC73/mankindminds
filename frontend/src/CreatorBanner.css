@@ -5,14 +5,30 @@
   margin: 0 0 52px;
   overflow: hidden;
   transform: translateX(-50%);
-  mask-image: linear-gradient(to right, transparent, #000 4%, #000 96%, transparent);
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    #000 4%,
+    #000 96%,
+    transparent
+  );
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent,
+    #000 4%,
+    #000 96%,
+    transparent
+  );
 }
 
 .creator-banner-track {
   display: flex;
   width: max-content;
   padding: 8px 0 18px;
-  animation: creator-banner-loop linear infinite;
+  will-change: transform;
+  animation-name: creator-banner-loop;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
 }
 
 .creator-banner:hover .creator-banner-track,
@@ -23,8 +39,9 @@
 .creator-banner-tile {
   position: relative;
   display: block;
-  flex: 0 0 clamp(160px, 20vw, 250px);
-  margin-right: 16px;
+  flex: 0 0 var(--creator-tile-width, clamp(160px, 20vw, 250px));
+  width: var(--creator-tile-width, clamp(160px, 20vw, 250px));
+  margin-right: var(--creator-tile-gap, 16px);
   aspect-ratio: 1;
   overflow: hidden;
   border: 1px solid rgba(15, 23, 42, 0.12);
@@ -32,6 +49,7 @@
   background: #e8e5df;
   color: #ffffff;
   text-decoration: none;
+  box-sizing: border-box;
 }
 
 .creator-banner-tile > img {
@@ -53,7 +71,7 @@
   height: 100%;
   place-items: center;
   color: #475569;
-  font: 400 64px Georgia, serif;
+  font: 400 64px Georgia, "Times New Roman", serif;
 }
 
 .creator-banner-overlay {
@@ -64,7 +82,10 @@
   justify-content: flex-end;
   gap: 5px;
   padding: 16px;
-  background: linear-gradient(transparent, rgba(0, 0, 0, 0.78));
+  background: linear-gradient(
+    transparent,
+    rgba(0, 0, 0, 0.78)
+  );
 }
 
 .creator-banner-verified {
@@ -93,8 +114,44 @@
 }
 
 @keyframes creator-banner-loop {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+
   to {
-    transform: translateX(-50%);
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+@media (max-width: 640px) {
+  .creator-banner {
+    margin-bottom: 40px;
+    mask-image: linear-gradient(
+      to right,
+      transparent,
+      #000 2%,
+      #000 98%,
+      transparent
+    );
+    -webkit-mask-image: linear-gradient(
+      to right,
+      transparent,
+      #000 2%,
+      #000 98%,
+      transparent
+    );
+  }
+
+  .creator-banner-overlay {
+    padding: 12px;
+  }
+
+  .creator-banner-name {
+    font-size: 18px;
+  }
+
+  .creator-banner-location {
+    font-size: 10px;
   }
 }
 
@@ -102,19 +159,10 @@
   .creator-banner {
     overflow-x: auto;
     mask-image: none;
+    -webkit-mask-image: none;
   }
 
   .creator-banner-track {
     animation: none;
-  }
-}
-
-@media (max-width: 640px) {
-  .creator-banner-tile {
-    flex-basis: clamp(150px, 42vw, 190px);
-  }
-
-  .creator-banner-overlay {
-    padding: 12px;
   }
 }
