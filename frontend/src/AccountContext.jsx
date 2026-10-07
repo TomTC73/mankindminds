@@ -3,20 +3,28 @@ import { API_URL } from "./apiConfig";
 
 const AccountContext = createContext(null);
 const TOKEN_KEY = "mankindMindsAccountToken";
+const LOCAL_PREVIEW_TOKEN = "local-account-preview-only";
 
 export function AccountProvider({ children }) {
   const [token, setToken] = useState(() => sessionStorage.getItem(TOKEN_KEY));
   const [account, setAccount] = useState(null);
   const [loading, setLoading] = useState(Boolean(token));
+  const [previewOnly, setPreviewOnly] = useState(
+    import.meta.env.DEV && token === LOCAL_PREVIEW_TOKEN,
+  );
 
   const clearSession = useCallback(() => {
     sessionStorage.removeItem(TOKEN_KEY);
     setToken(null);
     setAccount(null);
     setLoading(false);
+    setPreviewOnly(false);
   }, []);
 
   const request = useCallback(async (path, options = {}, sessionToken = token) => {
+    if (import.meta.env.DEV && sessionToken === LOCAL_PREVIEW_TOKEN) {
+      throw new Error("The local preview account is read-only.");
+    }
     const isFormData = options.body instanceof FormData;
     const response = await fetch(`${API_URL}${path}`, {
       ...options,
@@ -41,6 +49,22 @@ export function AccountProvider({ children }) {
       setLoading(false);
       return () => { active = false; };
     }
+    if (import.meta.env.DEV && token === LOCAL_PREVIEW_TOKEN) {
+      setLoading(true);
+      import("./localAccountPreview")
+        .then(({ account: previewAccount }) => {
+          if (active) {
+            setAccount(previewAccount);
+            setPreviewOnly(true);
+            setLoading(false);
+          }
+        })
+        .catch((error) => {
+          console.error("Could not load the local account preview:", error);
+          if (active) clearSession();
+        });
+      return () => { active = false; };
+    }
     setLoading(true);
     request("/accounts/me", {}, token)
       .then((result) => { if (active) setAccount(result); })
@@ -53,10 +77,23 @@ export function AccountProvider({ children }) {
     sessionStorage.setItem(TOKEN_KEY, result.accessToken);
     setToken(result.accessToken);
     setAccount(result.account);
+    setPreviewOnly(false);
     setLoading(false);
   }, []);
 
   const signIn = useCallback(async (credentials) => {
+    if (import.meta.env.DEV) {
+      const preview = await import("./localAccountPreview");
+      const identifier = credentials.identifier || credentials.email;
+      if (identifier === preview.email && credentials.password === preview.password) {
+        sessionStorage.setItem(TOKEN_KEY, LOCAL_PREVIEW_TOKEN);
+        setToken(LOCAL_PREVIEW_TOKEN);
+        setAccount(preview.account);
+        setPreviewOnly(true);
+        setLoading(false);
+        return preview.account;
+      }
+    }
     const result = await request("/accounts/login", {
       method: "POST",
       body: JSON.stringify(credentials),
@@ -98,12 +135,16 @@ export function AccountProvider({ children }) {
   }, [request]);
 
   const signOut = useCallback(async () => {
+    if (previewOnly) {
+      clearSession();
+      return;
+    }
     try {
       await request("/accounts/logout", { method: "POST" });
     } finally {
       clearSession();
     }
-  }, [clearSession, request]);
+  }, [clearSession, previewOnly, request]);
 
   const updateProfile = useCallback(async (profile) => {
     const updated = await request("/accounts/me", {
@@ -148,10 +189,10 @@ export function AccountProvider({ children }) {
   }, [clearSession, token]);
 
   const value = useMemo(() => ({
-    account, token, loading, request, signIn, signUp, sendSignupVerificationCode,
+    account, token, loading, previewOnly, request, signIn, signUp, sendSignupVerificationCode,
     sendClaimVerificationCode, claimAccount, signOut, updateProfile,
     deleteAccount, uploadImage, deleteImage, loadImage,
-  }), [account, loading, request, signIn, signUp, sendSignupVerificationCode,
+  }), [account, loading, previewOnly, request, signIn, signUp, sendSignupVerificationCode,
     sendClaimVerificationCode, claimAccount, signOut, token, updateProfile, deleteAccount,
     uploadImage, deleteImage, loadImage]);
 
