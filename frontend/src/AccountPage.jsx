@@ -13,7 +13,7 @@ const EMPTY_IMAGE_IDS = [];
 
 function AccountPage() {
   const {
-    account, loading, signIn, signUp, sendSignupVerificationCode,
+    account, loading, previewOnly, signIn, signUp, sendSignupVerificationCode,
     sendClaimVerificationCode, claimAccount, signOut, updateProfile,
     deleteAccount, uploadImage, deleteImage, loadImage,
   } = useAccount();
@@ -21,6 +21,21 @@ function AccountPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [mode, setMode] = useState("login");
+  const accountStatus = account?.status?.toUpperCase() || "PENDING";
+  const accountStatusLabel = {
+    PENDING: "Under review",
+    APPROVED: "Approved",
+    REJECTED: "Not approved",
+    BANNED: "Restricted",
+  }[accountStatus] || "In progress";
+  const accountStatusMessage = {
+    PENDING: previewOnly
+      ? "Your profile is under review. You should hear back within 48 hours. It will remain private until approved. This is a local sample, not a real submission."
+      : "Your profile is under review. You should hear back within 48 hours. It will remain private until it is approved.",
+    APPROVED: "Your profile has been approved by the Mankind Minds team.",
+    REJECTED: "Your submission was not approved. Please check your email for details or contact the team.",
+    BANNED: "Your account is restricted. Please contact the team if you need help.",
+  }[accountStatus] || "Your profile is being prepared. Please check back for updates.";
   const [form, setForm] = useState({
     email: "", password: "", displayName: "", category: "Tattoos",
     socialPlatform: "Instagram", socialHandle: "", businessName: "",
@@ -236,6 +251,21 @@ function AccountPage() {
       }
     } catch (requestError) {
       setError(requestError.message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const openLocalPreview = async () => {
+    setBusy(true);
+    setError("");
+    setMessage("");
+    try {
+      const preview = await import("./localAccountPreview");
+      await signIn({ identifier: preview.email, password: preview.password });
+      setMessage("Local preview opened. This sample account is read-only.");
+    } catch (requestError) {
+      setError(requestError.message || "Could not open the local preview.");
     } finally {
       setBusy(false);
     }
@@ -560,36 +590,54 @@ function AccountPage() {
             </section>
           ) : account ? (
             <>
+              <section
+                className={`account-status-banner account-status-banner-${accountStatus.toLowerCase()}`}
+                aria-label={`Profile status: ${accountStatusLabel}`}
+                role="status"
+              >
+                <div className="account-status-banner-mark" aria-hidden="true" />
+                <div>
+                  <p className="account-status-banner-label">PROFILE STATUS</p>
+                  <h3>{accountStatusLabel}</h3>
+                  <p className="account-status-banner-message">{accountStatusMessage}</p>
+                </div>
+              </section>
               <div className="account-dashboard-heading">
                 <div>
                   <p className="account-eyebrow">ACCOUNT OVERVIEW</p>
-                  <h2>Profile details</h2>
+                  <h2>Edit your profile</h2>
+                  <p className="account-dashboard-lede">Keep your creator information clear, current, and ready to share.</p>
                 </div>
-                <span className={`account-status account-status-${(account.status || "PENDING").toLowerCase()}`}>
-                  {account.status || "PENDING"}
-                </span>
-                {account.status === "APPROVED" && (account.creatorSlug || account.legacyCreatorSlug) && (
-                  <Link className="account-public-profile-link" to={`/creators/${encodeURIComponent(account.creatorSlug || account.legacyCreatorSlug)}`}>View public profile ↗</Link>
+                {accountStatus === "APPROVED" && (account.creatorSlug || account.legacyCreatorSlug) && (
+                  <div className="account-dashboard-meta">
+                    <Link className="account-public-profile-link" to={`/creators/${encodeURIComponent(account.creatorSlug || account.legacyCreatorSlug)}`}>View public profile ↗</Link>
+                  </div>
                 )}
               </div>
-              {account.status !== "APPROVED" && (
-                <div className="account-notice account-privacy-notice">
-                  <span className="account-notice-icon" aria-hidden="true">i</span>
-                  <p><strong>Your profile is private.</strong> It will only appear publicly after staff review and approval. You can edit your details and photos while you wait.</p>
+              {previewOnly && (
+                <div className="account-notice account-preview-notice" role="status">
+                  <span className="account-notice-icon" aria-hidden="true">D</span>
+                  <p><strong>Local preview account.</strong> This sample is read-only; changes and account actions are disabled.</p>
                 </div>
               )}
               <form id="account-profile-form" className="account-form account-profile-form" onSubmit={saveProfile}>
-                <div className="account-profile-fields">
-                  <ProfileFields
-                    form={form}
-                    onChange={change}
-                    includeBusiness
-                    includeSocials
-                    onSocialChange={changeSocialLink}
-                    onSocialAdd={addSocialLink}
-                    onSocialRemove={removeSocialLink}
-                  />
+                <div className="account-edit-introduction">
+                  <p className="account-eyebrow">YOUR DETAILS</p>
+                  <p>These details shape how people understand your work and how staff can review your profile.</p>
                 </div>
+                <fieldset className="account-preview-fieldset" disabled={previewOnly}>
+                  <div className="account-profile-fields">
+                    <ProfileFields
+                      form={form}
+                      onChange={change}
+                      includeBusiness
+                      includeSocials
+                      onSocialChange={changeSocialLink}
+                      onSocialAdd={addSocialLink}
+                      onSocialRemove={removeSocialLink}
+                    />
+                  </div>
+                </fieldset>
               </form>
               <section className="account-media">
                 <div className="account-section-heading">
@@ -608,7 +656,7 @@ function AccountPage() {
                     <label className="account-upload-label">
                       <span className="account-upload-title">Profile picture <span className="required" aria-hidden="true">*</span></span>
                       <span className="account-upload-hint">Choose an image that represents you.</span>
-                      <input type="file" accept="image/jpeg,image/png,image/webp" aria-required="true" disabled={busy} onChange={(event) => uploadPhotos(event, "profile")} />
+                      <input type="file" accept="image/jpeg,image/png,image/webp" aria-required="true" disabled={busy || previewOnly} onChange={(event) => uploadPhotos(event, "profile")} />
                     </label>
                   </div>
                 </div>
@@ -617,9 +665,9 @@ function AccountPage() {
                     <h3>Portfolio gallery</h3>
                     <p>{Math.max(0, 8 - galleryImageIds.length)} of 8 photo slots available</p>
                   </div>
-                  <label className={`button account-upload-button ${busy || galleryPhotos.length >= 8 ? "is-disabled" : ""}`}>
+                  <label className={`button account-upload-button ${busy || previewOnly || galleryPhotos.length >= 8 ? "is-disabled" : ""}`}>
                     Add photos
-                    <input type="file" accept="image/jpeg,image/png,image/webp" multiple disabled={busy || galleryPhotos.length >= 8} onChange={(event) => uploadPhotos(event, "gallery")} />
+                    <input type="file" accept="image/jpeg,image/png,image/webp" multiple disabled={busy || previewOnly || galleryPhotos.length >= 8} onChange={(event) => uploadPhotos(event, "gallery")} />
                   </label>
                 </div>
                 {galleryPhotos.length > 0 && (
@@ -627,7 +675,7 @@ function AccountPage() {
                     {galleryPhotos.map((photo) => (
                       <div className="account-gallery-item" key={photo.id}>
                         {photo.url ? <img src={photo.url} alt={`${form.displayName || "Your"} portfolio work`} /> : <div className="account-gallery-image-error">Photo unavailable</div>}
-                        <button className="account-remove-photo" type="button" disabled={busy} onClick={() => removePhoto(photo.id)}>Remove photo</button>
+                        <button className="account-remove-photo" type="button" disabled={busy || previewOnly} onClick={() => removePhoto(photo.id)}>Remove photo</button>
                       </div>
                     ))}
                   </div>
@@ -636,25 +684,56 @@ function AccountPage() {
                 {imageError && <p className="account-error" role="alert">{imageError}</p>}
               </section>
               <button
-                className="button account-primary-action"
+                className="button account-primary-action account-save-profile"
                 type="submit"
                 form="account-profile-form"
-                disabled={busy}
+                disabled={busy || previewOnly}
               >
-                {busy ? "Saving…" : "Save profile"}
+                {previewOnly ? "Preview only" : busy ? "Saving…" : "Save profile"}
               </button>
-              <div className="account-security-actions">
-                <button className="account-text-button" type="button" disabled={busy} onClick={requestReset}>Email me a password-reset link</button>
-                <button className="account-text-button" type="button" disabled={busy} onClick={handleSignOut}>Sign out</button>
-                <button
-                  className="account-text-button account-delete-action"
-                  type="button"
-                  disabled={busy}
-                  onClick={handleDeleteAccount}
-                >
-                  Delete account
-                </button>
-              </div>
+              <details className="account-advanced-options">
+                <summary>
+                  <span>
+                    <strong>Advanced options</strong>
+                    <small>Password, sign-in, and account controls</small>
+                  </span>
+                  <span className="account-advanced-chevron" aria-hidden="true">+</span>
+                </summary>
+                <div className="account-advanced-content">
+                  <div className="account-advanced-action">
+                    <div>
+                      <strong>Password reset</strong>
+                      <p>Send a secure password-reset link to your account email.</p>
+                    </div>
+                    <button className="account-secondary-action" type="button" disabled={busy || previewOnly} onClick={requestReset}>
+                      Email reset link
+                    </button>
+                  </div>
+                  <div className="account-advanced-action">
+                    <div>
+                      <strong>Sign out</strong>
+                      <p>End your current session on this device.</p>
+                    </div>
+                    <button className="account-secondary-action" type="button" disabled={busy} onClick={handleSignOut}>
+                      Sign out
+                    </button>
+                  </div>
+                  <div className="account-advanced-action account-advanced-danger">
+                    <div>
+                      <strong>Delete account</strong>
+                      <p>Permanently delete your account and active profile data.</p>
+                    </div>
+                    <button
+                      className="account-secondary-action account-delete-action"
+                      type="button"
+                      disabled={busy || previewOnly}
+                      onClick={handleDeleteAccount}
+                    >
+                      Delete account
+                    </button>
+                  </div>
+                </div>
+              </details>
             </>
           ) : (
             <>
@@ -773,6 +852,15 @@ function AccountPage() {
               </form>
               )}
               {mode === "login" && <button className="account-text-button account-forgot-password" type="button" disabled={busy} onClick={requestReset}>Forgot password?</button>}
+              {import.meta.env.DEV && mode === "login" && (
+                <div className="account-local-preview-login">
+                  <strong>Local design preview</strong>
+                  <p>Open a read-only sample account to preview the signed-in page. This does not connect to or modify a real account.</p>
+                  <button className="account-secondary-action" type="button" disabled={busy} onClick={openLocalPreview}>
+                    Open sample profile
+                  </button>
+                </div>
+              )}
             </>
           )}
           {error && <p className="account-error" role="alert">{error}</p>}
@@ -799,8 +887,8 @@ function ProfileFields({
   onSocialAdd,
   onSocialRemove,
 }) {
-  return (
-    <div className="account-profile-fields-inner">
+  const identityFields = (
+    <>
       <label>Display / creator name <span className="required" aria-hidden="true">*</span>
         <input name="displayName" value={form.displayName} onChange={onChange} maxLength={200} required />
       </label>
@@ -809,60 +897,78 @@ function ProfileFields({
           {categories.map((category) => <option key={category}>{category}</option>)}
         </select>
       </label>
-      {includeSocials ? (
-        <div className="account-social-links-field">
-          <p className="account-social-links-label">Social and portfolio links <span className="required" aria-hidden="true">*</span></p>
-          {(form.socialLinks || []).map((link, index) => (
-            <div className="account-social-link-row" key={`social-${index}`}>
-              <label>Platform <span className="required" aria-hidden="true">*</span>
-                <input
-                  value={link.name}
-                  maxLength={100}
-                  placeholder="Instagram, SoundCloud, website…"
-                  onChange={(event) => onSocialChange(index, "name", event.target.value)}
-                  required
-                />
-              </label>
-              <label>Profile link <span className="required" aria-hidden="true">*</span>
-                <input
-                  type="text"
-                  value={link.url}
-                  onChange={(event) => onSocialChange(index, "url", event.target.value)}
-                  maxLength={2048}
-                  placeholder="https://"
-                  required
-                />
-              </label>
-              <button
-                className="account-text-button"
-                type="button"
-                onClick={() => onSocialRemove(index)}
-              >
-                Remove
-              </button>
-            </div>
-          ))}
-          <button
-            className="account-text-button"
-            type="button"
-            disabled={(form.socialLinks || []).length >= 12}
-            onClick={onSocialAdd}
-          >
-            + Add another link
-          </button>
-        </div>
-      ) : (
+      {(includeBusiness || form.category === "Tattoos") && form.category === "Tattoos" && (
         <>
-          <label>Primary social or portfolio type <span className="required" aria-hidden="true">*</span>
-            <select name="socialPlatform" value={form.socialPlatform} onChange={onChange} required>
-              {platforms.map((platform) => <option key={platform}>{platform}</option>)}
-            </select>
+          <label>Business / studio name (optional)
+            <input name="businessName" value={form.businessName} onChange={onChange} maxLength={200} />
           </label>
-          <label>Social profile or portfolio link <span className="required" aria-hidden="true">*</span>
-            <input name="socialHandle" value={form.socialHandle} onChange={onChange} maxLength={2048} required />
+          <label>Business contact name (optional)
+            <input name="businessContactName" value={form.businessContactName} onChange={onChange} maxLength={200} />
+          </label>
+          <label>Business email (optional)
+            <input type="email" name="businessEmail" value={form.businessEmail} onChange={onChange} maxLength={254} />
           </label>
         </>
       )}
+      {includeBusiness && <label>Email address <span className="required" aria-hidden="true">*</span>
+        <input type="email" name="email" value={form.email} maxLength={254} readOnly aria-describedby="account-email-verified-help" required />
+        <small id="account-email-verified-help" className="account-field-help">Email changes require a verification process. Contact support if you need to update this address.</small>
+      </label>}
+    </>
+  );
+  const socialFields = includeSocials ? (
+    <div className="account-social-links-field">
+      <p className="account-social-links-label">Social and portfolio links <span className="required" aria-hidden="true">*</span></p>
+      {(form.socialLinks || []).map((link, index) => (
+        <div className="account-social-link-row" key={`social-${index}`}>
+          <label>Platform <span className="required" aria-hidden="true">*</span>
+            <input
+              value={link.name}
+              maxLength={100}
+              placeholder="Instagram, SoundCloud, website…"
+              onChange={(event) => onSocialChange(index, "name", event.target.value)}
+              required
+            />
+          </label>
+          <label>Profile link <span className="required" aria-hidden="true">*</span>
+            <input
+              type="text"
+              value={link.url}
+              onChange={(event) => onSocialChange(index, "url", event.target.value)}
+              maxLength={2048}
+              placeholder="https://"
+              required
+            />
+          </label>
+          <button className="account-text-button" type="button" onClick={() => onSocialRemove(index)}>
+            Remove
+          </button>
+        </div>
+      ))}
+      <button
+        className="account-text-button"
+        type="button"
+        disabled={(form.socialLinks || []).length >= 12}
+        onClick={onSocialAdd}
+      >
+        + Add another link
+      </button>
+    </div>
+  ) : (
+    <>
+      <label>Primary social or portfolio type <span className="required" aria-hidden="true">*</span>
+        <select name="socialPlatform" value={form.socialPlatform} onChange={onChange} required>
+          {platforms.map((platform) => <option key={platform}>{platform}</option>)}
+        </select>
+      </label>
+      <label>Social profile or portfolio link <span className="required" aria-hidden="true">*</span>
+        <input name="socialHandle" value={form.socialHandle} onChange={onChange} maxLength={2048} required />
+      </label>
+    </>
+  );
+  const workFields = (
+    <>
+      {socialFields}
       {includeDescription && (
         <label>Description <span className="required" aria-hidden="true">*</span>
           <textarea
@@ -895,23 +1001,40 @@ function ProfileFields({
           </small>
         </label>
       )}
-      {(includeBusiness || form.category === "Tattoos") && form.category === "Tattoos" && (
-        <>
-          <label>Business / studio name (optional)
-            <input name="businessName" value={form.businessName} onChange={onChange} maxLength={200} />
-          </label>
-          <label>Business contact name (optional)
-            <input name="businessContactName" value={form.businessContactName} onChange={onChange} maxLength={200} />
-          </label>
-          <label>Business email (optional)
-            <input type="email" name="businessEmail" value={form.businessEmail} onChange={onChange} maxLength={254} />
-          </label>
-        </>
-      )}
-      {includeBusiness && <label>Email address <span className="required" aria-hidden="true">*</span>
-        <input type="email" name="email" value={form.email} maxLength={254} readOnly aria-describedby="account-email-verified-help" required />
-        <small id="account-email-verified-help" className="account-field-help">Email changes require a verification process. Contact support if you need to update this address.</small>
-      </label>}
+    </>
+  );
+
+  if (includeBusiness && includeSocials) {
+    return (
+      <div className="account-profile-fields-inner account-profile-edit-fields">
+        <section className="account-edit-group">
+          <div className="account-edit-group-heading">
+            <span>01</span>
+            <div>
+              <h3>Identity and contact</h3>
+              <p>Your public name, creative category, and account email.</p>
+            </div>
+          </div>
+          <div className="account-edit-grid">{identityFields}</div>
+        </section>
+        <section className="account-edit-group">
+          <div className="account-edit-group-heading">
+            <span>02</span>
+            <div>
+              <h3>Your creative work</h3>
+              <p>Tell visitors what you do and where they can find your work.</p>
+            </div>
+          </div>
+          <div className="account-edit-grid account-edit-work-grid">{workFields}</div>
+        </section>
+      </div>
+    );
+  }
+
+  return (
+    <div className="account-profile-fields-inner">
+      {identityFields}
+      {workFields}
     </div>
   );
 }
