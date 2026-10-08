@@ -20,6 +20,10 @@
   color: #9a3f2f;
 }
 
+.account-auth-fields.account-login-fields > label {
+  grid-column: 1 / -1;
+}
+
 /* Required field asterisk */
 .required {
   display: inline;
