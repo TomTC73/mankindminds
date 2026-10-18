@@ -34,11 +34,11 @@ function PrivacyPolicy() {
           </p>
 
           <p>
-            The form is submitted through Web3Forms, a third-party form
-            delivery provider. The information is sent to that provider and
-            delivered to the Mankind Minds team for review and communication.
-            Please read the provider's own privacy information for details of
-            its processing and retention.
+            Application submissions are sent to the Mankind Minds backend and
+            processed by our team for review and communication. Where external
+            services are required to deliver notifications or hosting, we use
+            them under contract and their processing is governed by their own
+            policies.
           </p>
 
           <h4>3. Information Collected When You Browse</h4>
@@ -105,12 +105,11 @@ function PrivacyPolicy() {
 
           <h4>7. Sharing and Service Providers</h4>
           <p>
-            Application information is shared with Web3Forms as needed to
-            transmit and deliver the form. Public website data is hosted and
-            delivered through our website and backend hosting providers.
-            Map requests are handled by CARTO and OpenStreetMap-related
-            services. These providers may process technical information such as
-            an IP address as part of delivering their services.
+            Application information is processed by the Mankind Minds backend
+            and published where appropriate by our hosting providers. Map
+            requests are handled by CARTO and OpenStreetMap-related services.
+            These providers may process technical information such as an IP
+            address as part of delivering their services.
           </p>
 
           <p>
@@ -133,7 +132,7 @@ function PrivacyPolicy() {
             We keep application and verification information only for as long
             as reasonably necessary to review applications, maintain accurate
             records, handle disputes, and meet legal obligations. Retention by
-            Web3Forms and other providers is governed by their own policies.
+            third-party providers we use is governed by their own policies.
             Public listings may remain online while they are relevant or until
             they are updated or removed.
           </p>

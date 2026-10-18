@@ -2,6 +2,7 @@ import "./index.css";
 import Header from "./Header";
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { API_URL } from "./apiConfig";
 
 const categories = ["Tattoos", "Music", "Writing", "Videos", "Art"];
 
@@ -34,19 +35,62 @@ function CreatorApplication() {
     );
   });
 
-  const handleSubmit = (e) => {
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setErrorMsg("");
+
     if (
       selectedCategory === "Tattoos" &&
       applicationType === "business" &&
-      (!businessContact.trim() ||
-        !businessName.trim() ||
-        !businessEmail.trim())
+      (!businessContact.trim() || !businessName.trim() || !businessEmail.trim())
     ) {
-      e.preventDefault();
-      alert("Please complete your name, business name, and email address.");
-    } else if (applicationType === "individual" && !platformHandle.trim()) {
-      e.preventDefault();
-      alert("Please provide a social media or portfolio link/username.");
+      setErrorMsg("Please complete your name, business name, and email address.");
+      return;
+    }
+    if (applicationType === "individual" && !platformHandle.trim()) {
+      setErrorMsg("Please provide a social media or portfolio link/username.");
+      return;
+    }
+
+    const form = new FormData(e.target);
+    const payload = {
+      applicationType: applicationType,
+      creatorName: form.get("creator_name") || "",
+      email: form.get("email") || "",
+      category: form.get("category") || selectedCategory,
+      socialPlatform: form.get("social_platform") || selectedPlatform,
+      socialHandle: form.get("social_handle") || platformHandle,
+      businessContactName: form.get("business_contact_name") || "",
+      businessName: form.get("business_name") || "",
+      businessEmail: form.get("business_email") || "",
+      termsAgreement: form.get("terms_agreement") === "Agreed",
+      aiFreeConfirmation: form.get("ai_free_confirmation") === "Confirmed",
+    };
+
+    setSubmitting(true);
+    try {
+      const res = await fetch(`${API_URL}/applications`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (res.status === 202 || res.ok) {
+        setSubmitted(true);
+      } else if (res.status === 401) {
+        setErrorMsg("You must be signed in with a complete profile before applying. Please sign up or log in.");
+      } else {
+        const body = await res.json().catch(() => ({}));
+        setErrorMsg(body.error || `Failed to submit application (status ${res.status}).`);
+      }
+    } catch (err) {
+      setErrorMsg(err.message || "An unexpected error occurred.");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -72,42 +116,15 @@ function CreatorApplication() {
       <section className="section">
         <h3>Apply to Become Verified</h3>
 
-        <form
-          className={`application-form ${applicationType}-application`}
-          action="https://api.web3forms.com/submit"
-          method="POST"
-          onSubmit={handleSubmit}
-        >
-          <input
-            type="hidden"
-            name="access_key"
-            value="a268b81e-bb0f-4add-822b-edbb7c854136"
-          />
-
-          <input
-            type="hidden"
-            name="subject"
-            value="New Verified Creator Application"
-          />
-
-          <input
-            type="hidden"
-            name="from_name"
-            value="Mankind Minds Website"
-          />
-
-          {/* Hidden inputs to pass selected platform & handle to Web3Forms */}
-          <input
-            type="hidden"
-            name="social_platform"
-            value={selectedPlatform}
-          />
-          <input
-            type="hidden"
-            name="social_handle"
-            value={platformHandle}
-          />
-          <input type="hidden" name="application_type" value={applicationType} />
+        {submitted ? (
+          <div className="application-form" style={{ textAlign: "center", padding: "24px 16px" }}>
+            <h4>Application submitted</h4>
+            <p>Thanks — your application has been received. Our team will review it and be in touch.</p>
+          </div>
+        ) : (
+          <form className={`application-form ${applicationType}-application`} onSubmit={handleSubmit}>
+            {/* social fields use controlled state but also set names so FormData picks them up */}
+            <input type="hidden" name="application_type" value={applicationType} />
 
           {selectedCategory === "Tattoos" && (
             <div className="application-type-tabs" role="tablist" aria-label="Tattoo application type">
@@ -215,10 +232,11 @@ function CreatorApplication() {
                 boxSizing: "border-box",
               }}
             >
-              <select
-                className="platform-select"
-                value={selectedPlatform}
-                onChange={(e) => setSelectedPlatform(e.target.value)}
+                <select
+                  className="platform-select"
+                  name="social_platform"
+                  value={selectedPlatform}
+                  onChange={(e) => setSelectedPlatform(e.target.value)}
                 style={{
                   padding: "8px",
                   borderRadius: "4px",
@@ -245,9 +263,16 @@ function CreatorApplication() {
                   maxWidth: "100%",
                   boxSizing: "border-box",
                 }}
+                name="social_handle"
               />
             </div>
           </label>
+
+          {errorMsg && (
+            <div style={{ color: "var(--accent, #8d2d20)", fontSize: "14px", fontWeight: 600 }}>
+              {errorMsg}
+            </div>
+          )}
 
           <label className="checkbox-label">
             <input
@@ -285,8 +310,8 @@ function CreatorApplication() {
             verification.
           </p>
 
-          <button className="button" type="submit">
-            Submit Application
+          <button className="button" type="submit" disabled={submitting}>
+            {submitting ? "Submitting..." : "Submit Application"}
           </button>
         </form>
       </section>
