@@ -94,8 +94,9 @@ function CreatorProfile() {
     <div>
       <Header />
 
+      <div className="profile-page-body">
       {/* Top Back Navigation Bar */}
-      <div style={{ maxWidth: "900px", margin: "24px auto 0", padding: "0 20px" }}>
+      <div style={{ maxWidth: "900px", margin: "0 auto", padding: "24px 20px 0" }}>
         <Link
           to="/certificates"
           className="button"
@@ -213,6 +214,7 @@ function CreatorProfile() {
           )}
         </div>
       </section>
+      </div>
 
       {profileSections.map((section, idx) => (
         <section className="section" key={idx}>

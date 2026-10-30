@@ -1,6 +1,6 @@
 body {
   margin: 0;
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
   background: white;
   color: black;
 }
@@ -12,7 +12,7 @@ header.header {
   align-items: center;
   gap: 24px;
   padding: 14px 40px;
-  border-bottom: 1px solid #111;
+  border-bottom: 1px solid var(--border);
   background: #f3f3f3;
 }
 
@@ -42,7 +42,7 @@ header.header {
   display: flex;
   align-items: center;
   gap: 6px;
-  border: 1px solid #111;
+  border: 1px solid var(--border-strong);
   border-radius: 2px;
   background: #f3f3f3;
   color: #111;
@@ -84,7 +84,7 @@ header.header {
   top: calc(100% + 6px);
   left: 0;
   min-width: 100%;
-  border: 1px solid #111;
+  border: 1px solid var(--border-strong);
   background: #f3f3f3;
   opacity: 0;
   pointer-events: none;
@@ -102,7 +102,7 @@ header.header {
   display: block;
   width: 100%;
   border: 0;
-  border-bottom: 1px solid #111;
+  border-bottom: 1px solid var(--border);
   background: #f3f3f3;
   color: #111;
   cursor: pointer;
@@ -194,7 +194,7 @@ header.header {
   .section-menu-option {
     font-size: 14px;
     padding: 8px 10px;
-    font-family: Arial, Helvetica, sans-serif;
+    font-family: var(--font-sans);
   }
 
   .section-switcher {
@@ -213,7 +213,7 @@ header.header {
   .nav a {
     font-size: 10px;
     white-space: nowrap;
-    font-family: Arial, Helvetica, sans-serif;
+    font-family: var(--font-sans);
   }
 
   .nav a.contact-link {

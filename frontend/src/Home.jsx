@@ -5,6 +5,7 @@ import Header from "./Header";
 import backgroundImage from "./assets/BackgroundHome.png";
 import MapPage from "./MapPage";
 import HomeFeaturedCreators from "./HomeFeaturedCreators";
+import Footer from "./Footer";
 
 function Home() {
   const { pathname } = useLocation();
@@ -23,11 +24,10 @@ function Home() {
       >
         <div className="home-content">
           <div className="hero-box">
-            <h2>Human Creativity Certified</h2>
+            <h2>AI-Free Confidence</h2>
 
             <p>
-              Verify creators, showcase trusted certificates, and give brands,
-              followers, and collaborators confidence in who they are working with.
+              Verify your work is AI-free. Meet creators who share your commitment. Champion human authenticity
             </p>
 
             <div className="hero-actions">
@@ -59,6 +59,7 @@ function Home() {
         </section>
       )}
 
+      <Footer />
     </div>
   );
 }
