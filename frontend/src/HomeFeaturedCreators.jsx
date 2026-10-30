@@ -57,7 +57,14 @@ function HomeFeaturedCreators({ category }) {
   }, [category]);
 
   return (
-    <section className="home-featured-creators" aria-label={`Featured ${label} creators`}>
+    <section className="home-featured-creators" aria-labelledby="home-featured-creators-title">
+      <div className="home-featured-creators-heading">
+        <p>Meet the Talent</p>
+        <h2 id="home-featured-creators-title">Featured {label} Creators</h2>
+        <p>
+          Discover verified creators whose {label.toLowerCase()} work has been reviewed by Mankind Minds.
+        </p>
+      </div>
       {loading && <p className="home-featured-creators-message" role="status">Loading verified creators…</p>}
       {error && <p className="home-featured-creators-message" role="alert">{error}</p>}
       {!loading && !error && creators.length === 0 && (

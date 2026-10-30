@@ -1926,6 +1926,41 @@ export default function MapPage({ embedded = false }) {
     clients searching for certified talent.
   </p>
 
+  <div
+    style={{
+      display: "flex",
+      justifyContent: "center",
+      flexWrap: "wrap",
+      gap: "32px",
+      marginBottom: "48px",
+    }}
+  >
+    {["Verified Status", "Higher Visibility", "Portfolio Showcase"].map((label) => (
+      <div
+        key={label}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "10px",
+          fontSize: "15px",
+          fontWeight: "600",
+          color: "#334155",
+        }}
+      >
+        <span
+          style={{
+            width: "6px",
+            height: "6px",
+            borderRadius: "50%",
+            backgroundColor: "#0f172a",
+            display: "inline-block",
+          }}
+        />
+        {label}
+      </div>
+    ))}
+  </div>
+
   {/* CTA Button */}
   <button
     onClick={handleVerifyArtist}
@@ -1963,9 +1998,9 @@ export default function MapPage({ embedded = false }) {
       textAlign: "center",
     }}
   >
-    Applications reviewed within 48 hours ·     No fees to apply
-      </p>
-    </div>
+    Applications reviewed within 48 hours · No fees to apply
+  </p>
+</div>
 
        
       </div>

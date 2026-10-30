@@ -114,12 +114,12 @@ function PrivacyPolicy() {
 
           <h4>6. Legal Basis</h4>
           <p>
-            Where the UK GDPR or the EU GDPR applies, we generally rely on steps
+            Where applicable data protection law applies, we generally rely on steps
             taken at your request before providing a service, our legitimate
             interests in operating and protecting the website, and legal
             obligations. We rely on your consent for optional analytics, which
-            you can withdraw at any time. Where appropriate, we may rely on
-            your consent for other purposes.
+            you can withdraw at any time using Analytics preferences. Where
+            appropriate, we may rely on your consent for other purposes.
           </p>
 
           <p>
