@@ -223,6 +223,9 @@ class AccountAdminClient:
     def resend_rejection_email(self, account_id):
         return self.request("POST", f"/staff/{urllib.parse.quote(account_id, safe='')}/rejection-email")
 
+    def send_invite(self, email, name=""):
+        return self.request("POST", "/staff/invite", {"email": email, "name": name})
+
     def update_profile(self, account_id, profile):
         return self.request("PUT", f"/staff/{urllib.parse.quote(account_id, safe='')}/profile", profile)
 
@@ -604,6 +607,10 @@ class App(tk.Tk):
         tabs.add(rejected_tab, text="Rejected")
         self.build_rejected_account_queue(rejected_tab)
 
+        invite_tab = ttk.Frame(tabs, style="Panel.TFrame", padding=20)
+        tabs.add(invite_tab, text="Invite")
+        self.build_invite_panel(invite_tab)
+
         tools_tab = ttk.Frame(tabs, style="Panel.TFrame", padding=20)
         tabs.add(tools_tab, text="Tools")
         tool_sections = ttk.Notebook(tools_tab)
@@ -741,6 +748,49 @@ class App(tk.Tk):
         self.ban_tree.grid(row=1, column=0, columnspan=2, sticky="ew", pady=(10, 0))
         self.unban_button = ttk.Button(ban_frame, text="Remove selected ban", command=self.remove_selected_ban)
         self.unban_button.grid(row=1, column=2, padx=(8, 0), pady=(10, 0), sticky="n")
+
+    def build_invite_panel(self, parent):
+        parent.columnconfigure(0, weight=1)
+        ttk.Label(parent, text="Invite someone to join", style="Section.TLabel").grid(row=0, column=0, sticky="w")
+        ttk.Label(
+            parent,
+            text="Sends a personal invitation to someone who previously registered their interest in Mankind Minds.",
+            style="Muted.TLabel",
+        ).grid(row=1, column=0, sticky="w", pady=(2, 18))
+        form = ttk.Frame(parent, style="Panel.TFrame")
+        form.grid(row=2, column=0, sticky="w")
+        ttk.Label(form, text="Email address", style="Muted.TLabel").grid(row=0, column=0, sticky="w")
+        self.invite_email = ttk.Entry(form, width=48)
+        self.invite_email.grid(row=1, column=0, sticky="w", pady=(4, 14))
+        ttk.Label(form, text="Name (optional)", style="Muted.TLabel").grid(row=2, column=0, sticky="w")
+        self.invite_name = ttk.Entry(form, width=48)
+        self.invite_name.grid(row=3, column=0, sticky="w", pady=(4, 18))
+        self.invite_send_button = ttk.Button(
+            form, text="Send email", style="Accent.TButton", command=self.send_invite_email,
+        )
+        self.invite_send_button.grid(row=4, column=0, sticky="w")
+        self.invite_email.bind("<Return>", lambda _event: self.send_invite_email())
+        self.invite_name.bind("<Return>", lambda _event: self.send_invite_email())
+
+    def send_invite_email(self):
+        email = self.invite_email.get().strip()
+        name = self.invite_name.get().strip()
+        if not re.fullmatch(r"[^\s@<>\"]+@[^\s@<>\"]+\.[^\s@<>\"]+", email):
+            messagebox.showerror("Send invite", "Enter a valid email address.")
+            return
+        if not messagebox.askyesno("Send invite", f"Send the invitation email to {email}?"):
+            return
+
+        def done():
+            self.invite_email.delete(0, "end")
+            self.invite_name.delete(0, "end")
+
+        self.account_admin_action(
+            "Send invite",
+            lambda: self.account_admin.send_invite(email, name),
+            f"Invitation sent to {email}.",
+            on_success=done,
+        )
 
     def build_suggested_artist_queue(self, parent):
         parent.columnconfigure(0, weight=1)
@@ -1415,7 +1465,8 @@ class App(tk.Tk):
                 self.after(0, lambda: self.set_status(f"{title} failed.", PALETTE["accent"]))
                 self.after(0, lambda: messagebox.showerror(
                     f"{title} failed",
-                    f"The creator's status was not confirmed.\n\n{detail}",
+                    (f"The email could not be sent.\n\n{detail}" if title == "Send invite"
+                     else f"The creator's status was not confirmed.\n\n{detail}"),
                 ))
 
         threading.Thread(target=work, daemon=True).start()
