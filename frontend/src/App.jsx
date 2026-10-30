@@ -15,6 +15,7 @@ import CreatorApplication from "./CreatorApplication";
 import PrivacyPolicy from "./PrivacyPolicy";
 import Terms from "./Terms";
 import AnalyticsTracker from "./AnalyticsTracker";
+import ConsentBanner from "./ConsentBanner";
 import Artists from "./artists";
 import Report from "./Report";
 import AccountPage from "./AccountPage";
@@ -37,6 +38,7 @@ function App() {
     <BrowserRouter>
       <ScrollToTop />
       <AnalyticsTracker />
+      <ConsentBanner />
       <AccountProvider>
        <Routes>
         <Route path="/" element={<Navigate to="/tattoos" replace />} />

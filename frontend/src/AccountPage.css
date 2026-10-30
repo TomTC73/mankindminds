@@ -6,7 +6,7 @@
   border: 0;
   background: transparent;
   color: #6d6961;
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
   font-size: 13px;
   font-weight: 400;
   text-align: left;
@@ -81,7 +81,7 @@
 
 .account-local-preview-login > strong {
   color: #242321;
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--font-serif);
   font-size: 18px;
   font-weight: 400;
 }
@@ -107,7 +107,7 @@
 
 .account-local-preview-login dt {
   color: #6d6961;
-  font-family: "Courier New", Courier, monospace;
+  font-family: var(--font-sans);
   font-size: 10px;
   font-weight: 700;
   text-transform: uppercase;
@@ -117,7 +117,7 @@
   overflow-wrap: anywhere;
   margin: 0;
   color: #242321;
-  font-family: "Courier New", Courier, monospace;
+  font-family: var(--font-sans);
   font-size: 12px;
 }
 
@@ -128,7 +128,7 @@
 }
 
 .account-preview-notice .account-notice-icon {
-  font-family: "Courier New", Courier, monospace;
+  font-family: var(--font-sans);
   font-size: 9px;
   font-weight: 700;
 }
@@ -150,7 +150,7 @@
 .account-preview-status-toggle > span {
   margin-right: 4px;
   color: #6d6961;
-  font-family: "Courier New", Courier, monospace;
+  font-family: var(--font-sans);
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.04em;
@@ -163,7 +163,7 @@
   background: #fbfaf7;
   color: #4e4a44;
   cursor: pointer;
-  font-family: "Courier New", Courier, monospace;
+  font-family: var(--font-sans);
   font-size: 10px;
 }
 
@@ -239,7 +239,7 @@
 .account-dashboard-heading h2 {
   margin: 0;
   color: #242321;
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--font-serif);
   font-size: clamp(30px, 4vw, 42px);
   font-weight: 400;
   letter-spacing: -0.035em;
@@ -262,7 +262,7 @@
 
 .account-dashboard-status-label {
   color: #6d6961;
-  font-family: "Courier New", Courier, monospace;
+  font-family: var(--font-sans);
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.1em;
@@ -288,7 +288,7 @@
   border: 1px solid currentColor;
   border-radius: 50%;
   color: #9a3f2f;
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--font-serif);
   font-size: 17px;
 }
 
@@ -339,7 +339,7 @@
 .account-status-banner-label {
   margin: 0 0 4px;
   color: #6d6961;
-  font-family: "Courier New", Courier, monospace;
+  font-family: var(--font-sans);
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.12em;
@@ -348,7 +348,7 @@
 .account-status-banner h3 {
   margin: 0;
   color: #242321;
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--font-serif);
   font-size: 26px;
   font-weight: 400;
   line-height: 1.25;
@@ -411,7 +411,7 @@
 .account-edit-group-heading > span {
   padding-top: 3px;
   color: #9a3f2f;
-  font-family: "Courier New", Courier, monospace;
+  font-family: var(--font-sans);
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -420,7 +420,7 @@
 .account-edit-group-heading h3 {
   margin: 0;
   color: #242321;
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--font-serif);
   font-size: 21px;
   font-weight: 400;
 }
@@ -464,7 +464,7 @@
   border-radius: 0;
   background: #fff;
   color: #242321;
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
   font-size: 14px;
 }
 
@@ -621,7 +621,7 @@
   background: #fbfaf7;
   color: #242321;
   cursor: pointer;
-  font-family: "Courier New", Courier, monospace;
+  font-family: var(--font-sans);
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.04em;
@@ -689,7 +689,7 @@
 
   .account-page:not(.account-page-dashboard) .account-page-intro h1 {
     margin: 0;
-    font-family: Georgia, "Times New Roman", serif;
+    font-family: var(--font-serif);
     font-size: clamp(36px, 6vw, 58px);
     font-weight: 400;
     letter-spacing: -0.045em;
@@ -744,7 +744,7 @@
     background: transparent;
     color: #6d6961;
     cursor: pointer;
-    font-family: "Courier New", Courier, monospace;
+    font-family: var(--font-sans);
     font-size: 12px;
   }
 
@@ -796,7 +796,7 @@
     border-radius: 0;
     background: #fff;
     color: #242321;
-    font-family: Arial, Helvetica, sans-serif;
+    font-family: var(--font-sans);
     font-size: 15px;
   }
 
@@ -829,7 +829,7 @@
 
   .account-page:not(.account-page-dashboard) .account-form-section-label > span {
     color: #9a3f2f;
-    font-family: "Courier New", Courier, monospace;
+    font-family: var(--font-sans);
     font-size: 12px;
   }
 

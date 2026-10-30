@@ -1505,12 +1505,14 @@ export default function MapPage({ embedded = false }) {
       <div
         ref={artistsSectionRef}
         style={{
-          padding: "64px 20px 40px 20px",
+          padding: embedded ? "28px 20px 40px 20px" : "64px 20px 40px 20px",
           maxWidth: "1200px",
           margin: "0 auto",
           scrollMarginTop: "70px",
+          ...(embedded ? { display: "flex", flexDirection: "column" } : {}),
         }}
       >
+        {!embedded && (
         <div style={{ textAlign: "center", marginBottom: "44px" }}>
           <p
             style={{
@@ -1548,9 +1550,10 @@ export default function MapPage({ embedded = false }) {
             Explore portfolios and connect directly through Instagram.
           </p>
         </div>
+        )}
 
         {/* Artist search */}
-        <div style={{ display: "flex", justifyContent: "center", marginBottom: "40px" }}>
+        <div style={{ display: "flex", justifyContent: "center", marginBottom: embedded ? "0" : "40px", ...(embedded ? { order: 2, marginTop: "28px" } : {}) }}>
           <div style={{ position: "relative", width: "100%", maxWidth: "420px" }}>
             <input
               type="text"
@@ -1854,6 +1857,7 @@ export default function MapPage({ embedded = false }) {
 <div
   style={{
     marginTop: "72px",
+    order: 3,
     padding: "64px 48px",
     borderRadius: "20px",
     backgroundColor: "#ffffff",
@@ -1922,7 +1926,6 @@ export default function MapPage({ embedded = false }) {
     clients searching for certified talent.
   </p>
 
-  {/* Benefits */}
   <div
     style={{
       display: "flex",
@@ -1932,11 +1935,7 @@ export default function MapPage({ embedded = false }) {
       marginBottom: "48px",
     }}
   >
-    {[
-      "Verified Status",
-      "Higher Visibility",
-      "Portfolio Showcase",
-    ].map((label) => (
+    {["Verified Status", "Higher Visibility", "Portfolio Showcase"].map((label) => (
       <div
         key={label}
         style={{
@@ -2002,7 +2001,6 @@ export default function MapPage({ embedded = false }) {
     Applications reviewed within 48 hours · No fees to apply
   </p>
 </div>
-
 
        
       </div>

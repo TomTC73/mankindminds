@@ -1,6 +1,6 @@
 body {
   margin: 0;
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
   background: white;
   color: black;
 }
@@ -80,7 +80,7 @@ body {
 
 .home-featured-creators-heading h2 {
   margin: 0;
-  font: 400 clamp(30px, 4vw, 44px) Georgia, "Times New Roman", serif;
+  font: 400 clamp(30px, 4vw, 44px) var(--font-serif);
 }
 
 .home-featured-creators-heading p:last-child,
@@ -135,7 +135,7 @@ body {
 }
 
 .hero-box h2 {
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--font-serif);
   font-size: 44px;
   font-weight: 300;
   margin: 0;
@@ -183,7 +183,7 @@ body {
 .secondary-button {
   margin-left: 14px;
   background: transparent;
-  border: 1px solid black;
+  border: 1px solid var(--border-strong);
   color: black;
 }
 
@@ -218,7 +218,7 @@ body {
 
 .section {
   padding: 90px 20px;
-  border-top: 1px solid black;
+  border-top: 1px solid var(--border);
 }
 
 .section h3 {
@@ -247,7 +247,7 @@ body {
 }
 
 .card {
-  border: 1px solid black;
+  border: 1px solid var(--border-strong);
   padding: 28px;
   min-height: 170px;
 }
@@ -288,7 +288,7 @@ body {
 
 .certificate {
   text-align: center;
-  border: 1px solid black;
+  border: 1px solid var(--border-strong);
   padding: 48px 40px;
   max-width: 760px;
   margin: 0 auto;
@@ -343,7 +343,7 @@ body {
 
 .tattoo-process-hero h1 {
   margin: 0;
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--font-serif);
   font-size: clamp(54px, 9vw, 124px);
   line-height: 0.88;
   font-weight: 400;
@@ -388,7 +388,7 @@ body {
 .tattoo-process-story h2,
 .tattoo-process-check h2 {
   margin: 0;
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--font-serif);
   font-weight: 400;
   font-size: clamp(34px, 5vw, 64px);
   line-height: 0.98;
@@ -439,7 +439,7 @@ body {
 .tattoo-process-image-frame figcaption {
   margin: 12px 8px 0;
   color: #f3f3f3;
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--font-serif);
   font-size: 17px;
 }
 
@@ -497,7 +497,7 @@ body {
 
 .tattoo-process-check-grid h3 {
   margin: 54px 0 16px;
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--font-serif);
   font-size: 28px;
   font-weight: 400;
 }
@@ -509,18 +509,19 @@ body {
 }
 
 .tattoo-process-quote {
-  padding: 110px 24px;
+  padding: 96px 24px;
   text-align: center;
-  background: #555555;
+  background: #1c1b19;
   color: #f3f3f3;
 }
 
 .tattoo-process-quote p {
   max-width: 760px;
   margin: 0 auto 24px;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(30px, 5vw, 62px);
-  line-height: 1;
+  color: inherit;
+  font-family: var(--font-serif);
+  font-size: clamp(26px, 4.5vw, 48px);
+  line-height: 1.2;
 }
 
 .tattoo-process-quote span {
@@ -572,7 +573,7 @@ body {
 .cta {
   text-align: center;
   padding: 80px 20px;
-  border-top: 1px solid black;
+  border-top: 1px solid var(--border);
 }
 
 .cta h3 {
@@ -589,7 +590,7 @@ body {
 /* FOOTER */
 
 .footer {
-  border-top: 1px solid black;
+  border-top: 1px solid var(--border);
   padding: 24px 40px;
   text-align: center;
   font-size: 14px;

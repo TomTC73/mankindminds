@@ -71,6 +71,7 @@ function Header() {
   };
 
   return (
+    <>
     <header className="header">
       <div className="section-switcher" ref={switcherRef}>
         <button
@@ -126,6 +127,16 @@ function Header() {
         )}
       </nav>
     </header>
+    <nav className="mobile-tabbar" aria-label="Primary">
+      <Link to={`/process${selectedSection}`} aria-current={pathname.startsWith("/process") ? "page" : undefined}>Process</Link>
+      <Link to={certificatesPath} aria-current={pathname === "/certificates" ? "page" : undefined}>Certificates</Link>
+      {account || loading ? (
+        <Link to="/account" aria-current={pathname.startsWith("/account") ? "page" : undefined}>Profile</Link>
+      ) : (
+        <Link to={{ pathname: "/apply", search: `?category=${selectedLabel.toLowerCase()}` }} aria-current={pathname === "/apply" ? "page" : undefined}>Apply</Link>
+      )}
+    </nav>
+    </>
   );
 }
 

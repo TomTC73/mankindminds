@@ -72,12 +72,21 @@ function PrivacyPolicy() {
 
            <p>
             The website uses a first-party analytics system to understand how
-            the site is used. When you browse the site, it creates a random
-            anonymous visitor identifier in your browser's local storage and
-            sends page-view information such as the page path, referring page,
-            and screen width to our backend. This identifier is not your name,
-            email address, or account identity, and we do not use it to contact
-            or profile you.
+            the site is used. Analytics is optional and off by default: it
+            only runs if you click "Accept" on the analytics banner. If you
+            accept, it creates a random anonymous visitor identifier in your
+            browser's local storage and sends page-view information such as
+            the page path, referring page, and screen width to our backend.
+            This identifier is not your name, email address, or account
+            identity, and we do not use it to contact or profile you. If you
+            reject, nothing is stored and no analytics are sent. You can change
+            your choice at any time using "Analytics preferences" in the page
+            footer; withdrawing consent deletes the stored identifier.
+          </p>
+
+          <p>
+            Fonts are served from our own website, so your browser does not
+            contact Google or any other font provider.
           </p>
 
           <h4>4. Public Website Data</h4>
@@ -105,10 +114,12 @@ function PrivacyPolicy() {
 
           <h4>6. Legal Basis</h4>
           <p>
-            Where UK data protection law applies, we generally rely on steps
+            Where applicable data protection law applies, we generally rely on steps
             taken at your request before providing a service, our legitimate
             interests in operating and protecting the website, and legal
-            obligations. Where appropriate, we may rely on your consent.
+            obligations. We rely on your consent for optional analytics, which
+            you can withdraw at any time using Analytics preferences. Where
+            appropriate, we may rely on your consent for other purposes.
           </p>
 
           <p>

@@ -1,6 +1,6 @@
 body {
   margin: 0;
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
   background: white;
   color: black;
 }
@@ -17,7 +17,7 @@ a {
   justify-content: space-between;
   align-items: center;
   padding: 24px;
-  border-bottom: 1px solid black;
+  border-bottom: 1px solid var(--border);
 }
 
 .logo {
@@ -42,7 +42,7 @@ a {
 }
 
 .hero-box {
-  border: 1px solid black;
+  border: 1px solid var(--border-strong);
   padding: 40px;
   max-width: 600px;
   margin: 0 auto;
@@ -73,7 +73,7 @@ a {
 }
 
 .button {
-  border: 1px solid black;
+  border: 1px solid var(--border-strong);
   padding: 12px 24px;
   background: transparent;
   cursor: pointer;
@@ -87,7 +87,7 @@ a {
 
 .section {
   padding: 80px 20px;
-  border-top: 1px solid black;
+  border-top: 1px solid var(--border);
 }
 
 .account-section {
@@ -98,7 +98,7 @@ a {
   max-width: 620px;
   margin: 0 auto;
   padding: 36px;
-  border: 1px solid #111;
+  border: 1px solid var(--border-strong);
   background: #fff;
 }
 
@@ -159,7 +159,7 @@ a {
 .account-media {
   margin-top: 32px;
   padding-top: 24px;
-  border-top: 1px solid #111;
+  border-top: 1px solid var(--border);
 }
 
 .account-media h3 {
@@ -232,12 +232,12 @@ a {
   display: flex;
   gap: 8px;
   margin-top: 22px;
-  border-bottom: 1px solid #111;
+  border-bottom: 1px solid var(--border);
 }
 
 .account-mode-tabs button {
   padding: 10px 14px;
-  border: 1px solid #111;
+  border: 1px solid var(--border-strong);
   border-bottom: 0;
   background: #fff;
   color: #111;
@@ -308,7 +308,7 @@ a {
 
 .certificate {
   text-align: center;
-  border: 1px solid black;
+  border: 1px solid var(--border-strong);
   padding: 40px;
   max-width: 700px;
   margin: 0 auto;
@@ -321,7 +321,7 @@ a {
 }
 
 .footer {
-  border-top: 1px solid black;
+  border-top: 1px solid var(--border);
   padding: 20px;
   text-align: center;
   font-size: 14px;
@@ -347,7 +347,7 @@ a {
 }
 
 .certificate-category-tab {
-  border: 1px solid #111;
+  border: 1px solid var(--border-strong);
   padding: 10px 18px;
   color: #111;
   font-size: 14px;
@@ -363,13 +363,13 @@ a {
 .certificate-empty-state {
   max-width: 900px;
   margin: 0 auto;
-  border: 1px solid #111;
+  border: 1px solid var(--border-strong);
   padding: 28px;
   text-align: center;
 }
 
 .creator-tab {
-  border: 1px solid black;
+  border: 1px solid var(--border-strong);
   padding: 20px;
   display: flex;
   align-items: center;
@@ -379,7 +379,7 @@ a {
 .creator-avatar {
   width: 60px;
   height: 60px;
-  border: 1px solid black;
+  border: 1px solid var(--border-strong);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -422,7 +422,7 @@ a {
 
 .verified-badge {
   display: inline-block;
-  border: 1px solid black;
+  border: 1px solid var(--border-strong);
   padding: 6px 12px;
   font-size: 13px;
   white-space: nowrap;
@@ -452,7 +452,7 @@ a {
   max-width: 140px;
   max-height: 140px;
   object-fit: cover;
-  border: 1px solid black;
+  border: 1px solid var(--border-strong);
   border-radius: 50%;
   flex-shrink: 0;
   display: block;
@@ -463,7 +463,7 @@ a {
   height: 140px;
   max-width: 140px;
   max-height: 140px;
-  border: 1px solid black;
+  border: 1px solid var(--border-strong);
   border-radius: 50%;
   flex-shrink: 0;
   display: flex;
@@ -476,7 +476,7 @@ a {
 }
 
 .ai-free-card {
-  border: 1px solid black;
+  border: 1px solid var(--border-strong);
   padding: 24px;
   margin-top: 24px;
 }
@@ -491,7 +491,7 @@ a {
 }
 
 .social-link {
-  border: 1px solid black;
+  border: 1px solid var(--border-strong);
   padding: 12px 18px;
 }
 
@@ -542,7 +542,7 @@ a {
 /* Creator application form */
 
 .application-form {
-  border: 1px solid black;
+  border: 1px solid var(--border-strong);
   padding: 40px;
   max-width: 700px;
   margin: 0 auto;
@@ -560,7 +560,7 @@ a {
 }
 
 .application-type-tabs button {
-  border: 1px solid #111;
+  border: 1px solid var(--border-strong);
   background: #fff;
   color: #111;
   padding: 10px 14px;
@@ -618,9 +618,9 @@ a {
 .application-form input,
 .application-form select,
 .application-form textarea {
-  border: 1px solid black;
+  border: 1px solid var(--border-strong);
   padding: 12px;
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
   font-size: 15px;
   background: white;
   color: black;
@@ -646,7 +646,7 @@ a {
   background: white;
   color: black;
   border-color: black;
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
 }
 
 .application-form select:focus option:checked {
@@ -711,7 +711,7 @@ a {
   .button,
   .certificate-category-tab,
   .social-link {
-    font-family: Arial, Helvetica, sans-serif;
+    font-family: var(--font-sans);
   }
 
   .header {
@@ -729,7 +729,7 @@ a {
   --line: #d2cbc0;
   --accent: #9a3f2f;
   --accent-soft: #efe0d8;
-  --mono: "Courier New", Courier, monospace;
+  --mono: var(--font-sans);
 }
 
 html {
@@ -741,7 +741,7 @@ body {
     linear-gradient(rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.18)),
     var(--paper);
   color: var(--ink);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
 }
 
 p {
@@ -997,7 +997,7 @@ header.header {
 
   .account-verification-heading h3 {
     margin: 0;
-    font-family: Georgia, "Times New Roman", serif;
+    font-family: var(--font-serif);
     font-size: 25px;
     font-weight: 400;
     letter-spacing: -0.025em;
@@ -1108,7 +1108,7 @@ header.header {
   .account-page-intro h1,
   .member-profile-state h1 {
     margin: 0;
-    font-family: Georgia, "Times New Roman", serif;
+    font-family: var(--font-serif);
     font-size: clamp(36px, 6vw, 58px);
     font-weight: 400;
     letter-spacing: -0.045em;
@@ -1198,7 +1198,7 @@ header.header {
     border-radius: 0;
     background: #fff;
     color: var(--ink);
-    font-family: Arial, Helvetica, sans-serif;
+    font-family: var(--font-sans);
     font-size: 15px;
     transition: border-color 150ms ease, box-shadow 150ms ease;
   }
@@ -1472,7 +1472,7 @@ header.header {
     border: 1px solid var(--line);
     border-radius: 50%;
     color: var(--accent);
-    font-family: Georgia, serif;
+    font-family: var(--font-serif);
     font-size: 12px;
   }
 
@@ -1524,7 +1524,7 @@ header.header {
 
   .account-photo-placeholder {
     color: var(--muted-ink);
-    font-family: Georgia, serif;
+    font-family: var(--font-serif);
     font-size: 42px;
   }
 
@@ -1574,7 +1574,7 @@ header.header {
 
   .account-gallery-heading h3 {
     margin: 0;
-    font-family: Georgia, "Times New Roman", serif;
+    font-family: var(--font-serif);
     font-size: 21px;
     font-weight: 400;
     text-align: left;
@@ -1745,7 +1745,7 @@ header.header {
 
   .creator-application-heading h1 {
     margin: 0;
-    font-family: Georgia, "Times New Roman", serif;
+    font-family: var(--font-serif);
     font-size: clamp(38px, 6vw, 60px);
     font-weight: 400;
     letter-spacing: -0.045em;
@@ -1778,7 +1778,7 @@ header.header {
     border: 1px solid var(--line);
     background: var(--paper);
     color: var(--accent);
-    font-family: Georgia, serif;
+    font-family: var(--font-serif);
     font-size: 17px;
   }
 
@@ -1838,7 +1838,7 @@ header.header {
     border-color: var(--line);
     background: var(--paper-light);
     color: var(--ink);
-    font-family: Arial, Helvetica, sans-serif;
+    font-family: var(--font-sans);
     font-size: 15px;
   }
 
@@ -2007,7 +2007,7 @@ header.header {
 
   .member-profile-avatar > span {
     color: var(--muted-ink);
-    font-family: Georgia, serif;
+    font-family: var(--font-serif);
     font-size: 42px;
   }
 
@@ -2017,7 +2017,7 @@ header.header {
 
   .member-profile-identity h1 {
     margin: 0;
-    font-family: Georgia, "Times New Roman", serif;
+    font-family: var(--font-serif);
     font-size: clamp(34px, 5vw, 54px);
     font-weight: 400;
     letter-spacing: -0.045em;
@@ -2364,7 +2364,7 @@ header.header {
   h2,
   h3,
   h4 {
-    font-family: Georgia, "Times New Roman", serif;
+    font-family: var(--font-serif);
     font-weight: 400;
     letter-spacing: -0.035em;
   }
@@ -2482,7 +2482,7 @@ header.header {
   }
 
   .creator-info h4 {
-    font-family: Georgia, "Times New Roman", serif;
+    font-family: var(--font-serif);
     font-size: 28px;
   }
 

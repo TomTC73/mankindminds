@@ -1,6 +1,7 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { API_URL } from "./apiConfig";
+import { getAnalyticsConsent, subscribeToConsent } from "./consent";
 
 const VISITOR_ID_KEY = "mankind_minds_analytics_id";
 
@@ -19,8 +20,12 @@ function getAnonymousVisitorId() {
 
 function AnalyticsTracker() {
   const { pathname, search } = useLocation();
+  const [consent, setConsent] = useState(getAnalyticsConsent);
+
+  useEffect(() => subscribeToConsent(() => setConsent(getAnalyticsConsent())), []);
 
   useEffect(() => {
+    if (consent !== "granted") return undefined;
     const controller = new AbortController();
     const payload = {
       sessionId: getAnonymousVisitorId(),
@@ -40,7 +45,7 @@ function AnalyticsTracker() {
     });
 
     return () => controller.abort();
-  }, [pathname, search]);
+  }, [pathname, search, consent]);
 
   return null;
 }

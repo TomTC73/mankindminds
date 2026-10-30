@@ -71,7 +71,7 @@
   height: 100%;
   place-items: center;
   color: #475569;
-  font: 400 64px Georgia, "Times New Roman", serif;
+  font: 400 64px var(--font-serif);
 }
 
 .creator-banner-overlay {
@@ -100,7 +100,7 @@
 
 .creator-banner-name {
   overflow: hidden;
-  font: 400 clamp(18px, 2vw, 24px) Georgia, "Times New Roman", serif;
+  font: 400 clamp(18px, 2vw, 24px) var(--font-serif);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
