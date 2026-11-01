@@ -1112,9 +1112,10 @@ class App(tk.Tk):
         if probability is None:
             return "not checked"
         verdicts = {"AI_FREE": "auto-verified", "AI_GENERATED": "auto-rejected", "NEEDS_REVIEW": "needs review"}
+        held = " - HELD, not public yet" if image_id in account.get("heldImageIds", []) else ""
         return (
             f"AI {probability * 100:.1f}% / Real {(1 - probability) * 100:.1f}% "
-            f"({verdicts.get(check.get('verdict'), check.get('verdict', ''))})"
+            f"({verdicts.get(check.get('verdict'), check.get('verdict', ''))}){held}"
         )
 
     def ai_review_summary(self, account):
@@ -1308,7 +1309,8 @@ class App(tk.Tk):
             if not account_id:
                 continue
             self.account_rows[account_id] = account
-            if account.get("status") in ("PENDING", "UNDER_REVIEW"):
+            held = account.get("status") == "APPROVED" and bool(account.get("heldImageIds"))
+            if account.get("status") in ("PENDING", "UNDER_REVIEW") or held:
                 self.suggested_rows[account_id] = account
                 self.suggested_artist_tree.insert(
                     "",
@@ -1356,6 +1358,8 @@ class App(tk.Tk):
             checks = [c for c in (account.get("imageChecks") or {}).values() if c.get("aiProbability") is not None]
             if account.get("status") == "UNDER_REVIEW":
                 review = "UNDER REVIEW"
+            elif account.get("heldImageIds"):
+                review = f"{len(account['heldImageIds'])} new photo(s) held"
             elif any(c.get("verdict") == "NEEDS_REVIEW" for c in checks):
                 review = "Needs photo check"
             else:
@@ -1363,7 +1367,11 @@ class App(tk.Tk):
             if checks:
                 review = (review + " | " if review else "") + f"max AI {max(c['aiProbability'] for c in checks) * 100:.0f}%"
             self.suggested_artist_tree.set(account_id, "review", review)
-        pending_count = sum(1 for account in rows if account.get("status") in ("PENDING", "UNDER_REVIEW"))
+        pending_count = sum(
+            1 for account in rows
+            if account.get("status") in ("PENDING", "UNDER_REVIEW")
+            or (account.get("status") == "APPROVED" and account.get("heldImageIds"))
+        )
         rejected_count = len(self.rejected_rows)
         approved_count = sum(1 for account in rows if account.get("status") == "APPROVED")
         self.set_status(

@@ -128,6 +128,8 @@ function AccountPage() {
   const [galleryPhotos, setGalleryPhotos] = useState([]);
   const [imageError, setImageError] = useState("");
   const galleryImageIds = account?.galleryImageIds || EMPTY_IMAGE_IDS;
+  const heldImageIds = account?.heldImageIds || EMPTY_IMAGE_IDS;
+  const profilePhotoHeld = Boolean(account?.profileImageId) && heldImageIds.includes(account.profileImageId);
   useEffect(() => {
     let active = true;
     const objectUrls = [];
@@ -655,6 +657,7 @@ function AccountPage() {
                 <div className="account-photo-tools">
                   <div className="account-profile-photo">
                     {profilePhotoUrl ? <img src={profilePhotoUrl} alt="Your profile" /> : <span className="account-photo-placeholder" aria-hidden="true">{form.displayName?.trim()?.charAt(0)?.toUpperCase() || "＋"}</span>}
+                    {profilePhotoUrl && profilePhotoHeld && <span className="photo-under-review">Under review</span>}
                   </div>
                   <div className="account-photo-actions">
                     <label className="account-upload-label">
@@ -678,7 +681,10 @@ function AccountPage() {
                   <div className="account-gallery">
                     {galleryPhotos.map((photo) => (
                       <div className="account-gallery-item" key={photo.id}>
-                        {photo.url ? <img src={photo.url} alt={`${form.displayName || "Your"} portfolio work`} /> : <div className="account-gallery-image-error">Photo unavailable</div>}
+                        <div className="account-gallery-frame">
+                          {photo.url ? <img src={photo.url} alt={`${form.displayName || "Your"} portfolio work`} /> : <div className="account-gallery-image-error">Photo unavailable</div>}
+                          {photo.url && heldImageIds.includes(photo.id) && <span className="photo-under-review">Under review</span>}
+                        </div>
                         <button className="account-remove-photo" type="button" disabled={busy || previewOnly} onClick={() => removePhoto(photo.id)}>Remove photo</button>
                       </div>
                     ))}
