@@ -22,6 +22,7 @@ import AccountPage from "./AccountPage";
 import { AccountProvider } from "./AccountContext";
 import AccountRequired from "./AccountRequired";
 import MemberProfile from "./MemberProfile";
+import { API_URL } from "./apiConfig";
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -34,6 +35,18 @@ function ScrollToTop() {
 }
 
 function App() {
+  // Wake the AI photo checker as soon as someone opens the site, so it is ready by the time they upload.
+  useEffect(() => {
+    try {
+      const last = Number(sessionStorage.getItem("aiWarmUpAt") || 0);
+      if (Date.now() - last < 3 * 60 * 1000) return;
+      sessionStorage.setItem("aiWarmUpAt", String(Date.now()));
+    } catch {
+      // sessionStorage may be unavailable; the server rate-limits anyway.
+    }
+    fetch(`${API_URL}/warm-up`, { method: "POST" }).catch(() => {});
+  }, []);
+
   return (
     <BrowserRouter>
       <ScrollToTop />
