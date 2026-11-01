@@ -1107,7 +1107,7 @@ class App(tk.Tk):
         check = (account.get("imageChecks") or {}).get(image_id) or {}
         probability = check.get("aiProbability")
         media_type = (account.get("mediaTypes") or {}).get(image_id)
-        tag = media_type + "-manual" if media_type else "unchecked" if probability is None else f"ai{round(probability * 100)}pct"
+        tag = media_type + "-manual" if media_type else "ai-credentials" if check.get("credential") and probability is None else "unchecked" if probability is None else f"ai{round(probability * 100)}pct"
         return "rejected-" + tag if image_id in account.get("flaggedImageIds", []) else tag
 
     @staticmethod
@@ -1119,6 +1119,13 @@ class App(tk.Tk):
         check = (account.get("imageChecks") or {}).get(image_id)
         if not check:
             return "not checked"
+        credential = check.get("credential")
+        if credential:
+            decision = {"AI_GENERATED": "auto-rejected", "NEEDS_REVIEW": "needs review"}.get(check.get("verdict"), "")
+            held = " - HELD, not public yet" if image_id in account.get("heldImageIds", []) else ""
+            probability = check.get("aiProbability")
+            score = "" if probability is None else f" | AI {probability * 100:.1f}%"
+            return f"{credential}{score} ({decision}){held}"
         probability = check.get("aiProbability")
         if probability is None:
             return "not checked"
