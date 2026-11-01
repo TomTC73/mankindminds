@@ -4,8 +4,27 @@ import Header from "./Header";
 import Footer from "./Footer";
 import { API_URL, resolveCreatorImageUrl, resolveSafeExternalUrl } from "./apiConfig";
 import "./index.css";
+import "./PortfolioMedia.css";
 
 const TATTOO_GALLERY_PAGE_SIZE = 9;
+
+// A text portfolio item: shows an excerpt on the tile and the full text when opened.
+function TextTile({ url, label, onOpen }) {
+  const [text, setText] = useState("");
+  useEffect(() => {
+    let active = true;
+    fetch(resolveCreatorImageUrl(url))
+      .then((response) => (response.ok ? response.text() : ""))
+      .then((value) => { if (active) setText(value); })
+      .catch((requestError) => console.error("Could not load portfolio text:", requestError));
+    return () => { active = false; };
+  }, [url]);
+  return (
+    <button type="button" className="creator-gallery-text" aria-label={label} onClick={() => onOpen(text)}>
+      {text || "Loading text..."}
+    </button>
+  );
+}
 
 function CreatorProfile() {
   const { slug } = useParams();
@@ -16,6 +35,7 @@ function CreatorProfile() {
   const [retryAttempt, setRetryAttempt] = useState(0);
   const [visibleCount, setVisibleCount] = useState(TATTOO_GALLERY_PAGE_SIZE);
   const [selectedImage, setSelectedImage] = useState(null);
+  const [selectedText, setSelectedText] = useState(null);
 
   useEffect(() => {
     let active = true;
@@ -44,6 +64,9 @@ function CreatorProfile() {
   }, [slug, retryAttempt]);
 
   const isTattooCreator = creator?.category?.toLowerCase().includes("tattoo");
+  const galleryItems = creator?.galleryItems?.length
+    ? creator.galleryItems
+    : (creator?.gallery || []).map((url) => ({ url, type: "image" }));
   const profileSections = creator?.sections || [];
   const aboutSectionIndex = profileSections.findIndex((section) => (
     section.title?.toLowerCase().startsWith("about ")
@@ -235,33 +258,48 @@ function CreatorProfile() {
         </section>
       )}
 
-      {creator.gallery?.length > 0 && (
+      {galleryItems.length > 0 && (
         <section className="section creator-gallery-section">
           <h3>Selected Work</h3>
           <div className="creator-gallery">
-            {(isTattooCreator ? creator.gallery.slice(0, visibleCount) : creator.gallery).map((imageUrl, idx) => (
+            {(isTattooCreator ? galleryItems.slice(0, visibleCount) : galleryItems).map((item, idx) => (
               <div 
                 className="creator-gallery-item" 
-                key={`${imageUrl}-${idx}`}
-                onClick={() => setSelectedImage(imageUrl)}
-                style={{ cursor: "pointer" }}
+                key={`${item.url}-${idx}`}
+                onClick={item.type === "image" ? () => setSelectedImage(item.url) : undefined}
+                style={item.type === "image" ? { cursor: "pointer" } : undefined}
               >
-                <img src={resolveCreatorImageUrl(imageUrl)} alt={`${creator.name} work`} loading="lazy" />
+                {item.type === "video" ? (
+                  <video src={resolveCreatorImageUrl(item.url)} controls preload="metadata" playsInline aria-label={`${creator.name} video`} />
+                ) : item.type === "text" ? (
+                  <TextTile url={item.url} label={`Read ${creator.name}'s writing`} onOpen={setSelectedText} />
+                ) : (
+                  <img src={resolveCreatorImageUrl(item.url)} alt={`${creator.name} work`} loading="lazy" />
+                )}
               </div>
             ))}
           </div>
-          {isTattooCreator && visibleCount < creator.gallery.length && (
+          {isTattooCreator && visibleCount < galleryItems.length && (
             <div className="gallery-load-more-wrap">
               <button
                 type="button"
                 className="button"
                 onClick={() => setVisibleCount((count) => count + TATTOO_GALLERY_PAGE_SIZE)}
               >
-                Load More ({creator.gallery.length - visibleCount} remaining)
+                Load More ({galleryItems.length - visibleCount} remaining)
               </button>
             </div>
           )}
         </section>
+      )}
+
+      {selectedText !== null && (
+        <div className="portfolio-text-modal" onClick={() => setSelectedText(null)}>
+          <div className="portfolio-text-modal-card" role="dialog" aria-label="Portfolio text" onClick={(e) => e.stopPropagation()}>
+            <button type="button" className="portfolio-text-modal-close" onClick={() => setSelectedText(null)} aria-label="Close text">×</button>
+            {selectedText}
+          </div>
+        </div>
       )}
 
       {/* Image Lightbox Modal */}

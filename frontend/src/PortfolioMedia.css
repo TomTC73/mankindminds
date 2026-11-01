@@ -1,0 +1,157 @@
+/* Video and text portfolio items share the image tile size on the account and public profile pages. */
+.account-gallery-item video,
+.creator-gallery-item video {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  background: #111;
+}
+
+.account-gallery-text,
+.creator-gallery-text {
+  position: relative;
+  box-sizing: border-box;
+  width: 100%;
+  aspect-ratio: 1;
+  overflow: hidden;
+  padding: 12px;
+  background: var(--paper-light, #fbfaf7);
+  color: var(--ink, #242321);
+  font-family: var(--font-serif, Georgia, serif);
+  font-size: 12px;
+  line-height: 1.55;
+  text-align: left;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.account-gallery-text::after,
+.creator-gallery-text::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 42%;
+  background: linear-gradient(to bottom, rgba(251, 250, 247, 0), var(--paper-light, #fbfaf7));
+  pointer-events: none;
+}
+
+.creator-gallery-text {
+  border: 0;
+  cursor: pointer;
+}
+
+.account-gallery-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.account-text-entry {
+  display: grid;
+  gap: 8px;
+  margin: 0 0 16px;
+}
+
+.account-text-entry textarea {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 180px;
+  padding: 12px 13px;
+  border: 1px solid var(--line, #d2cbc0);
+  border-radius: 0;
+  background: #fff;
+  color: var(--ink, #242321);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.55;
+  resize: vertical;
+}
+
+.account-text-entry textarea:focus {
+  border-color: var(--accent);
+  outline: 2px solid rgba(154, 63, 47, 0.18);
+  outline-offset: 1px;
+}
+
+.account-text-entry-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  color: var(--muted-ink, #625e57);
+  font-size: 12px;
+}
+
+.account-text-entry-footer .is-over {
+  color: var(--accent, #984132);
+  font-weight: 600;
+}
+
+.account-text-entry-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.account-text-entry-buttons .account-remove-photo {
+  width: auto;
+  margin: 0;
+  padding: 0 14px;
+}
+
+.portfolio-text-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.portfolio-text-modal-card {
+  position: relative;
+  box-sizing: border-box;
+  width: min(720px, 100%);
+  max-height: 85vh;
+  overflow-y: auto;
+  padding: 28px;
+  border-radius: 12px;
+  background: #fff;
+  color: #111;
+  font-family: var(--font-serif, Georgia, serif);
+  font-size: 16px;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+}
+
+.portfolio-text-modal-close {
+  position: sticky;
+  top: 0;
+  float: right;
+  margin: -12px -12px 0 8px;
+  border: 0;
+  background: none;
+  color: #111;
+  font-size: 28px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+@media (max-width: 560px) {
+  .account-gallery-actions {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .account-gallery-actions .button {
+    flex: 1;
+  }
+}

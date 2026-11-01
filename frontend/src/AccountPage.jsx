@@ -6,9 +6,14 @@ import { useAccount } from "./AccountContext";
 import { API_URL, resolveCreatorImageUrl } from "./apiConfig";
 import "./index.css";
 import "./AccountPage.css";
+import "./PortfolioMedia.css";
+import {
+  MAX_PORTFOLIO_SLOTS, MAX_TEXT_CHARS, PORTFOLIO_ACCEPT, portfolioFileProblem, profileImageProblem,
+} from "./portfolioMedia";
 const categories = ["Tattoos", "Music", "Writing", "Videos", "Art"];
 const platforms = ["Instagram", "TikTok", "YouTube", "Website", "Other"];
 const EMPTY_IMAGE_IDS = [];
+const EMPTY_MEDIA_TYPES = {};
 function AccountPage() {
   const {
     account, loading, previewOnly, signIn, signUp, sendSignupVerificationCode,
@@ -128,6 +133,10 @@ function AccountPage() {
   const [galleryPhotos, setGalleryPhotos] = useState([]);
   const [imageError, setImageError] = useState("");
   const galleryImageIds = account?.galleryImageIds || EMPTY_IMAGE_IDS;
+  const mediaTypes = account?.mediaTypes || EMPTY_MEDIA_TYPES;
+  const [textOpen, setTextOpen] = useState(false);
+  const [pastedText, setPastedText] = useState("");
+  const pastedLength = [...pastedText].length;
   const heldImageIds = account?.heldImageIds || EMPTY_IMAGE_IDS;
   const profilePhotoHeld = Boolean(account?.profileImageId) && heldImageIds.includes(account.profileImageId);
   useEffect(() => {
@@ -185,7 +194,16 @@ function AccountPage() {
         setGalleryPhotos(galleryImageIds.map((id, index) => ({
           id,
           url: fulfilledUrls[index + (account?.profileImageId ? 1 : 0)],
+          type: mediaTypes[id] || "image",
+          text: "",
         })));
+        galleryImageIds.forEach((id, index) => {
+          const url = fulfilledUrls[index + (account?.profileImageId ? 1 : 0)];
+          if (mediaTypes[id] !== "text" || !url) return;
+          fetch(url).then((response) => response.text()).then((text) => {
+            if (active) setGalleryPhotos((previous) => previous.map((photo) => (photo.id === id ? { ...photo, text } : photo)));
+          }).catch((textError) => console.error("Could not read portfolio text:", textError));
+        });
         setImageError(results.some((result) => result.status === "rejected")
           ? "Some photos could not be loaded. Refresh to try again."
           : "");
@@ -194,7 +212,7 @@ function AccountPage() {
       active = false;
       objectUrls.forEach((url) => URL.revokeObjectURL(url));
     };
-  }, [account?.claimRequired, account?.profileImageId, galleryImageIds, loadImage]);
+  }, [account?.claimRequired, account?.profileImageId, galleryImageIds, mediaTypes, loadImage]);
   const change = (event) => setForm((previous) => ({
     ...previous,
     [event.target.name]: event.target.value,
@@ -395,16 +413,21 @@ function AccountPage() {
   const uploadPhotos = async (event, kind) => {
     const files = Array.from(event.target.files || []);
     event.target.value = "";
-    if (!files.length) return;
-    const oversizedFile = files.find((file) => file.size > 5 * 1024 * 1024);
-    if (oversizedFile) {
-      setImageError(`${oversizedFile.name} is larger than the 5 MB limit. Choose a smaller image.`);
-      return;
+    await uploadFiles(files, kind);
+  };
+  const uploadFiles = async (files, kind) => {
+    if (!files.length) return false;
+    for (const file of files) {
+      const problem = kind === "gallery" ? await portfolioFileProblem(file) : profileImageProblem(file);
+      if (problem) {
+        setImageError(problem);
+        return false;
+      }
     }
-    const remainingSlots = 8 - galleryImageIds.length;
+    const remainingSlots = MAX_PORTFOLIO_SLOTS - galleryImageIds.length;
     if (kind === "gallery" && files.length > remainingSlots) {
-      setImageError(`You can add ${remainingSlots} more gallery photo${remainingSlots === 1 ? "" : "s"}.`);
-      return;
+      setImageError(`You can add ${remainingSlots} more portfolio item${remainingSlots === 1 ? "" : "s"}.`);
+      return false;
     }
     setBusy(true);
     setError("");
@@ -412,11 +435,20 @@ function AccountPage() {
     setImageError("");
     try {
       for (const file of files) await uploadImage(file, kind);
-      setMessage(kind === "profile" ? "Your profile photo has been updated." : "Your gallery photo(s) have been added.");
+      setMessage(kind === "profile" ? "Your profile photo has been updated." : "Your portfolio item(s) have been added.");
+      return true;
     } catch (requestError) {
       setError(requestError.message);
+      return false;
     } finally {
       setBusy(false);
+    }
+  };
+  const submitPastedText = async () => {
+    const file = new File([pastedText], "pasted-text.txt", { type: "text/plain" });
+    if (await uploadFiles([file], "gallery")) {
+      setPastedText("");
+      setTextOpen(false);
     }
   };
   const removePhoto = async (imageId) => {
@@ -670,27 +702,47 @@ function AccountPage() {
                 <div className="account-gallery-heading">
                   <div>
                     <h3>Portfolio gallery</h3>
-                    <p>{Math.max(0, 8 - galleryImageIds.length)} of 8 photo slots available</p>
+                    <p>{Math.max(0, MAX_PORTFOLIO_SLOTS - galleryImageIds.length)} of {MAX_PORTFOLIO_SLOTS} portfolio slots available. Each can be an image, a video up to 30 seconds, or text.</p>
                   </div>
-                  <label className={`button account-upload-button ${busy || previewOnly || galleryPhotos.length >= 8 ? "is-disabled" : ""}`}>
-                    Add photos
-                    <input type="file" accept="image/jpeg,image/png,image/webp" multiple disabled={busy || previewOnly || galleryPhotos.length >= 8} onChange={(event) => uploadPhotos(event, "gallery")} />
-                  </label>
+                  <div className="account-gallery-actions">
+                    <label className={`button account-upload-button ${busy || previewOnly || galleryPhotos.length >= MAX_PORTFOLIO_SLOTS ? "is-disabled" : ""}`}>
+                      Add work
+                      <input type="file" accept={PORTFOLIO_ACCEPT} multiple disabled={busy || previewOnly || galleryPhotos.length >= MAX_PORTFOLIO_SLOTS} onChange={(event) => uploadPhotos(event, "gallery")} />
+                    </label>
+                    <button className={`button account-upload-button ${busy || previewOnly || galleryPhotos.length >= MAX_PORTFOLIO_SLOTS ? "is-disabled" : ""}`} type="button" disabled={busy || previewOnly || galleryPhotos.length >= MAX_PORTFOLIO_SLOTS} onClick={() => setTextOpen((open) => !open)}>
+                      Paste text
+                    </button>
+                  </div>
                 </div>
+                {textOpen && (
+                  <div className="account-text-entry">
+                    <textarea value={pastedText} onChange={(event) => setPastedText(event.target.value)} placeholder="Paste or type your writing here" aria-label="Portfolio text" disabled={busy} />
+                    <div className="account-text-entry-footer">
+                      <span className={pastedLength > MAX_TEXT_CHARS ? "is-over" : ""}>{pastedLength.toLocaleString()} / {MAX_TEXT_CHARS.toLocaleString()} characters. You can also add a .txt or .docx file with Add work.</span>
+                      <div className="account-text-entry-buttons">
+                        <button className="account-remove-photo" type="button" disabled={busy} onClick={() => { setTextOpen(false); setPastedText(""); }}>Cancel</button>
+                        <button className="button account-upload-button" type="button" disabled={busy || !pastedText.trim() || pastedLength > MAX_TEXT_CHARS} onClick={submitPastedText}>Add text</button>
+                      </div>
+                    </div>
+                  </div>
+                )}
                 {galleryPhotos.length > 0 && (
                   <div className="account-gallery">
                     {galleryPhotos.map((photo) => (
                       <div className="account-gallery-item" key={photo.id}>
                         <div className="account-gallery-frame">
-                          {photo.url ? <img src={photo.url} alt={`${form.displayName || "Your"} portfolio work`} /> : <div className="account-gallery-image-error">Photo unavailable</div>}
+                          {!photo.url ? <div className="account-gallery-image-error">Item unavailable</div>
+                            : photo.type === "video" ? <video src={photo.url} controls preload="metadata" playsInline aria-label={`${form.displayName || "Your"} portfolio video`} />
+                            : photo.type === "text" ? <div className="account-gallery-text">{photo.text || "Loading text..."}</div>
+                            : <img src={photo.url} alt={`${form.displayName || "Your"} portfolio work`} />}
                           {photo.url && heldImageIds.includes(photo.id) && <span className="photo-under-review">Under review</span>}
                         </div>
-                        <button className="account-remove-photo" type="button" disabled={busy || previewOnly} onClick={() => removePhoto(photo.id)}>Remove photo</button>
+                        <button className="account-remove-photo" type="button" disabled={busy || previewOnly} onClick={() => removePhoto(photo.id)}>Remove</button>
                       </div>
                     ))}
                   </div>
                 )}
-                {galleryPhotos.length === 0 && <p className="account-gallery-empty">Your portfolio photos will appear here. Add up to eight examples of your work.</p>}
+                {galleryPhotos.length === 0 && <p className="account-gallery-empty">Your portfolio will appear here. Add up to eight images, short videos, or pieces of writing.</p>}
                 {imageError && <p className="account-error" role="alert">{imageError}</p>}
               </section>
               <button
