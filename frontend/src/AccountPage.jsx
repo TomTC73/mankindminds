@@ -25,6 +25,7 @@ function AccountPage() {
     : account?.status?.toUpperCase() || "PENDING";
   const accountStatusLabel = {
     PENDING: "Under review",
+    UNDER_REVIEW: "Under review",
     APPROVED: "Approved",
     REJECTED: "Not approved",
     BANNED: "Restricted",
@@ -33,6 +34,7 @@ function AccountPage() {
     PENDING: previewOnly
       ? "Your profile is under review. You should hear back within 48 hours. It will remain private until approved. This is a local sample, not a real submission."
       : "Your profile is under review. You should hear back within 48 hours. It will remain private until it is approved.",
+    UNDER_REVIEW: "Your account is temporarily under review by the Mankind Minds team. Your profile is hidden until the review is finished.",
     APPROVED: "Your profile has been approved by the Mankind Minds team.",
     REJECTED: "Your submission was not approved. Please check your email for details or contact the team.",
     BANNED: "Your account is restricted. Please contact the team if you need help.",
@@ -572,7 +574,7 @@ function AccountPage() {
           ) : account ? (
             <>
               <section
-                className={`account-status-banner account-status-banner-${accountStatus.toLowerCase()}`}
+                className={`account-status-banner account-status-banner-${accountStatus.toLowerCase().replace("under_review", "pending")}`}
                 aria-label={`Profile status: ${accountStatusLabel}`}
                 role="status"
               >

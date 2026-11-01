@@ -292,6 +292,15 @@ class AccountAdminClient:
     def bans(self):
         return self.request("GET", "/staff/bans")
 
+    def ai_settings(self):
+        return self.request("GET", "/staff/ai-settings")
+
+    def set_ai_settings(self, reject_ai_percent, verify_real_percent):
+        return self.request(
+            "PUT", "/staff/ai-settings",
+            {"rejectAiPercent": reject_ai_percent, "verifyRealPercent": verify_real_percent},
+        )
+
     def add_ban(self, ban_type, value):
         return self.request("POST", "/staff/bans", {"type": ban_type, "value": value})
 
@@ -699,7 +708,7 @@ class App(tk.Tk):
         )
         self.account_photo_tree.heading("kind", text="Photo")
         self.account_photo_tree.heading("id", text="Photo identifier")
-        self.account_photo_tree.column("kind", width=110)
+        self.account_photo_tree.column("kind", width=330)
         self.account_photo_tree.column("id", width=330)
         self.account_photo_tree.bind("<<TreeviewSelect>>", self.select_account_photo)
         self.account_photo_tree.grid(row=0, column=0, columnspan=3, sticky="ew")
@@ -811,7 +820,7 @@ class App(tk.Tk):
 
         self.suggested_artist_tree = ttk.Treeview(
             parent,
-            columns=("name", "category", "email", "photos"),
+            columns=("name", "category", "email", "photos", "review"),
             show="headings",
             selectmode="browse",
         )
@@ -823,6 +832,8 @@ class App(tk.Tk):
         ):
             self.suggested_artist_tree.heading(column, text=title)
             self.suggested_artist_tree.column(column, width=width)
+        self.suggested_artist_tree.heading("review", text="AI review")
+        self.suggested_artist_tree.column("review", width=190)
         self.suggested_artist_tree.grid(row=1, column=0, sticky="nsew", pady=(16, 10))
         self.suggested_artist_tree.bind("<<TreeviewSelect>>", self.select_suggested_artist)
         actions = ttk.Frame(parent, style="Panel.TFrame")
@@ -843,7 +854,78 @@ class App(tk.Tk):
             actions, text="Delete account", command=self.delete_selected_suggested_account,
         )
         self.suggested_delete_button.pack(side="left", padx=(8, 0))
+        ttk.Button(
+            actions, text="AI photo thresholds...", command=self.open_ai_threshold_dialog,
+        ).pack(side="left", padx=(8, 0))
         self.select_suggested_artist()
+
+    def open_ai_threshold_dialog(self):
+        if not self.account_admin:
+            messagebox.showinfo("AI photo thresholds", "Sign in with GitHub and load member accounts first.")
+            return
+        self.set_status("Loading AI photo thresholds...", PALETTE["accent"])
+
+        def load():
+            try:
+                settings = self.account_admin.ai_settings()
+                self.after(0, lambda: self.show_ai_threshold_dialog(settings))
+            except Exception as error:
+                self.after(0, lambda message=str(error): messagebox.showerror("Could not load thresholds", message))
+
+        threading.Thread(target=load, daemon=True).start()
+
+    def show_ai_threshold_dialog(self, settings):
+        window = tk.Toplevel(self)
+        window.title("AI photo thresholds")
+        window.transient(self)
+        window.grab_set()
+        body = ttk.Frame(window, padding=20)
+        body.pack(fill="both", expand=True)
+        ttk.Label(
+            body,
+            text=(
+                "Photos are scored by the AI detector. Above the reject level they are rejected automatically; "
+                "above the verify level they are verified as AI-free automatically. Anything between goes to manual review.\n"
+                "Lower numbers decide more photos automatically; higher numbers send more to staff."
+            ),
+            wraplength=460, justify="left",
+        ).grid(row=0, column=0, columnspan=2, sticky="w", pady=(0, 12))
+        reject = tk.StringVar(value=str(settings.get("rejectAiPercent", 90)))
+        verify = tk.StringVar(value=str(settings.get("verifyRealPercent", 90)))
+        ttk.Label(body, text="Reject as AI at or above (% AI confidence):").grid(row=1, column=0, sticky="w", pady=4)
+        ttk.Spinbox(body, from_=50, to=99.9, increment=1, textvariable=reject, width=8).grid(row=1, column=1, padx=(12, 0))
+        ttk.Label(body, text="Verify as AI-free at or above (% real confidence):").grid(row=2, column=0, sticky="w", pady=4)
+        ttk.Spinbox(body, from_=50, to=99.9, increment=1, textvariable=verify, width=8).grid(row=2, column=1, padx=(12, 0))
+        buttons = ttk.Frame(body)
+        buttons.grid(row=3, column=0, columnspan=2, sticky="e", pady=(14, 0))
+
+        def save():
+            try:
+                reject_value = float(reject.get())
+                verify_value = float(verify.get())
+            except ValueError:
+                messagebox.showerror("AI photo thresholds", "Enter numbers between 50 and 99.9.", parent=window)
+                return
+            if not (50 <= reject_value <= 99.9 and 50 <= verify_value <= 99.9):
+                messagebox.showerror("AI photo thresholds", "Values must be between 50 and 99.9.", parent=window)
+                return
+            window.destroy()
+            self.set_status("Saving AI photo thresholds...", PALETTE["accent"])
+
+            def work():
+                try:
+                    saved = self.account_admin.set_ai_settings(reject_value, verify_value)
+                    self.after(0, lambda: self.set_status(
+                        f"AI thresholds saved: reject at {saved['rejectAiPercent']}% AI, "
+                        f"verify at {saved['verifyRealPercent']}% real. Applies to new uploads.", "#46705b",
+                    ))
+                except Exception as error:
+                    self.after(0, lambda message=str(error): messagebox.showerror("Could not save thresholds", message))
+
+            threading.Thread(target=work, daemon=True).start()
+
+        ttk.Button(buttons, text="Cancel", command=window.destroy).pack(side="right")
+        ttk.Button(buttons, text="Save", command=save).pack(side="right", padx=(0, 8))
 
     def build_rejected_account_queue(self, parent):
         parent.columnconfigure(0, weight=1)
@@ -990,8 +1072,8 @@ class App(tk.Tk):
         )
         social_text.config(state="disabled")
         social_text.grid(row=social_row, column=1, sticky="ew", pady=4)
-        photos = len(account.get("galleryImageIds", [])) + bool(account.get("profileImageId"))
-        ttk.Label(body, text=f"Uploaded photos: {photos}").grid(
+        photos = len(account.get("galleryImageIds", [])) + bool(account.get("profileImageId")) + len(account.get("flaggedImageIds", []))
+        ttk.Label(body, text=f"Uploaded photos: {photos}" + self.ai_review_summary(account), wraplength=520, justify="left").grid(
             row=social_row + 1, column=1, sticky="w", pady=(8, 0),
         )
         dialog_actions = ttk.Frame(body)
@@ -1014,11 +1096,53 @@ class App(tk.Tk):
         text.config(state="disabled")
         text.grid(row=row, column=1, sticky="ew", pady=4)
 
+    @staticmethod
+    def ai_file_tag(account, image_id):
+        check = (account.get("imageChecks") or {}).get(image_id) or {}
+        probability = check.get("aiProbability")
+        tag = "unchecked" if probability is None else f"ai{round(probability * 100)}pct"
+        return "rejected-" + tag if image_id in account.get("flaggedImageIds", []) else tag
+
+    @staticmethod
+    def ai_score_label(account, image_id):
+        check = (account.get("imageChecks") or {}).get(image_id)
+        if not check:
+            return "not checked"
+        probability = check.get("aiProbability")
+        if probability is None:
+            return "not checked"
+        verdicts = {"AI_FREE": "auto-verified", "AI_GENERATED": "auto-rejected", "NEEDS_REVIEW": "needs review"}
+        return (
+            f"AI {probability * 100:.1f}% / Real {(1 - probability) * 100:.1f}% "
+            f"({verdicts.get(check.get('verdict'), check.get('verdict', ''))})"
+        )
+
+    def ai_review_summary(self, account):
+        lines = []
+        profile_id = account.get("profileImageId")
+        if profile_id:
+            lines.append(f"Profile photo: {self.ai_score_label(account, profile_id)}")
+        for index, image_id in enumerate(account.get("galleryImageIds", []), start=1):
+            lines.append(f"Gallery photo {index}: {self.ai_score_label(account, image_id)}")
+        for index, image_id in enumerate(account.get("flaggedImageIds", []), start=1):
+            lines.append(f"Rejected as AI {index}: {self.ai_score_label(account, image_id)}")
+        reasons = {
+            "AI_PHOTO_REJECTED": "Account under review: an AI-generated photo was rejected.",
+            "PHOTO_NEEDS_REVIEW": "Account under review: a new photo needs a manual check.",
+        }
+        reason = reasons.get(account.get("reviewReason"))
+        if reason:
+            lines.insert(0, reason)
+        if account.get("aiFreeVerified"):
+            lines.insert(0, "Page verified AI-free: every photo passed the AI check.")
+        return ("\n" + "\n".join(lines)) if lines else ""
+
     def open_suggested_photos(self, account):
         images = []
         if account.get("profileImageId"):
             images.append(account["profileImageId"])
         images.extend(account.get("galleryImageIds", []))
+        images.extend(account.get("flaggedImageIds", []))
         if not images:
             return
         self.set_status("Downloading private submission photos...", PALETTE["accent"])
@@ -1030,7 +1154,7 @@ class App(tk.Tk):
                 extensions = {"image/jpeg": ".jpg", "image/png": ".png", "image/webp": ".webp"}
                 for index, image_id in enumerate(images, start=1):
                     content, content_type = self.account_admin.download_image(account["id"], image_id)
-                    path = os.path.join(temporary_dir.name, f"submission-{index}{extensions[content_type]}")
+                    path = os.path.join(temporary_dir.name, f"submission-{index}-{self.ai_file_tag(account, image_id)}{extensions[content_type]}")
                     with open(path, "wb") as image_file:
                         image_file.write(content)
                     paths.append(path)
@@ -1142,9 +1266,11 @@ class App(tk.Tk):
             self.account_detail_text.insert("1.0", details.strip())
             profile_image_id = account.get("profileImageId")
             if profile_image_id:
-                self.account_photo_tree.insert("", "end", iid=profile_image_id, values=("Profile", profile_image_id))
+                self.account_photo_tree.insert("", "end", iid=profile_image_id, values=("Profile - " + self.ai_score_label(account, profile_image_id), profile_image_id))
             for image_id in account.get("galleryImageIds", []):
-                self.account_photo_tree.insert("", "end", iid=image_id, values=("Gallery", image_id))
+                self.account_photo_tree.insert("", "end", iid=image_id, values=("Gallery - " + self.ai_score_label(account, image_id), image_id))
+            for image_id in account.get("flaggedImageIds", []):
+                self.account_photo_tree.insert("", "end", iid=image_id, values=("Rejected (AI) - " + self.ai_score_label(account, image_id), image_id))
         self.account_detail_text.config(state="disabled")
 
     def select_account_photo(self, _event=None):
@@ -1182,7 +1308,7 @@ class App(tk.Tk):
             if not account_id:
                 continue
             self.account_rows[account_id] = account
-            if account.get("status") == "PENDING":
+            if account.get("status") in ("PENDING", "UNDER_REVIEW"):
                 self.suggested_rows[account_id] = account
                 self.suggested_artist_tree.insert(
                     "",
@@ -1226,7 +1352,18 @@ class App(tk.Tk):
         self.select_account()
         self.select_suggested_artist()
         self.select_rejected_artist()
-        pending_count = sum(1 for account in rows if account.get("status") == "PENDING")
+        for account_id, account in self.suggested_rows.items():
+            checks = [c for c in (account.get("imageChecks") or {}).values() if c.get("aiProbability") is not None]
+            if account.get("status") == "UNDER_REVIEW":
+                review = "UNDER REVIEW"
+            elif any(c.get("verdict") == "NEEDS_REVIEW" for c in checks):
+                review = "Needs photo check"
+            else:
+                review = "AI-free page" if account.get("aiFreeVerified") else ""
+            if checks:
+                review = (review + " | " if review else "") + f"max AI {max(c['aiProbability'] for c in checks) * 100:.0f}%"
+            self.suggested_artist_tree.set(account_id, "review", review)
+        pending_count = sum(1 for account in rows if account.get("status") in ("PENDING", "UNDER_REVIEW"))
         rejected_count = len(self.rejected_rows)
         approved_count = sum(1 for account in rows if account.get("status") == "APPROVED")
         self.set_status(
