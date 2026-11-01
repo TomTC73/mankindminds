@@ -235,9 +235,15 @@ class AccountAdminClient:
     def upload_image(self, account_id, file_path, kind):
         with open(file_path, "rb") as image:
             content = image.read()
-        if not content or len(content) > 5 * 1024 * 1024:
-            raise ValueError("Choose an image no larger than 5 MB.")
-        content_type = mimetypes.guess_type(file_path)[0] or "application/octet-stream"
+        extension = os.path.splitext(file_path)[1].lower()
+        limit = 25 if extension in (".mp4", ".mov", ".webm") else 5
+        if not content or len(content) > limit * 1024 * 1024:
+            raise ValueError(f"Choose a file no larger than {limit} MB.")
+        content_type = {
+            ".mov": "video/quicktime",
+            ".txt": "text/plain",
+            ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        }.get(extension) or mimetypes.guess_type(file_path)[0] or "application/octet-stream"
         boundary = "----MankindMinds" + os.urandom(16).hex()
         filename = os.path.basename(file_path).replace('"', "")
         body = (
@@ -274,12 +280,12 @@ class AccountAdminClient:
             f"{urllib.parse.quote(image_id, safe='')}"
         )
         request = urllib.request.Request(url, method="GET")
-        request.add_header("Accept", "image/jpeg,image/png,image/webp")
+        request.add_header("Accept", "*/*")
         request.add_header("Authorization", "Bearer " + self.token)
         try:
-            with urllib.request.urlopen(request, timeout=60) as response:
+            with urllib.request.urlopen(request, timeout=120) as response:
                 content_type = response.headers.get_content_type()
-                if content_type not in ("image/jpeg", "image/png", "image/webp"):
+                if content_type not in ("image/jpeg", "image/png", "image/webp", "video/mp4", "video/webm", "video/quicktime", "text/plain"):
                     raise RuntimeError("The account service returned an unsupported photo type.")
                 return response.read(), content_type
         except urllib.error.HTTPError as error:
@@ -1100,11 +1106,16 @@ class App(tk.Tk):
     def ai_file_tag(account, image_id):
         check = (account.get("imageChecks") or {}).get(image_id) or {}
         probability = check.get("aiProbability")
-        tag = "unchecked" if probability is None else f"ai{round(probability * 100)}pct"
+        media_type = (account.get("mediaTypes") or {}).get(image_id)
+        tag = media_type + "-manual" if media_type else "unchecked" if probability is None else f"ai{round(probability * 100)}pct"
         return "rejected-" + tag if image_id in account.get("flaggedImageIds", []) else tag
 
     @staticmethod
     def ai_score_label(account, image_id):
+        media_type = (account.get("mediaTypes") or {}).get(image_id)
+        if media_type:
+            held = " - HELD, not public yet" if image_id in account.get("heldImageIds", []) else ""
+            return f"{media_type.capitalize()} - manual review only, not AI-checked{held}"
         check = (account.get("imageChecks") or {}).get(image_id)
         if not check:
             return "not checked"
@@ -1124,7 +1135,7 @@ class App(tk.Tk):
         if profile_id:
             lines.append(f"Profile photo: {self.ai_score_label(account, profile_id)}")
         for index, image_id in enumerate(account.get("galleryImageIds", []), start=1):
-            lines.append(f"Gallery photo {index}: {self.ai_score_label(account, image_id)}")
+            lines.append(f"Portfolio item {index}: {self.ai_score_label(account, image_id)}")
         for index, image_id in enumerate(account.get("flaggedImageIds", []), start=1):
             lines.append(f"Rejected as AI {index}: {self.ai_score_label(account, image_id)}")
         reasons = {
@@ -1152,9 +1163,14 @@ class App(tk.Tk):
             temporary_dir = tempfile.TemporaryDirectory(prefix="mankind-minds-review-")
             paths = []
             try:
-                extensions = {"image/jpeg": ".jpg", "image/png": ".png", "image/webp": ".webp"}
+                extensions = {
+                    "image/jpeg": ".jpg", "image/png": ".png", "image/webp": ".webp",
+                    "video/mp4": ".mp4", "video/webm": ".webm", "video/quicktime": ".mov", "text/plain": ".txt",
+                }
                 for index, image_id in enumerate(images, start=1):
                     content, content_type = self.account_admin.download_image(account["id"], image_id)
+                    if content_type == "text/plain":
+                        content = b"\xef\xbb\xbf" + content
                     path = os.path.join(temporary_dir.name, f"submission-{index}-{self.ai_file_tag(account, image_id)}{extensions[content_type]}")
                     with open(path, "wb") as image_file:
                         image_file.write(content)
@@ -1269,7 +1285,7 @@ class App(tk.Tk):
             if profile_image_id:
                 self.account_photo_tree.insert("", "end", iid=profile_image_id, values=("Profile - " + self.ai_score_label(account, profile_image_id), profile_image_id))
             for image_id in account.get("galleryImageIds", []):
-                self.account_photo_tree.insert("", "end", iid=image_id, values=("Gallery - " + self.ai_score_label(account, image_id), image_id))
+                self.account_photo_tree.insert("", "end", iid=image_id, values=("Portfolio - " + self.ai_score_label(account, image_id), image_id))
             for image_id in account.get("flaggedImageIds", []):
                 self.account_photo_tree.insert("", "end", iid=image_id, values=("Rejected (AI) - " + self.ai_score_label(account, image_id), image_id))
         self.account_detail_text.config(state="disabled")
@@ -1359,7 +1375,7 @@ class App(tk.Tk):
             if account.get("status") == "UNDER_REVIEW":
                 review = "UNDER REVIEW"
             elif account.get("heldImageIds"):
-                review = f"{len(account['heldImageIds'])} new photo(s) held"
+                review = f"{len(account['heldImageIds'])} new item(s) held"
             elif any(c.get("verdict") == "NEEDS_REVIEW" for c in checks):
                 review = "Needs photo check"
             else:
@@ -1756,8 +1772,11 @@ class App(tk.Tk):
         if not account:
             return
         file_path = filedialog.askopenfilename(
-            title="Choose member photo",
-            filetypes=(("Images", "*.jpg *.jpeg *.png *.webp"), ("All files", "*.*")),
+            title="Choose member photo or portfolio item",
+            filetypes=(
+                ("Portfolio items", "*.jpg *.jpeg *.png *.webp *.mp4 *.mov *.webm *.txt *.docx"),
+                ("All files", "*.*"),
+            ),
         )
         if not file_path:
             return
