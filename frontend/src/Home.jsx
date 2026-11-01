@@ -14,7 +14,7 @@ function Home() {
   return (
     <div
       className={`home-page ${isTattooHome ? "tattoo-home" : ""}`}
-      style={{ backgroundImage: `url(${backgroundImage})` }}
+      style={{ backgroundImage: `url(${backgroundImage})`, "--home-bg": `url(${backgroundImage})` }}
     >
       <Header />
 
