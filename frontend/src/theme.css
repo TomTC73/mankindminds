@@ -684,3 +684,22 @@ textarea:focus {
   background: linear-gradient(135deg, rgba(245, 241, 233, 0.94), rgba(224, 218, 207, 0.88));
 }
 .profile-page-body .hero { background: transparent; }
+
+/* One fixed, identical background layer on every category page and screen size. */
+.home-page,
+.home-page.tattoo-home {
+  background-image: none !important;
+  isolation: isolate;
+}
+
+.home-page::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-image: var(--home-bg);
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: right bottom;
+  pointer-events: none;
+}
