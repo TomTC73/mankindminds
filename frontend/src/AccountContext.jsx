@@ -21,7 +21,8 @@ export function AccountProvider({ children }) {
     setPreviewOnly(false);
   }, []);
 
-  const request = useCallback(async (path, options = {}, sessionToken = token) => {
+  const request = useCallback(async (path, requestOptions = {}, sessionToken = token) => {
+    const { keepSession, ...options } = requestOptions;
     if (import.meta.env.DEV && sessionToken === LOCAL_PREVIEW_TOKEN) {
       throw new Error("The local preview account is read-only.");
     }
@@ -36,7 +37,7 @@ export function AccountProvider({ children }) {
     });
     if (!response.ok) {
       const body = await response.json().catch(() => null);
-      if (response.status === 401 && sessionToken) clearSession();
+      if (response.status === 401 && sessionToken && !keepSession) clearSession();
       throw new Error(body?.error || "The request failed. Please try again.");
     }
     return response.status === 204 ? null : response.json();
@@ -170,12 +171,36 @@ export function AccountProvider({ children }) {
   }, [request]);
 
   const deleteImage = useCallback(async (imageId) => {
-    const updated = await request(`/accounts/me/images/${encodeURIComponent(imageId)}`, {
-      method: "DELETE",
+    const previous = account;
+    const without = (ids) => (Array.isArray(ids) ? ids.filter((id) => id !== imageId) : ids);
+    // Remove it from the screen straight away; the server confirms in the background.
+    setAccount((current) => {
+      if (!current) return current;
+      const mediaTypes = { ...(current.mediaTypes || {}) };
+      delete mediaTypes[imageId];
+      return {
+        ...current,
+        profileImageId: current.profileImageId === imageId ? null : current.profileImageId,
+        galleryImageIds: without(current.galleryImageIds),
+        heldImageIds: without(current.heldImageIds),
+        flaggedImageIds: without(current.flaggedImageIds),
+        mediaTypes,
+      };
     });
-    setAccount(updated);
-    return updated;
-  }, [request]);
+    try {
+      const updated = await request(`/accounts/me/images/${encodeURIComponent(imageId)}`, {
+        method: "DELETE",
+        keepSession: true,
+      });
+      setAccount(updated);
+      return updated;
+    } catch (error) {
+      // "Image not found" means it is already gone, so there is nothing to restore.
+      if (/not found/i.test(error.message)) return null;
+      setAccount(previous);
+      throw error;
+    }
+  }, [account, request]);
 
   const loadImage = useCallback(async (imageId) => {
     const response = await fetch(`${API_URL}/accounts/me/images/${encodeURIComponent(imageId)}`, {
