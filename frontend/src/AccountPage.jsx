@@ -103,6 +103,7 @@ function AccountPage() {
   useEffect(() => {
     if (!account?.legacyCreatorSlug) return undefined;
     let active = true;
+    setDetailsLoading(true);
     fetch(`${API_URL}/creators/${encodeURIComponent(account.legacyCreatorSlug)}`)
       .then((response) => {
         if (!response.ok) throw new Error(`Creator profile request failed (${response.status}).`);
@@ -126,11 +127,14 @@ function AccountPage() {
       .catch((requestError) => {
         console.error("Could not load the existing creator details:", requestError);
         if (active) setError("Your existing profile details could not be loaded. Refresh to try again.");
-      });
+      })
+      .finally(() => { if (active) setDetailsLoading(false); });
     return () => { active = false; };
   }, [account?.legacyCreatorSlug]);
   const [profilePhotoUrl, setProfilePhotoUrl] = useState("");
   const [galleryPhotos, setGalleryPhotos] = useState([]);
+  const [mediaLoading, setMediaLoading] = useState(true);
+  const [detailsLoading, setDetailsLoading] = useState(false);
   const [imageError, setImageError] = useState("");
   const galleryImageIds = account?.galleryImageIds || EMPTY_IMAGE_IDS;
   const mediaTypes = account?.mediaTypes || EMPTY_MEDIA_TYPES;
@@ -138,6 +142,8 @@ function AccountPage() {
   const [pastedText, setPastedText] = useState("");
   const pastedLength = [...pastedText].length;
   const heldImageIds = account?.heldImageIds || EMPTY_IMAGE_IDS;
+  const portfolioFull = galleryImageIds.length >= MAX_PORTFOLIO_SLOTS;
+  const galleryLoading = mediaLoading && galleryPhotos.length === 0 && galleryImageIds.length > 0;
   const profilePhotoHeld = Boolean(account?.profileImageId) && heldImageIds.includes(account.profileImageId);
   useEffect(() => {
     let active = true;
@@ -145,6 +151,7 @@ function AccountPage() {
     const loadLegacyPhoto = async () => {
       setProfilePhotoUrl("");
       if (!account?.legacyCreatorSlug) {
+        if (active) setMediaLoading(false);
         return;
       }
       try {
@@ -156,7 +163,9 @@ function AccountPage() {
         console.error("Could not load the existing creator profile:", requestError);
         if (active) setImageError("Your existing profile picture could not be loaded. Refresh to try again.");
       }
+      if (active) setMediaLoading(false);
     };
+    setMediaLoading(true);
     if (account?.claimRequired) {
       setGalleryPhotos([]);
       setImageError("");
@@ -191,6 +200,7 @@ function AccountPage() {
         });
         setProfilePhotoUrl(account?.profileImageId ? fulfilledUrls[0] : "");
         if (!account?.profileImageId) loadLegacyPhoto();
+        else setMediaLoading(false);
         setGalleryPhotos(galleryImageIds.map((id, index) => ({
           id,
           url: fulfilledUrls[index + (account?.profileImageId ? 1 : 0)],
@@ -631,6 +641,12 @@ function AccountPage() {
                   </div>
                 )}
               </div>
+              {(mediaLoading || detailsLoading) && (
+                <div className="account-loading-note" role="status">
+                  <span className="account-loading-mark" aria-hidden="true" />
+                  Still loading your saved photos and details. They will appear here in a moment.
+                </div>
+              )}
               {previewOnly && (
                 <div className="account-notice account-preview-notice" role="status">
                   <span className="account-notice-icon" aria-hidden="true">D</span>
@@ -688,7 +704,9 @@ function AccountPage() {
                 <p className="account-section-description">A clear profile image and a few examples of your work help visitors get to know you.</p>
                 <div className="account-photo-tools">
                   <div className="account-profile-photo">
-                    {profilePhotoUrl ? <img src={profilePhotoUrl} alt="Your profile" /> : <span className="account-photo-placeholder" aria-hidden="true">{form.displayName?.trim()?.charAt(0)?.toUpperCase() || "＋"}</span>}
+                    {profilePhotoUrl ? <img src={profilePhotoUrl} alt="Your profile" />
+                      : mediaLoading ? <span className="account-skeleton" role="status" aria-label="Loading profile photo" />
+                      : <span className="account-photo-placeholder" aria-hidden="true">{form.displayName?.trim()?.charAt(0)?.toUpperCase() || "＋"}</span>}
                     {profilePhotoUrl && profilePhotoHeld && <span className="photo-under-review">Under review</span>}
                   </div>
                   <div className="account-photo-actions">
@@ -702,14 +720,14 @@ function AccountPage() {
                 <div className="account-gallery-heading">
                   <div>
                     <h3>Portfolio gallery</h3>
-                    <p>{Math.max(0, MAX_PORTFOLIO_SLOTS - galleryImageIds.length)} of {MAX_PORTFOLIO_SLOTS} portfolio slots available. Each can be an image, a video up to 30 seconds, or text.</p>
+                    <p>{galleryLoading ? "Loading your portfolio…" : `${Math.max(0, MAX_PORTFOLIO_SLOTS - galleryImageIds.length)} of ${MAX_PORTFOLIO_SLOTS} portfolio slots available. Each can be an image, a video up to 30 seconds, or text.`}</p>
                   </div>
                   <div className="account-gallery-actions">
-                    <label className={`button account-upload-button ${busy || previewOnly || galleryPhotos.length >= MAX_PORTFOLIO_SLOTS ? "is-disabled" : ""}`}>
+                    <label className={`button account-upload-button ${busy || previewOnly || portfolioFull ? "is-disabled" : ""}`}>
                       Add work
-                      <input type="file" accept={PORTFOLIO_ACCEPT} multiple disabled={busy || previewOnly || galleryPhotos.length >= MAX_PORTFOLIO_SLOTS} onChange={(event) => uploadPhotos(event, "gallery")} />
+                      <input type="file" accept={PORTFOLIO_ACCEPT} multiple disabled={busy || previewOnly || portfolioFull} onChange={(event) => uploadPhotos(event, "gallery")} />
                     </label>
-                    <button className={`button account-upload-button ${busy || previewOnly || galleryPhotos.length >= MAX_PORTFOLIO_SLOTS ? "is-disabled" : ""}`} type="button" disabled={busy || previewOnly || galleryPhotos.length >= MAX_PORTFOLIO_SLOTS} onClick={() => setTextOpen((open) => !open)}>
+                    <button className={`button account-upload-button ${busy || previewOnly || portfolioFull ? "is-disabled" : ""}`} type="button" disabled={busy || previewOnly || portfolioFull} onClick={() => setTextOpen((open) => !open)}>
                       Paste text
                     </button>
                   </div>
@@ -724,6 +742,15 @@ function AccountPage() {
                         <button className="button account-upload-button" type="button" disabled={busy || !pastedText.trim() || pastedLength > MAX_TEXT_CHARS} onClick={submitPastedText}>Add text</button>
                       </div>
                     </div>
+                  </div>
+                )}
+                {galleryLoading && (
+                  <div className="account-gallery" role="status" aria-label="Loading your portfolio">
+                    {galleryImageIds.map((id) => (
+                      <div className="account-gallery-item" key={id}>
+                        <div className="account-gallery-frame"><span className="account-skeleton" /></div>
+                      </div>
+                    ))}
                   </div>
                 )}
                 {galleryPhotos.length > 0 && (
@@ -742,7 +769,7 @@ function AccountPage() {
                     ))}
                   </div>
                 )}
-                {galleryPhotos.length === 0 && <p className="account-gallery-empty">Your portfolio will appear here. Add up to eight images, short videos, or pieces of writing.</p>}
+                {galleryPhotos.length === 0 && !galleryLoading && !mediaLoading && <p className="account-gallery-empty">Your portfolio will appear here. Add up to eight images, short videos, or pieces of writing.</p>}
                 {imageError && <p className="account-error" role="alert">{imageError}</p>}
               </section>
               <button
