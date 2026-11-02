@@ -462,16 +462,14 @@ function AccountPage() {
     }
   };
   const removePhoto = async (imageId) => {
-    setBusy(true);
     setError("");
     setMessage("");
+    setGalleryPhotos((previous) => previous.filter((photo) => photo.id !== imageId));
     try {
       await deleteImage(imageId);
-      setMessage("Photo removed.");
+      setMessage("Removed from your portfolio.");
     } catch (requestError) {
       setError(requestError.message);
-    } finally {
-      setBusy(false);
     }
   };
   const handleSignOut = async () => {
