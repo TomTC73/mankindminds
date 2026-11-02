@@ -5,6 +5,7 @@ Run with `python app.py` or package with:
 """
 
 import base64
+import io
 import json
 import mimetypes
 import os
@@ -18,6 +19,11 @@ import urllib.request
 import webbrowser
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
+
+try:
+    from PIL import Image, ImageOps, ImageTk
+except ImportError:  # thumbnails are optional; images then open in the default viewer
+    Image = ImageOps = ImageTk = None
 
 
 OWNER = "TomTC73"
@@ -205,8 +211,24 @@ class AccountAdminClient:
     def accounts(self):
         return self.request("GET", "/staff")
 
-    def set_status(self, account_id, status):
-        return self.request("PUT", f"/staff/{urllib.parse.quote(account_id, safe='')}/status", {"status": status})
+    def set_status(self, account_id, status, reason=None):
+        body = {"status": status}
+        if reason:
+            body["reason"] = reason
+        return self.request("PUT", f"/staff/{urllib.parse.quote(account_id, safe='')}/status", body)
+
+    def approve_image(self, account_id, image_id):
+        return self.request(
+            "POST",
+            f"/staff/{urllib.parse.quote(account_id, safe='')}/images/{urllib.parse.quote(image_id, safe='')}/approve",
+        )
+
+    def reject_image(self, account_id, image_id, reason):
+        return self.request(
+            "POST",
+            f"/staff/{urllib.parse.quote(account_id, safe='')}/images/{urllib.parse.quote(image_id, safe='')}/reject",
+            {"reason": reason},
+        )
 
     def issue_claim_credentials(self, account_id):
         return self.request("POST", f"/staff/{urllib.parse.quote(account_id, safe='')}/claim-credentials")
@@ -732,6 +754,11 @@ class App(tk.Tk):
             photo_actions, text="Delete selected photo", command=self.delete_selected_account_photo,
         )
         self.account_delete_photo_button.pack(side="left", padx=(8, 0))
+        self.account_view_media_button = ttk.Button(
+            photo_actions, text="Review all media",
+            command=lambda: self.open_review_gallery(self.selected_account()),
+        )
+        self.account_view_media_button.pack(side="left", padx=(8, 0))
 
         actions = ttk.Frame(parent, style="Panel.TFrame")
         actions.grid(row=5, column=0, columnspan=2, sticky="w", pady=(8, 0))
@@ -1087,8 +1114,8 @@ class App(tk.Tk):
         ttk.Button(dialog_actions, text="Close", command=window.destroy).pack(side="right")
         if photos:
             ttk.Button(
-                dialog_actions, text="Open submitted photos",
-                command=lambda: self.open_suggested_photos(account),
+                dialog_actions, text="Review submitted media",
+                command=lambda: self.open_suggested_photos(account, window),
             ).pack(side="right", padx=(0, 8))
         body.columnconfigure(1, weight=1)
 
@@ -1156,54 +1183,311 @@ class App(tk.Tk):
             lines.insert(0, "Page verified AI-free: every photo passed the AI check.")
         return ("\n" + "\n".join(lines)) if lines else ""
 
-    def open_suggested_photos(self, account):
-        images = []
-        if account.get("profileImageId"):
-            images.append(account["profileImageId"])
-        images.extend(account.get("galleryImageIds", []))
-        images.extend(account.get("flaggedImageIds", []))
-        if not images:
+    def open_suggested_photos(self, account, parent=None):
+        self.open_review_gallery(account, parent)
+
+    MEDIA_EXTENSIONS = {
+        "image/jpeg": ".jpg", "image/png": ".png", "image/webp": ".webp",
+        "video/mp4": ".mp4", "video/webm": ".webm", "video/quicktime": ".mov", "text/plain": ".txt",
+    }
+    GALLERY_COLUMNS = 4
+    GALLERY_THUMB = 210
+
+    @staticmethod
+    def review_items(account):
+        items = []
+        types = account.get("mediaTypes") or {}
+        profile_id = account.get("profileImageId")
+        if profile_id:
+            items.append((profile_id, "Profile photo", "image", "profile"))
+        for index, image_id in enumerate(account.get("galleryImageIds", []), start=1):
+            kind = types.get(image_id, "image")
+            items.append((image_id, f"Portfolio {index} - {kind}", kind, "portfolio"))
+        for index, image_id in enumerate(account.get("flaggedImageIds", []), start=1):
+            items.append((image_id, f"Rejected as AI {index}", "image", "flagged"))
+        return items
+
+    def open_review_gallery(self, account, parent=None):
+        items = self.review_items(account)
+        if not items:
+            messagebox.showinfo("No media", "This account has not uploaded anything yet.", parent=parent or self)
             return
-        self.set_status("Downloading private submission photos...", PALETTE["accent"])
+        self.set_status("Loading submitted media...", PALETTE["accent"])
 
         def work():
-            temporary_dir = tempfile.TemporaryDirectory(prefix="mankind-minds-review-")
-            paths = []
-            try:
-                extensions = {
-                    "image/jpeg": ".jpg", "image/png": ".png", "image/webp": ".webp",
-                    "video/mp4": ".mp4", "video/webm": ".webm", "video/quicktime": ".mov", "text/plain": ".txt",
-                }
-                for index, image_id in enumerate(images, start=1):
-                    content, content_type = self.account_admin.download_image(account["id"], image_id)
-                    if content_type == "text/plain":
-                        content = b"\xef\xbb\xbf" + content
-                    path = os.path.join(temporary_dir.name, f"submission-{index}-{self.ai_file_tag(account, image_id)}{extensions[content_type]}")
-                    with open(path, "wb") as image_file:
-                        image_file.write(content)
-                    paths.append(path)
-                self.after(0, lambda: self.open_review_image_files(temporary_dir, paths))
-            except Exception as error:
-                temporary_dir.cleanup()
-                self.after(0, lambda message=str(error): messagebox.showerror("Could not open submission photos", message))
-                self.after(0, lambda: self.set_status("Could not load submission photos.", PALETTE["accent"]))
+            downloaded = {}
+            for image_id, _label, _kind, _role in items:
+                try:
+                    downloaded[image_id] = self.account_admin.download_image(account["id"], image_id)
+                except Exception as error:
+                    downloaded[image_id] = str(error)
+            self.after(0, lambda: self.build_review_gallery(account, items, downloaded, parent))
 
         threading.Thread(target=work, daemon=True).start()
 
-    def open_review_image_files(self, temporary_dir, paths):
+    def build_review_gallery(self, account, items, downloaded, parent):
+        self.set_status("Submitted media loaded.", "#46705b")
+        window = tk.Toplevel(self)
+        window.title("Review media - " + (account.get("displayName") or account.get("email") or "creator"))
+        window.geometry("1020x740")
+        window.transient(parent or self)
+        window.grab_set()
+        window.configure(background=PALETTE["paper"])
+
+        def close():
+            window.destroy()
+            if parent is not None:
+                try:
+                    parent.grab_set()
+                except tk.TclError:
+                    pass
+
+        window.protocol("WM_DELETE_WINDOW", close)
+        header = ttk.Frame(window, padding=(16, 12, 16, 4))
+        header.pack(fill="x")
+        ttk.Label(header, text=account.get("displayName") or account.get("email", ""), style="Section.TLabel").pack(anchor="w")
+        summary = "\n".join(
+            line for line in self.ai_review_summary(account).strip().splitlines()
+            if not line.startswith(("Profile photo:", "Portfolio item", "Rejected as AI"))
+        )
+        if summary:
+            ttk.Label(header, text=summary, style="Muted.TLabel", wraplength=960, justify="left").pack(anchor="w", pady=(4, 0))
+        ttk.Button(header, text="Close", command=close).pack(anchor="e")
+
+        outer = ttk.Frame(window)
+        outer.pack(fill="both", expand=True, padx=16, pady=(4, 16))
+        canvas = tk.Canvas(outer, background=PALETTE["paper"], highlightthickness=0)
+        scrollbar = ttk.Scrollbar(outer, orient="vertical", command=canvas.yview)
+        canvas.configure(yscrollcommand=scrollbar.set)
+        scrollbar.pack(side="right", fill="y")
+        canvas.pack(side="left", fill="both", expand=True)
+        grid = ttk.Frame(canvas)
+        canvas.create_window((0, 0), window=grid, anchor="nw")
+        grid.bind("<Configure>", lambda _e: canvas.configure(scrollregion=canvas.bbox("all")))
+        window.bind("<MouseWheel>", lambda event: canvas.yview_scroll(-1 * (event.delta // 120), "units"))
+
+        cards = {}
+
+        def relayout():
+            for position, card in enumerate(cards.values()):
+                card.grid(row=position // self.GALLERY_COLUMNS, column=position % self.GALLERY_COLUMNS,
+                          padx=8, pady=8, sticky="n")
+
+        def remove_card(image_id):
+            card = cards.pop(image_id, None)
+            if card:
+                card.destroy()
+            relayout()
+            if not cards:
+                close()
+
+        for image_id, label, kind, role in items:
+            cards[image_id] = self.build_review_card(
+                grid, window, account, image_id, label, kind, role, downloaded[image_id], remove_card,
+            )
+        relayout()
+
+    def build_review_card(self, grid, window, account, image_id, label, kind, role, downloaded, remove_card):
+        size = self.GALLERY_THUMB
+        card = tk.Frame(grid, background=PALETTE["panel"], highlightbackground=PALETTE["line"], highlightthickness=1)
+        tk.Label(card, text=label, background=PALETTE["panel"], foreground=PALETTE["ink"],
+                 font=("Segoe UI", 10, "bold")).pack(anchor="w", padx=8, pady=(8, 4))
+        thumb = tk.Frame(card, width=size, height=size, background="#111111")
+        thumb.pack(padx=8)
+        thumb.pack_propagate(False)
+        content, content_type = (downloaded if isinstance(downloaded, tuple) else (None, None))
+        if content is None:
+            tk.Label(thumb, text="Could not load\n" + str(downloaded)[:120], background="#111111",
+                     foreground="#ffffff", wraplength=size - 16, justify="center").pack(fill="both", expand=True)
+        elif content_type == "text/plain":
+            text = tk.Text(thumb, wrap="word", font=("Georgia", 9), relief="flat", background="#fbfaf7",
+                           foreground=PALETTE["ink"], padx=8, pady=8, cursor="hand2")
+            excerpt = content.decode("utf-8", "replace")
+            text.insert("1.0", excerpt[:700] + ("..." if len(excerpt) > 700 else ""))
+            text.config(state="disabled")
+            text.pack(fill="both", expand=True)
+            text.bind("<Button-1>", lambda _e: self.view_review_media(window, content, content_type, label))
+        elif content_type.startswith("video/"):
+            play = tk.Label(thumb, text="\u25b6\nVideo", background="#111111", foreground="#ffffff",
+                            font=("Segoe UI", 22), cursor="hand2")
+            play.pack(fill="both", expand=True)
+            play.bind("<Button-1>", lambda _e: self.view_review_media(window, content, content_type, label))
+        else:
+            thumbnail = self.make_thumbnail(content, size)
+            if thumbnail is None:
+                tk.Label(thumb, text="Image\n(install Pillow for previews)", background="#111111",
+                         foreground="#ffffff").pack(fill="both", expand=True)
+            else:
+                picture = tk.Label(thumb, image=thumbnail, background="#111111", cursor="hand2")
+                picture.image = thumbnail
+                picture.pack(fill="both", expand=True)
+                picture.bind("<Button-1>", lambda _e: self.view_review_media(window, content, content_type, label))
+
+        held = image_id in account.get("heldImageIds", [])
+        if role == "flagged":
+            state, colour = "Rejected as AI - not public", PALETTE["accent"]
+        elif held:
+            state, colour = "Waiting for review - not public", PALETTE["accent"]
+        else:
+            state, colour = "Approved - live", "#46705b"
+        status = tk.Label(card, text=state, background=PALETTE["panel"], foreground=colour, font=("Segoe UI", 9, "bold"))
+        status.pack(anchor="w", padx=8, pady=(6, 0))
+        tk.Label(card, text=self.ai_score_label(account, image_id), background=PALETTE["panel"],
+                 foreground=PALETTE["muted"], wraplength=size, justify="left", font=("Segoe UI", 8)).pack(anchor="w", padx=8)
+
+        buttons = ttk.Frame(card)
+        buttons.pack(fill="x", padx=8, pady=8)
+        if content is not None:
+            verb = "Play" if content_type.startswith("video/") else "Read" if content_type == "text/plain" else "View"
+            ttk.Button(buttons, text=verb, width=6,
+                       command=lambda: self.view_review_media(window, content, content_type, label)).pack(side="left")
+        if role != "flagged":
+            approve = ttk.Button(buttons, text="Approve", width=8)
+            if held:
+                approve.config(command=lambda: self.approve_review_item(
+                    window, account, image_id, label, status, approve))
+                approve.pack(side="left", padx=(6, 0))
+            ttk.Button(buttons, text="Deny", width=6,
+                       command=lambda: self.deny_review_item(window, account, image_id, label, remove_card)
+                       ).pack(side="left", padx=(6, 0))
+        return card
+
+    @staticmethod
+    def make_thumbnail(content, size):
+        if Image is None:
+            return None
         try:
-            for path in paths:
-                os.startfile(path)
+            picture = ImageOps.exif_transpose(Image.open(io.BytesIO(content)))
+            return ImageTk.PhotoImage(ImageOps.fit(picture.convert("RGB"), (size, size)))
+        except Exception:
+            return None
+
+    def view_review_media(self, window, content, content_type, label):
+        if content_type == "text/plain":
+            viewer = tk.Toplevel(window)
+            viewer.title(label)
+            viewer.geometry("720x560")
+            text = tk.Text(viewer, wrap="word", font=("Georgia", 12), padx=16, pady=16)
+            scrollbar = ttk.Scrollbar(viewer, orient="vertical", command=text.yview)
+            text.configure(yscrollcommand=scrollbar.set)
+            text.insert("1.0", content.decode("utf-8", "replace"))
+            text.config(state="disabled")
+            scrollbar.pack(side="right", fill="y")
+            text.pack(fill="both", expand=True)
+            return
+        if content_type.startswith("image/") and Image is not None:
+            try:
+                picture = ImageOps.exif_transpose(Image.open(io.BytesIO(content))).convert("RGB")
+                picture.thumbnail((min(1100, self.winfo_screenwidth() - 120), min(800, self.winfo_screenheight() - 160)))
+                viewer = tk.Toplevel(window)
+                viewer.title(label)
+                photo = ImageTk.PhotoImage(picture)
+                holder = tk.Label(viewer, image=photo)
+                holder.image = photo
+                holder.pack()
+                return
+            except Exception:
+                pass
+        temporary_dir = tempfile.TemporaryDirectory(prefix="mankind-minds-review-")
+        path = os.path.join(temporary_dir.name, "submission" + self.MEDIA_EXTENSIONS.get(content_type, ""))
+        with open(path, "wb") as media_file:
+            media_file.write(content)
+        try:
+            os.startfile(path)
         except OSError as error:
             temporary_dir.cleanup()
-            messagebox.showerror("Could not open submission photo", str(error))
-            self.set_status("Could not open submission photo.", PALETTE["accent"])
+            messagebox.showerror("Could not open media", str(error), parent=window)
             return
         self.temporary_photo_dirs.append(temporary_dir)
-        self.set_status(
-            "Submission photos opened. Temporary review files will be removed when the staff app closes.",
-            "#46705b",
+
+    def run_review_action(self, window, title, action, on_success):
+        self.set_status(title + "...", PALETTE["accent"])
+
+        def work():
+            try:
+                action()
+            except Exception as error:
+                detail = str(error).strip() or "The account service returned an unspecified error."
+                self.after(0, lambda: self.set_status(title + " failed.", PALETTE["accent"]))
+                self.after(0, lambda: messagebox.showerror(title + " failed", detail, parent=window))
+                return
+            self.after(0, on_success)
+            self.after(0, lambda: self.load_account_admin(silent=True))
+
+        threading.Thread(target=work, daemon=True).start()
+
+    def approve_review_item(self, window, account, image_id, label, status_label, approve_button):
+        if not messagebox.askyesno(
+            "Approve", f"Approve this item ({label})? It will become visible on the member's profile and they will be emailed.",
+            parent=window,
+        ):
+            return
+
+        def done():
+            status_label.config(text="Approved - live", foreground="#46705b")
+            approve_button.destroy()
+            self.set_status("Item approved and the member was emailed.", "#46705b")
+
+        self.run_review_action(window, "Approve item", lambda: self.account_admin.approve_image(account["id"], image_id), done)
+
+    def deny_review_item(self, window, account, image_id, label, remove_card):
+        reason = self.ask_reason(
+            window, "Deny item",
+            f"Deny and remove this item ({label}). The member will receive an email with the reason below:",
         )
+        if reason is None:
+            return
+
+        def done():
+            remove_card(image_id)
+            self.set_status("Item denied and the member was emailed.", "#46705b")
+
+        self.run_review_action(
+            window, "Deny item", lambda: self.account_admin.reject_image(account["id"], image_id, reason), done,
+        )
+
+    def ask_reason(self, parent, title, prompt, required=True):
+        result = {"value": None}
+        dialog = tk.Toplevel(parent)
+        dialog.title(title)
+        dialog.transient(parent)
+        dialog.grab_set()
+        body = ttk.Frame(dialog, padding=16)
+        body.pack(fill="both", expand=True)
+        ttk.Label(body, text=prompt, wraplength=420, justify="left").pack(anchor="w")
+        text = tk.Text(body, width=54, height=6, wrap="word", relief="solid", borderwidth=1)
+        text.pack(fill="both", expand=True, pady=8)
+        text.focus_set()
+        counter = ttk.Label(body, text="0 / 1000", style="Muted.TLabel")
+        counter.pack(anchor="w")
+
+        def update_counter(_event=None):
+            counter.config(text=f"{len(text.get('1.0', 'end').strip())} / 1000")
+
+        text.bind("<KeyRelease>", update_counter)
+
+        def submit():
+            reason = text.get("1.0", "end").strip()
+            if required and not reason:
+                messagebox.showwarning(title, "Enter a reason so the member knows why.", parent=dialog)
+                return
+            if len(reason) > 1000:
+                messagebox.showwarning(title, "The reason must be 1000 characters or fewer.", parent=dialog)
+                return
+            result["value"] = reason
+            dialog.destroy()
+
+        buttons = ttk.Frame(body)
+        buttons.pack(fill="x", pady=(10, 0))
+        ttk.Button(buttons, text="Cancel", command=dialog.destroy).pack(side="right")
+        ttk.Button(buttons, text="Send and deny", command=submit).pack(side="right", padx=(0, 8))
+        self.wait_window(dialog)
+        if parent is not self:
+            try:
+                parent.grab_set()
+            except tk.TclError:
+                pass
+        return result["value"]
 
     def set_selected_suggested_status(self, status):
         account = self.selected_suggested_artist()
@@ -1211,18 +1495,25 @@ class App(tk.Tk):
             return
         approving = status == "APPROVED"
         title = "Approve creator" if approving else "Reject creator request"
-        message = (
-            f"Approve {account.get('displayName', 'this creator')} as AI-Free verified? "
-            "Their profile will become public in Verified Creators, and they will receive an acceptance email "
-            "with their page link and downloadable QR code."
-            if approving
-            else f"Reject {account.get('displayName', 'this creator')}? They will receive an automatic rejection email."
-        )
-        if not messagebox.askyesno(title, message):
-            return
+        reason = None
+        if approving:
+            if not messagebox.askyesno(
+                title,
+                f"Approve {account.get('displayName', 'this creator')} as AI-Free verified? "
+                "Their profile will become public in Verified Creators, and they will receive an acceptance email "
+                "with their page link and downloadable QR code.",
+            ):
+                return
+        else:
+            reason = self.ask_reason(
+                self, title,
+                f"Reject {account.get('displayName', 'this creator')}? They will receive an email including this reason:",
+            )
+            if reason is None:
+                return
         self.account_admin_action(
             title,
-            lambda: self.account_admin.set_status(account["id"], status),
+            lambda: self.account_admin.set_status(account["id"], status, reason),
             "Creator approved as AI-Free verified. The acceptance email and custom QR code were sent."
             if approving else "Creator request rejected and rejection email sent.",
             on_success=lambda: messagebox.showinfo(
@@ -1256,6 +1547,7 @@ class App(tk.Tk):
         for button in (self.account_upload_profile_button, self.account_upload_gallery_button):
             button.config(state=state)
         self.account_delete_photo_button.config(state="disabled")
+        self.account_view_media_button.config(state=state)
         self.account_photo_tree.delete(*self.account_photo_tree.get_children())
         account = self.selected_account()
         self.account_detail_text.config(state="normal")

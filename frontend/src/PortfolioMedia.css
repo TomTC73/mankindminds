@@ -1,3 +1,37 @@
+/* Placeholders shown while the backend is still returning an account's saved media. */
+.account-skeleton {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 80px;
+  background: linear-gradient(100deg, #ece7de 30%, #f7f4ee 50%, #ece7de 70%);
+  background-size: 200% 100%;
+  animation: account-skeleton-shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes account-skeleton-shimmer {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+
+.account-loading-note {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 16px;
+  color: var(--muted-ink, #625e57);
+  font-size: 14px;
+}
+
+.account-gallery-frame > .account-skeleton {
+  aspect-ratio: 1;
+  height: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .account-skeleton { animation: none; }
+}
+
 /* Video and text portfolio items share the image tile size on the account and public profile pages. */
 .account-gallery-item video,
 .creator-gallery-item video {
