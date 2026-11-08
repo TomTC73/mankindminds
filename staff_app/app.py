@@ -233,6 +233,13 @@ class AccountAdminClient:
     def issue_claim_credentials(self, account_id):
         return self.request("POST", f"/staff/{urllib.parse.quote(account_id, safe='')}/claim-credentials")
 
+    def email_claim_credentials(self, account_id, email, credentials):
+        return self.request(
+            "POST",
+            f"/staff/{urllib.parse.quote(account_id, safe='')}/claim-credentials/email",
+            {"email": email, "username": credentials["username"], "temporaryPassword": credentials["temporaryPassword"]},
+        )
+
     def import_legacy_claim(self, creator):
         return self.request("POST", "/staff/legacy-claim", creator)
 
@@ -2168,11 +2175,64 @@ class App(tk.Tk):
         ttk.Label(
             body,
             text="After sign-in, the creator must verify an email address they control and choose a new password. "
-                 "Their profile stays hidden from the public until that claim is complete.",
+                 "The linked account profile stays private until the claim is complete; any existing published "
+                 "legacy portfolio remains visible.",
             style="Muted.TLabel",
             wraplength=480,
         ).pack(anchor="w", pady=(12, 0))
-        ttk.Button(body, text="Close", command=window.destroy).pack(anchor="e", pady=(16, 0))
+        ttk.Label(body, text="Send these details to the creator", style="Section.TLabel").pack(anchor="w", pady=(16, 4))
+        ttk.Label(
+            body,
+            text="Check the address carefully: this email contains the temporary password.",
+            style="Muted.TLabel",
+            wraplength=480,
+        ).pack(anchor="w")
+        send_row = ttk.Frame(body)
+        send_row.pack(fill="x", pady=(8, 0))
+        recipient = ttk.Entry(send_row, width=36)
+        recipient.pack(side="left", fill="x", expand=True)
+
+        def send_email():
+            email = recipient.get().strip()
+            if len(email) > 254 or not re.fullmatch(r'[^\s@<>"]+@[^\s@<>"]+\.[^\s@<>"]+', email):
+                messagebox.showerror("Send claim email", "Enter a valid email address.", parent=window)
+                return
+            if not messagebox.askyesno(
+                "Confirm recipient",
+                f"Send the temporary login and password to {email}?\n\n"
+                "Anyone with these details can claim this account. Make sure the address belongs to the creator.",
+                parent=window,
+            ):
+                return
+            send_button.config(state="disabled")
+            close_button.config(state="disabled")
+
+            def work():
+                try:
+                    self.account_admin.email_claim_credentials(account["id"], email, credentials)
+                except Exception as error:
+                    def failed(detail=str(error)):
+                        if window.winfo_exists():
+                            send_button.config(state="normal")
+                            close_button.config(state="normal")
+                            messagebox.showerror("Claim email failed", detail, parent=window)
+                    self.after(0, failed)
+                    return
+
+                def sent():
+                    if window.winfo_exists():
+                        send_button.config(state="normal")
+                        close_button.config(state="normal")
+                        messagebox.showinfo("Claim email sent", f"Claim details sent to {email}.", parent=window)
+                self.after(0, sent)
+
+            threading.Thread(target=work, daemon=True).start()
+
+        send_button = ttk.Button(send_row, text="Send email", command=send_email)
+        send_button.pack(side="left", padx=(8, 0))
+        close_button = ttk.Button(body, text="Close", command=window.destroy)
+        close_button.pack(anchor="e", pady=(16, 0))
+        window.protocol("WM_DELETE_WINDOW", lambda: window.destroy() if str(close_button["state"]) != "disabled" else None)
 
     def delete_selected_account(self):
         account = self.selected_account()

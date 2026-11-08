@@ -128,7 +128,11 @@ email and high-entropy password once; the `.invalid` email domain is only a
 login identifier and cannot receive mail. Share the details securely. The
 creator must verify an email address they control and choose a new password
 before claiming the account. After import, **Issue / reset claim login**
-generates replacement one-time credentials if needed. Closing the staff
+generates replacement one-time credentials if needed. In the credentials
+window, staff can optionally enter the creator's email address and send the
+claim instructions and temporary login. Check the recipient carefully: the
+email contains the temporary password. Credentials can only be sent while
+they remain valid and the account is awaiting claim. Closing the staff
 manager removes temporary local photo-review files.
 
 Account images are stored privately in the `mankind-minds-backend-account-media`
