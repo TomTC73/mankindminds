@@ -46,8 +46,17 @@ npm run build
 - `/process/music`
 - `/process/writing`
 - `/process/art`
+- `/about/`
 - `/certificates`
 - `/apply`
 
 Creator data is loaded from the configured API in
 `frontend/src/apiConfig.js`.
+
+The About page's text and review-category panels are in
+`frontend/src/about-content.html`; the same content is included in the static
+page generated for search engines. Replace the "coming soon" text in each
+category when its screening details are ready. The Dani and Thomas portrait
+placeholders can be replaced with images stored in `frontend/public/` and
+referenced from that file. Run `npm run build` followed by
+`node --test scripts/check-about.mjs` from `frontend/` to check the static page.

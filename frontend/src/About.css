@@ -55,13 +55,47 @@
 .about-process { background: #111; color: #f3f3f3; }
 .about-process .eyebrow { color: #aaa; }
 .about-section-intro { max-width: 720px; margin-top: 24px; color: #cfc5b5; }
-.about-steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 50px; border: 1px solid #5d554c; }
-.about-steps article { padding: 28px; }
-.about-steps article + article { border-left: 1px solid #5d554c; }
-.about-steps span { color: #aaa; font-size: 12px; letter-spacing: .14em; }
-.about-steps h3 { margin: 36px 0 16px; font: 400 28px Georgia, "Times New Roman", serif; }
-.about-steps p, .about-note { color: #cfc5b5; line-height: 1.7; }
-.about-note { max-width: 750px; margin: 28px 0 0; font-size: 14px; }
+.about-beliefs { background: #e7ddd0; }
+.about-beliefs-inner { display: grid; grid-template-columns: .9fr 1.1fr; gap: 80px; }
+.about-beliefs h2 em { color: #984132; font-weight: 400; }
+.about-copy a, .about-human-review a { text-decoration: underline; text-underline-offset: 3px; }
+.about-review-selector { margin-top: 42px; }
+.about-review-tabs { display: flex; flex-wrap: wrap; gap: 10px; padding: 0; margin: 0; border: 0; }
+.about-review-tabs legend { margin-bottom: 14px; color: #cfc5b5; font-size: 14px; }
+.about-review-tabs label { position: relative; cursor: pointer; }
+.about-review-tabs input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.about-review-tabs span {
+  display: block;
+  padding: 11px 20px;
+  border: 1px solid #777067;
+  border-radius: 999px;
+  color: #f3f3f3;
+  transition: background .2s, color .2s;
+}
+.about-review-tabs input:checked + span { background: #f2e8d9; border-color: #f2e8d9; color: #181715; }
+.about-review-tabs input:focus-visible + span { outline: 3px solid #dcbca5; outline-offset: 3px; }
+.about-review-panels {
+  margin-top: 22px;
+  padding: clamp(26px, 5vw, 48px);
+  border-radius: 18px;
+  background: #292622;
+}
+.about-review-panel { display: none; }
+.about-review-selector:has(input[value="tattoos"]:checked) [data-category="tattoos"],
+.about-review-selector:has(input[value="art"]:checked) [data-category="art"],
+.about-review-selector:has(input[value="music"]:checked) [data-category="music"],
+.about-review-selector:has(input[value="writing"]:checked) [data-category="writing"],
+.about-review-selector:has(input[value="videos"]:checked) [data-category="videos"] { display: block; }
+.about-panel-label { margin: 0 0 16px; color: #d3b39f; font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
+.about-review-panel h3, .about-human-review h3 { margin: 0 0 16px; font: 400 clamp(30px, 4vw, 42px)/1.1 Georgia, "Times New Roman", serif; }
+.about-review-panel p:not(.about-panel-label), .about-human-review p:not(.about-panel-label) { max-width: 700px; color: #e0d7cb; line-height: 1.7; }
+.about-review-panel .about-coming-soon { margin: 28px 0 0; font-size: 14px; font-style: italic; }
+.about-human-review { display: grid; grid-template-columns: .8fr 1.2fr; gap: 70px; padding: 64px 0 0; }
+.about-human-review p:first-child { margin-top: 0; }
+.about-creator-photos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; margin-top: 36px; }
+.about-creator-photos figure { margin: 0; }
+.about-photo-placeholder { display: grid; place-items: center; aspect-ratio: 4 / 5; border-radius: 12px; background: #ded4c8; color: #a38b79; font: 400 70px Georgia, "Times New Roman", serif; }
+.about-creator-photos figcaption { margin-top: 10px; font-weight: 600; }
 .about-faq { border-top: 1px solid #111; background: #e8e8e8; }
 .about-faq-list { display: grid; grid-template-columns: 1fr 1fr; gap: 0 60px; margin-top: 48px; }
 .about-faq-list article { padding: 24px 0; border-top: 1px solid #aaa; }
@@ -72,8 +106,8 @@
 
 @media (max-width: 700px) {
   .about-section { padding: 70px 24px; }
-  .about-split, .about-faq-list, .about-steps { grid-template-columns: 1fr; }
+  .about-split, .about-faq-list, .about-beliefs-inner, .about-human-review { grid-template-columns: 1fr; }
   .about-split { gap: 30px; }
-  .about-steps article + article { border-left: 0; border-top: 1px solid #5d554c; }
+  .about-beliefs-inner, .about-human-review { gap: 30px; }
   .tattoo-process-check-grid { padding: 28px 20px; }
 }
