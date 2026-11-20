@@ -1,7 +1,7 @@
 import "./Home.css";
 import Header from "./Header";
 import Footer from "./Footer";
-import { Navigate, useParams } from "react-router-dom";
+import { Link, Navigate, useParams } from "react-router-dom";
 
 const processBySection = {
   tattoos: {
@@ -111,6 +111,34 @@ const processBySection = {
   },
 };
 
+function ReviewOverview() {
+  return (
+    <section className="tattoo-process-check">
+      <div className="tattoo-process-check-heading">
+        <p className="eyebrow">Our review</p>
+        <h2>An always developing process.</h2>
+      </div>
+      <div className="tattoo-process-check-grid process-review-grid">
+        <article className="process-review-copy">
+          <p>Create an account and submit your application, and our team will review your work.</p>
+          <p>
+            You will have the ability to add a bio, profile picture, and upload to your portfolio.
+            Once your profile is set up, submit your application for our team to evaluate
+            its authenticity. Once approved, you will be sent an email confirming the
+            activation of your account, and a QR link to share with your friends.
+          </p>
+          <p>
+            Our process is always growing, and we continuously seek ways to improve our
+            methods and user experience. Click below to learn more about us, and our current
+            operation to verify your profiles as AI-free.
+          </p>
+          <Link className="process-read-more" to="/about/">Read More</Link>
+        </article>
+      </div>
+    </section>
+  );
+}
+
 function Process() {
   const { section } = useParams();
   const process = processBySection[section];
@@ -208,47 +236,7 @@ function Process() {
             </div>
           </section>
 
-          <section className="tattoo-process-check">
-            <div className="tattoo-process-check-heading">
-              <p className="eyebrow">Our review</p>
-              <h2>Three checks. One clear decision.</h2>
-            </div>
-            <div className="tattoo-process-check-grid">
-              <article>
-                <span>01</span>
-                <h3>Trace the practice</h3>
-                <p>
-                  We review studio history, portfolio continuity, process notes,
-                  and the context around the work.
-                </p>
-              </article>
-              <article>
-                <span>02</span>
-                <h3>Read the artwork</h3>
-                <p>
-                  Our custom Burchett software looks for patterns associated
-                  with synthetic imagery in the submitted art file or drawing.
-                  AI is a powerful tool, and its pattern-recognition
-                  capabilities make it useful here, paradoxically, for
-                  detecting AI imagery. A human reviewer then considers the
-                  result alongside the work and its history.
-                </p>
-              </article>
-              <article>
-                <span>03</span>
-                <h3>Make the call</h3>
-                <p>
-                  A reviewer considers the evidence as a whole. If we find no
-                  reason to believe the submitted tattoo work is AI-generated,
-                  we issue Burchett Verification. We use submissions only for
-                  verification, do not sell them or send them to unrelated
-                  third parties, and delete verification materials once the
-                  assessment is complete, subject to legal or public-record
-                  requirements.
-                </p>
-              </article>
-            </div>
-          </section>
+          <ReviewOverview />
 
           <section className="tattoo-process-quote">
             <p>
@@ -317,40 +305,7 @@ function Process() {
           </div>
         </section>
 
-        <section className="tattoo-process-check">
-          <div className="tattoo-process-check-heading">
-            <p className="eyebrow">Our review</p>
-            <h2>Three checks. One clear decision.</h2>
-          </div>
-          <div className="tattoo-process-check-grid">
-            <article>
-              <span>01</span>
-              <h3>Trace the practice</h3>
-              <p>
-                We review drafts, credits, performances, studio history,
-                portfolio continuity, and the context around the work.
-              </p>
-            </article>
-            <article>
-              <span>02</span>
-              <h3>Read the evidence</h3>
-              <p>
-                Our specialist tools look for patterns associated with
-                synthetic material. A reviewer then considers those results
-                alongside the work itself.
-              </p>
-            </article>
-            <article>
-              <span>03</span>
-              <h3>Make the call</h3>
-              <p>
-                A reviewer considers the evidence as a whole. If we find no reason
-                to believe the submitted work is AI-generated, we issue{" "}
-                {process.title}.
-              </p>
-            </article>
-          </div>
-        </section>
+        <ReviewOverview />
 
         <section className="tattoo-process-quote">
           <p>Good work carries the choices that made it.</p>

@@ -1,0 +1,79 @@
+.about-page {
+  background: #f3f3f3;
+  color: #111;
+}
+
+.about-page .header {
+  background: #f3f3f3;
+}
+
+.about-hero {
+  padding: clamp(80px, 10vw, 150px) max(24px, 8vw);
+  border-bottom: 1px solid #111;
+  background: radial-gradient(circle at 80% 20%, rgba(0, 0, 0, 0.08), transparent 30%),
+    linear-gradient(135deg, #f3f3f3, #d9d9d9);
+}
+
+.about-hero-inner { max-width: 930px; }
+.about-hero h1 {
+  max-width: 900px;
+  margin: 0;
+  font: 400 clamp(50px, 8vw, 105px)/0.94 Georgia, "Times New Roman", serif;
+  letter-spacing: -0.055em;
+}
+.about-lede { max-width: 620px; margin: 32px 0; font-size: 20px; line-height: 1.6; }
+.about-button, .process-read-more {
+  display: inline-block;
+  padding: 14px 26px;
+  border: 1px solid currentColor;
+  font-size: 14px;
+  font-weight: 700;
+  transition: background .2s, color .2s;
+}
+.about-button { background: #111; color: #fff; }
+.about-button:hover, .about-button:focus-visible { background: transparent; color: #111; }
+.process-read-more { margin-top: 24px; color: #f3f3f3; }
+.process-read-more:hover, .process-read-more:focus-visible { background: #f3f3f3; color: #111; }
+.tattoo-process-check-grid.process-review-grid { grid-template-columns: 1fr; }
+.tattoo-process-check-grid .process-review-copy { min-height: 0; }
+.tattoo-process-check-grid .process-review-copy p + p { margin-top: 18px; }
+
+.about-section {
+  box-sizing: border-box;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 100px 24px;
+}
+.about-split { display: grid; grid-template-columns: .9fr 1.1fr; gap: 80px; }
+.about-section h2 {
+  max-width: 750px;
+  margin: 0;
+  font: 400 clamp(36px, 5vw, 64px)/1 Georgia, "Times New Roman", serif;
+  letter-spacing: -0.04em;
+}
+.about-copy p, .about-section-intro { margin: 0 0 20px; font-size: 18px; line-height: 1.7; }
+.about-process { background: #111; color: #f3f3f3; }
+.about-process .eyebrow { color: #aaa; }
+.about-section-intro { max-width: 720px; margin-top: 24px; color: #cfc5b5; }
+.about-steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 50px; border: 1px solid #5d554c; }
+.about-steps article { padding: 28px; }
+.about-steps article + article { border-left: 1px solid #5d554c; }
+.about-steps span { color: #aaa; font-size: 12px; letter-spacing: .14em; }
+.about-steps h3 { margin: 36px 0 16px; font: 400 28px Georgia, "Times New Roman", serif; }
+.about-steps p, .about-note { color: #cfc5b5; line-height: 1.7; }
+.about-note { max-width: 750px; margin: 28px 0 0; font-size: 14px; }
+.about-faq { border-top: 1px solid #111; background: #e8e8e8; }
+.about-faq-list { display: grid; grid-template-columns: 1fr 1fr; gap: 0 60px; margin-top: 48px; }
+.about-faq-list article { padding: 24px 0; border-top: 1px solid #aaa; }
+.about-faq-list h3 { margin: 0 0 12px; font: 400 24px/1.2 Georgia, "Times New Roman", serif; }
+.about-faq-list p, .about-contact { margin: 0; line-height: 1.7; }
+.about-contact { margin-top: 30px; }
+.about-contact a { text-decoration: underline; }
+
+@media (max-width: 700px) {
+  .about-section { padding: 70px 24px; }
+  .about-split, .about-faq-list, .about-steps { grid-template-columns: 1fr; }
+  .about-split { gap: 30px; }
+  .about-steps article + article { border-left: 0; border-top: 1px solid #5d554c; }
+  .tattoo-process-check-grid { padding: 28px 20px; }
+}
