@@ -22,6 +22,7 @@ import AccountPage from "./AccountPage";
 import { AccountProvider } from "./AccountContext";
 import AccountRequired from "./AccountRequired";
 import MemberProfile from "./MemberProfile";
+import About from "./About";
 import { API_URL } from "./apiConfig";
 
 function ScrollToTop() {
@@ -63,7 +64,7 @@ function App() {
         <Route path="/map" element={<MapPage />} />
         <Route path="/process" element={<Navigate to="/process/tattoos" replace />} />
         <Route path="/process/:section" element={<Process />} />
-        <Route path="/about" element={<Navigate to="/process/tattoos" replace />} />
+        <Route path="/about" element={<About />} />
         <Route path="/certificates" element={<VerifiedCreators />} />
         <Route path="/members/:id" element={<MemberProfile />} />
 

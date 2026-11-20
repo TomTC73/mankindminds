@@ -6,6 +6,8 @@ function Footer() {
     <footer className="footer">
       <p>© 2026 Mankind Minds. All rights reserved.</p>
       <p>
+        <Link to="/about/">About Us</Link>
+        {" | "}
         <Link to="/terms">Terms & Conditions</Link>
         {" | "}
         <Link to="/privacy-policy">Privacy Policy</Link>
