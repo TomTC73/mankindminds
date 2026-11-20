@@ -477,16 +477,20 @@ body {
 
 .tattoo-process-check-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 24px;
-  max-width: 1120px;
+  grid-template-columns: 1fr;
+  gap: 4px;
+  width: 100%;
+  max-width: none;
   margin: 0 auto;
+  padding: 60px 80px;
+  box-sizing: border-box;
+  border: 1px solid #5d554c;
 }
 
 .tattoo-process-check-grid article {
-  min-height: 250px;
-  padding: 28px;
-  border: 1px solid #5d554c;
+  min-height: 22px;
+  padding: 10px;
+  border: none;
 }
 
 .tattoo-process-check-grid span {
@@ -505,14 +509,14 @@ body {
 .tattoo-process-check-grid p {
   margin: 0;
   color: #cfc5b5;
-  line-height: 1.6;
+  line-height: 1.4;
 }
 
 .tattoo-process-quote {
   padding: 110px 24px;
   text-align: center;
   background: #555555;
-  color: #f3f3f3;
+  color: #ffffff;
 }
 
 .tattoo-process-quote p {
@@ -521,6 +525,7 @@ body {
   font-family: Georgia, "Times New Roman", serif;
   font-size: clamp(30px, 5vw, 62px);
   line-height: 1;
+  color: #ffffff !important;
 }
 
 .tattoo-process-quote span {

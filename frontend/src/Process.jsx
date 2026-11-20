@@ -211,7 +211,7 @@ function Process() {
           <section className="tattoo-process-check">
             <div className="tattoo-process-check-heading">
               <p className="eyebrow">Our review</p>
-              <h2>Three checks. One clear decision.</h2>
+              <h2>An always developing process.</h2>
             </div>
             <div className="tattoo-process-check-grid">
               <article>
@@ -252,13 +252,10 @@ function Process() {
 
           <section className="tattoo-process-quote">
             <p>
-              A tattoo records a person, a place, and a point in time. Burchett
-              exists to protect the human work behind that mark, and to give
-              artists and clients confidence in what they are choosing.
+              "Another tattoo, another thing you did, another place you’ve been.”
             </p>
             <span>
-              A working belief behind Burchett Verification - with questions,
-              contact us by phone, email, or in person where possible.
+              Anthony Bourdain - 2015
             </span>
           </section>
         </main>
@@ -320,33 +317,13 @@ function Process() {
         <section className="tattoo-process-check">
           <div className="tattoo-process-check-heading">
             <p className="eyebrow">Our review</p>
-            <h2>Three checks. One clear decision.</h2>
+            <h2>An always developing process.</h2>
           </div>
           <div className="tattoo-process-check-grid">
             <article>
-              <span>01</span>
-              <h3>Trace the practice</h3>
               <p>
                 We review drafts, credits, performances, studio history,
                 portfolio continuity, and the context around the work.
-              </p>
-            </article>
-            <article>
-              <span>02</span>
-              <h3>Read the evidence</h3>
-              <p>
-                Our specialist tools look for patterns associated with
-                synthetic material. A reviewer then considers those results
-                alongside the work itself.
-              </p>
-            </article>
-            <article>
-              <span>03</span>
-              <h3>Make the call</h3>
-              <p>
-                A reviewer considers the evidence as a whole. If we find no reason
-                to believe the submitted work is AI-generated, we issue{" "}
-                {process.title}.
               </p>
             </article>
           </div>

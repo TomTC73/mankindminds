@@ -1906,62 +1906,6 @@ export default function MapPage({ embedded = false }) {
     Get Verified. Get Discovered.
   </h2>
 
-  {/* Description */}
-  <p
-    style={{
-      margin: "0 auto 40px auto",
-      maxWidth: "540px",
-      fontSize: "16px",
-      lineHeight: "1.65",
-      color: "#475569",
-      textAlign: "center",
-    }}
-  >
-    Join a curated network of professional tattoo artists and studios.
-    Showcase your work, earn trust with verification, and connect with
-    clients searching for certified talent.
-  </p>
-
-  {/* Benefits */}
-  <div
-    style={{
-      display: "flex",
-      justifyContent: "center",
-      flexWrap: "wrap",
-      gap: "32px",
-      marginBottom: "48px",
-    }}
-  >
-    {[
-      "Verified Status",
-      "Higher Visibility",
-      "Portfolio Showcase",
-    ].map((label) => (
-      <div
-        key={label}
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "10px",
-          fontSize: "15px",
-          fontWeight: "600",
-          color: "#334155",
-        }}
-      >
-        <span
-          style={{
-            width: "6px",
-            height: "6px",
-            borderRadius: "50%",
-            backgroundColor: "#0f172a",
-            display: "inline-block",
-          }}
-        />
-        {label}
-      </div>
-    ))}
-  </div>
-
   {/* CTA Button */}
   <button
     onClick={handleVerifyArtist}
