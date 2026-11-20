@@ -14,4 +14,18 @@ test("built About page contains indexable content and page-specific metadata", a
   assert.equal((html.match(/rel="canonical"/g) || []).length, 1);
   assert.ok(html.includes(`<link rel="canonical" href="${aboutUrl}" />`));
   assert.ok(sitemap.includes(`<loc>${aboutUrl}</loc>`));
+  for (const [category, title] of [
+    ["tattoos", "Burchett Verification"],
+    ["art", "Cassatt Verification"],
+    ["music", "Joplin Verification"],
+    ["writing", "Ellison Verification"],
+    ["videos", "Varda Verification"],
+  ]) {
+    assert.ok(html.includes(`name="review-category" value="${category}"`));
+    assert.ok(html.includes(`data-category="${category}"`));
+    assert.ok(html.includes(title));
+  }
+  assert.ok(html.includes('name="review-category" value="tattoos" checked'));
+  assert.ok(html.includes("Dani"));
+  assert.ok(html.includes("Thomas"));
 });
